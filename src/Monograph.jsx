@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import * as Plotly from "plotly";
+import Plotly from "plotly.js-dist-min";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MONOGRAPH · AESTHETIC SYSTEM
