@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist-min";
+import { useResponsive, responsiveScale, responsiveSpacing, useTouchInteraction, useSwipeGesture } from "./responsive";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MONOGRAPH · AESTHETIC SYSTEM
@@ -481,95 +482,234 @@ function Frac({ n, d, size = "1em" }) {
 }
 
 function Eq({ number, children, style }) {
+  const responsive = useResponsive();
   return (
     <div style={{
-      display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
-      padding: "18px 24px", margin: "18px 0",
-      background: C.bgDeep, borderLeft: `2px solid ${C.gold}`,
-      fontFamily: FONT_MATH, fontSize: "1.32em", color: C.ink, lineHeight: 1.4,
+      display: "grid",
+      gridTemplateColumns: responsive.isMobile ? "1fr" : "1fr auto",
+      alignItems: responsive.isMobile ? "center" : "center",
+      padding: responsive.isMobile ? "14px 16px" : "18px 24px",
+      margin: responsive.isMobile ? "14px 0" : "18px 0",
+      background: C.bgDeep,
+      borderLeft: `2px solid ${C.gold}`,
+      fontFamily: FONT_MATH,
+      fontSize: responsive.isMobile ? "1.2em" : "1.32em",
+      color: C.ink,
+      lineHeight: 1.4,
       ...style,
     }}>
-      <div style={{ textAlign: "center" }}>{children}</div>
-      {number && <div style={{ color: C.inkFaint, fontSize: "0.85em", fontStyle: "italic" }}>({number})</div>}
+      <div style={{
+        textAlign: "center",
+        marginBottom: responsive.isMobile && number ? 8 : 0
+      }}>{children}</div>
+      {number && <div style={{
+        color: C.inkFaint,
+        fontSize: responsive.isMobile ? "0.75em" : "0.85em",
+        fontStyle: "italic",
+        textAlign: responsive.isMobile ? "center" : "right"
+      }}>({number})</div>}
     </div>
   );
 }
 
 function Theorem({ kind = "Theorem", number, title, children, tone = "gold" }) {
+  const responsive = useResponsive();
   const toneC = tone === "gold" ? C.gold : tone === "crimson" ? C.crimson : tone === "teal" ? C.teal : C.indigo;
   return (
     <div style={{
-      margin: "18px 0", padding: "14px 18px 14px 22px",
-      background: `${toneC}08`, borderLeft: `3px solid ${toneC}`,
-      borderRadius: "0 3px 3px 0", position: "relative",
+      margin: responsive.isMobile ? "14px 0" : "18px 0",
+      padding: responsive.isMobile ? "12px 14px 12px 16px" : "14px 18px 14px 22px",
+      background: `${toneC}08`,
+      borderLeft: `3px solid ${toneC}`,
+      borderRadius: "0 3px 3px 0",
+      position: "relative",
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
-        <span style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", fontWeight: 600, fontSize: "1.18em", color: toneC, letterSpacing: 0.3 }}>
+      <div style={{
+        display: "flex",
+        gap: responsive.isMobile ? 6 : 8,
+        marginBottom: responsive.isMobile ? 4 : 6,
+        flexDirection: responsive.isMobile ? "column" : "row",
+        alignItems: responsive.isMobile ? "flex-start" : "baseline",
+      }}>
+        <span style={{
+          fontFamily: FONT_DISPLAY,
+          fontStyle: "italic",
+          fontWeight: 600,
+          fontSize: responsive.isMobile ? "1.08em" : "1.18em",
+          color: toneC,
+          letterSpacing: 0.3
+        }}>
           {kind}{number ? ` ${number}` : ""}.
         </span>
-        {title && <span style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", color: C.ink, fontSize: "1.12em" }}>{title}</span>}
+        {title && <span style={{
+          fontFamily: FONT_DISPLAY,
+          fontStyle: "italic",
+          color: C.ink,
+          fontSize: responsive.isMobile ? "1.05em" : "1.12em"
+        }}>{title}</span>}
       </div>
-      <div style={{ fontFamily: FONT_MATH, fontSize: "1.15em", color: C.ink, lineHeight: 1.6 }}>
+      <div style={{
+        fontFamily: FONT_MATH,
+        fontSize: responsive.isMobile ? "1.08em" : "1.15em",
+        color: C.ink,
+        lineHeight: 1.6
+      }}>
         {children}
       </div>
     </div>
   );
 }
 
-function SectionHead({ number, title, eyebrow }) {
+function SectionHead({ number, title, eyebrow, id }) {
+  const responsive = useResponsive();
   return (
-    <div style={{ margin: "48px 0 18px", position: "relative" }}>
-      {eyebrow && <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginBottom: 6 }}>{eyebrow}</div>}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 16, borderBottom: `1px solid ${C.rule}`, paddingBottom: 10 }}>
-        <span style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", fontSize: 30, color: C.gold, fontWeight: 500 }}>§ {number}</span>
-        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 500, color: C.inkBr, letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</h2>
+    <div id={id} style={{
+      margin: responsive.isMobile ? "36px 0 14px" : "48px 0 18px",
+      position: "relative"
+    }}>
+      {eyebrow && <div style={{
+        fontFamily: FONT_MONO,
+        fontSize: responsive.isMobile ? 9 : 11,
+        color: C.gold,
+        letterSpacing: 3,
+        textTransform: "uppercase",
+        marginBottom: responsive.isMobile ? 4 : 6
+      }}>{eyebrow}</div>}
+      <div style={{
+        display: "flex",
+        gap: responsive.isMobile ? 12 : 16,
+        borderBottom: `1px solid ${C.rule}`,
+        paddingBottom: responsive.isMobile ? 8 : 10,
+        flexDirection: responsive.isMobile ? "column" : "row",
+        alignItems: responsive.isMobile ? "flex-start" : "baseline",
+      }}>
+        <span style={{
+          fontFamily: FONT_DISPLAY,
+          fontStyle: "italic",
+          fontSize: responsive.isMobile ? 24 : 30,
+          color: C.gold,
+          fontWeight: 500
+        }}>§ {number}</span>
+        <h2 style={{
+          fontFamily: FONT_DISPLAY,
+          fontSize: responsive.isMobile ? 28 : responsive.isTablet ? 34 : 38,
+          fontWeight: 500,
+          color: C.inkBr,
+          letterSpacing: responsive.isMobile ? -0.2 : -0.3,
+          lineHeight: 1.1,
+          margin: 0,
+        }}>{title}</h2>
       </div>
     </div>
   );
 }
 
 function Figure({ number, caption, children, noPad }) {
+  const responsive = useResponsive();
   return (
     <figure style={{
-      background: C.panel, border: `1px solid ${C.border}`, borderRadius: 3,
-      margin: "18px 0", overflow: "hidden",
+      background: C.panel,
+      border: `1px solid ${C.border}`,
+      borderRadius: 3,
+      margin: responsive.isMobile ? "14px 0" : "18px 0",
+      overflow: "hidden",
     }}>
       <div style={{
-        padding: "9px 16px", borderBottom: `1px solid ${C.border}`,
-        background: C.panelAlt, display: "flex", alignItems: "baseline", gap: 10,
+        padding: responsive.isMobile ? "7px 12px" : "9px 16px",
+        borderBottom: `1px solid ${C.border}`,
+        background: C.panelAlt,
+        display: "flex",
+        alignItems: "baseline",
+        gap: responsive.isMobile ? 6 : 10,
       }}>
-        <span style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", fontSize: 14, color: C.gold, fontWeight: 600 }}>Figure {number}.</span>
-        <span style={{ fontFamily: FONT_MATH, fontSize: 15, color: C.ink, fontStyle: "italic" }}>{caption}</span>
+        <span style={{
+          fontFamily: FONT_DISPLAY,
+          fontStyle: "italic",
+          fontSize: responsive.isMobile ? 12 : 14,
+          color: C.gold,
+          fontWeight: 600
+        }}>Figure {number}.</span>
+        <span style={{
+          fontFamily: FONT_MATH,
+          fontSize: responsive.isMobile ? 13 : 15,
+          color: C.ink,
+          fontStyle: "italic"
+        }}>{caption}</span>
       </div>
-      <div style={{ padding: noPad ? 0 : 14 }}>{children}</div>
+      <div style={{
+        padding: noPad ? 0 : responsive.isMobile ? 10 : 14
+      }}>{children}</div>
     </figure>
   );
 }
 
 function Prose({ children, style }) {
-  return <p style={{ fontFamily: FONT_MATH, fontSize: "1.24em", lineHeight: 1.72, color: C.ink, margin: "14px 0", textAlign: "justify", hyphens: "auto", ...style }}>{children}</p>;
+  const responsive = useResponsive();
+  return <p style={{
+    fontFamily: FONT_MATH,
+    fontSize: responsive.isMobile ? "1.1em" : "1.24em",
+    lineHeight: responsive.isMobile ? 1.6 : 1.72,
+    color: C.ink,
+    margin: responsive.isMobile ? "12px 0" : "14px 0",
+    textAlign: "justify",
+    hyphens: "auto",
+    ...style
+  }}>{children}</p>;
 }
 
 function Toggle({ on, onClick, children, tone = "gold" }) {
+  const responsive = useResponsive();
   const c = tone === "gold" ? C.gold : tone === "crimson" ? C.crimson : tone === "teal" ? C.teal : C.indigo;
   return (
     <button onClick={onClick} style={{
-      background: on ? `${c}18` : "transparent", color: on ? c : C.inkDim,
+      background: on ? `${c}18` : "transparent",
+      color: on ? c : C.inkDim,
       border: `1px solid ${on ? `${c}66` : C.border}`,
-      padding: "5px 11px", fontSize: 10, fontFamily: FONT_MONO, fontWeight: 500,
-      letterSpacing: 1.5, textTransform: "uppercase", borderRadius: 2, cursor: "pointer",
+      padding: responsive.isMobile ? "8px 12px" : "5px 11px",
+      fontSize: responsive.isMobile ? 10 : 10,
+      fontFamily: FONT_MONO,
+      fontWeight: 500,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      borderRadius: 4,
+      cursor: "pointer",
       transition: "all 0.15s",
+      minWidth: responsive.isMobile ? 70 : 70,
+      minHeight: responsive.isMobile ? 44 : "auto",
+      touchAction: "manipulation",
+      WebkitTapHighlightColor: "transparent",
+      ":active": {
+        transform: responsive.isMobile ? "scale(0.98)" : "none",
+        background: on ? `${c}28` : `${C.border}22`,
+      },
     }}>{children}</button>
   );
 }
 
 function Metric({ label, value, unit, tone = "gold", mono = true }) {
+  const responsive = useResponsive();
   const c = tone === "gold" ? C.gold : tone === "teal" ? C.teal : tone === "crimson" ? C.crimson : C.indigo;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ fontSize: 10, color: C.inkFaint, letterSpacing: 2, textTransform: "uppercase", fontFamily: FONT_MONO }}>{label}</span>
-      <span style={{ fontSize: 19, color: c, fontFamily: mono ? FONT_MONO : FONT_MATH, fontStyle: mono ? "normal" : "italic", fontWeight: 500 }}>
-        {value}{unit && <span style={{ color: C.inkFaint, fontSize: "0.65em", marginLeft: 3 }}>{unit}</span>}
+    <div style={{ display: "flex", flexDirection: "column", gap: responsive.isMobile ? 1 : 2 }}>
+      <span style={{
+        fontSize: responsive.isMobile ? 8 : 10,
+        color: C.inkFaint,
+        letterSpacing: 2,
+        textTransform: "uppercase",
+        fontFamily: FONT_MONO
+      }}>{label}</span>
+      <span style={{
+        fontSize: responsive.isMobile ? 16 : 19,
+        color: c,
+        fontFamily: mono ? FONT_MONO : FONT_MATH,
+        fontStyle: mono ? "normal" : "italic",
+        fontWeight: 500,
+      }}>
+        {value}{unit && <span style={{
+          color: C.inkFaint,
+          fontSize: responsive.isMobile ? "0.5em" : "0.65em",
+          marginLeft: responsive.isMobile ? 2 : 3
+        }}>{unit}</span>}
       </span>
     </div>
   );
@@ -606,6 +746,16 @@ function YoungDiagram({ triplet, maxHeight = 70 }) {
 // MAIN MONOGRAPH
 // ═══════════════════════════════════════════════════════════════════════════
 export default function Monograph() {
+  const responsive = useResponsive();
+  const touchInteraction = useTouchInteraction();
+
+  // Swipe gestures for M parameter control
+  const swipeHandlers = useSwipeGesture(
+    () => setM(Math.min(M_ + 5, 150)), // Swipe left: increase M
+    () => setM(Math.max(M_ - 5, 10)),  // Swipe right: decrease M
+    30 // Lower threshold for easier swiping
+  );
+
   const [M_, setM] = useState(40);
   const [debouncedM, setDebouncedM] = useState(40);
   const [selectedS, setSelectedS] = useState(22);
@@ -613,6 +763,58 @@ export default function Monograph() {
   const [logScale, setLogScale] = useState(false);
   const [gaussianOn, setGaussianOn] = useState(true);
   const [computing, setComputing] = useState(false);
+
+  // Section navigation for mobile
+  const [currentSection, setCurrentSection] = useState(0);
+  const sections = [
+    { id: 'cover', title: 'Cover' },
+    { id: 'bose-einstein', title: '§8 Bose-Einstein' },
+    { id: 'feynman', title: '§9 Feynman' },
+    { id: 'young', title: '§10 Young' },
+    { id: 'nlo', title: '§11 NLO' },
+    { id: 'lorenz', title: '§12 Lorenz' },
+    { id: 'kolmogorov', title: '§13 Kolmogorov' },
+    { id: 'gutenberg', title: '§14 Gutenberg-Richter' },
+    { id: 'bbn', title: '§15 BBN' },
+    { id: 'sis', title: '§16 SIS' },
+    { id: 'quantum-walk', title: '§17 Quantum Walk' },
+  ];
+
+  // Section navigation swipe gestures
+  const sectionSwipeHandlers = useSwipeGesture(
+    () => setCurrentSection(Math.min(currentSection + 1, sections.length - 1)), // Swipe left: next section
+    () => setCurrentSection(Math.max(currentSection - 1, 0)), // Swipe right: previous section
+    50
+  );
+
+  // Scroll to section function
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Auto-update current section based on scroll position
+  useEffect(() => {
+    if (!responsive.isMobile) return;
+
+    const handleScroll = () => {
+      const sectionElements = sections.map(s => document.getElementById(s.id)).filter(Boolean);
+      const scrollY = window.scrollY + 100; // Offset for header
+
+      for (let i = sectionElements.length - 1; i >= 0; i--) {
+        const element = sectionElements[i];
+        if (element && element.offsetTop <= scrollY) {
+          setCurrentSection(i);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [responsive.isMobile]);
 
   // Physics section state
   const [beta, setBeta] = useState(0.08);          // § 8 inverse temperature
@@ -757,18 +959,43 @@ export default function Monograph() {
 
     Plotly.react(barRef.current, traces, {
       paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 20, b: 42, l: 56 },
-      xaxis: { title: { text: "S (sum)", font: { size: 12, family: FONT_MATH, style: "italic" } }, gridcolor: C.rule, zerolinecolor: C.rule, color: C.inkDim, linecolor: C.rule },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 32, l: 40 } : { t: 10, r: 20, b: 42, l: 56 },
+      xaxis: {
+        title: {
+          text: "S (sum)",
+          font: { size: responsive.isMobile ? 10 : 12, family: FONT_MATH, style: "italic" }
+        },
+        gridcolor: C.rule,
+        zerolinecolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
       yaxis: {
-        title: { text: logScale ? "log p₃(S)" : "p₃(S)", font: { size: 12, family: FONT_MATH, style: "italic" } },
-        gridcolor: C.rule, zerolinecolor: C.rule, color: C.inkDim, linecolor: C.rule,
+        title: {
+          text: logScale ? "log p₃(S)" : "p₃(S)",
+          font: { size: responsive.isMobile ? 10 : 12, family: FONT_MATH, style: "italic" }
+        },
+        gridcolor: C.rule,
+        zerolinecolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
         type: logScale ? "log" : "linear",
       },
       annotations, shapes,
       showlegend: gaussianOn || symmetry,
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.98, y: 0.98, xanchor: "right" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.95 : 0.98,
+        y: responsive.isMobile ? 0.95 : 0.98,
+        xanchor: "right"
+      },
+      hoverlabel: {
+        bgcolor: C.panel,
+        bordercolor: C.gold,
+        font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 }
+      },
     }, { displayModeBar: false, responsive: true });
 
     barRef.current.on("plotly_click", (d) => {
@@ -788,31 +1015,65 @@ export default function Monograph() {
       {
         x: xs, y: ys, z: zs, mode: "markers", type: "scatter3d",
         marker: {
-          size: debouncedM <= 25 ? 3.2 : debouncedM <= 60 ? 2.2 : 1.6,
+          size: responsive.isMobile ? (debouncedM <= 25 ? 2.5 : debouncedM <= 60 ? 1.8 : 1.2) : (debouncedM <= 25 ? 3.2 : debouncedM <= 60 ? 2.2 : 1.6),
           color: ss,
           colorscale: [[0, "#2b3978"], [0.25, "#5fa8a8"], [0.5, "#d4a574"], [0.75, "#c45050"], [1, "#f8f0d8"]],
           opacity: hx.length > 0 ? 0.38 : 0.72,
-          colorbar: { title: { text: "S", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9, family: FONT_MONO }, len: 0.55, thickness: 9, x: 1.0 },
+          colorbar: {
+            title: { text: "S", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+            tickfont: { color: C.inkDim, size: responsive.isMobile ? 7 : 9, family: FONT_MONO },
+            len: responsive.isMobile ? 0.45 : 0.55,
+            thickness: responsive.isMobile ? 6 : 9,
+            x: responsive.isMobile ? 0.85 : 1.0
+          },
         },
         hovertemplate: "(%{x}, %{y}, %{z})<br>S=%{marker.color}<extra></extra>",
       },
       hx.length ? {
         x: hx, y: hy, z: hz, mode: "markers", type: "scatter3d",
-        marker: { size: 5.5, color: C.crimson, symbol: "diamond", opacity: 1, line: { color: C.inkBr, width: 0.8 } },
+        marker: {
+          size: responsive.isMobile ? 4.5 : 5.5,
+          color: C.crimson,
+          symbol: "diamond",
+          opacity: 1,
+          line: { color: C.inkBr, width: 0.8 }
+        },
         hovertemplate: `<i>S</i>=${selectedS}<br>(%{x},%{y},%{z})<extra></extra>`,
       } : null,
     ].filter(Boolean), {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 }, showlegend: false,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
+      showlegend: false,
       scene: {
-        xaxis: { title: { text: "x", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true, zerolinecolor: C.rule },
-        yaxis: { title: { text: "y", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true, zerolinecolor: C.rule },
-        zaxis: { title: { text: "z", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true, zerolinecolor: C.rule },
+        xaxis: {
+          title: { text: "x", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true,
+          zerolinecolor: C.rule
+        },
+        yaxis: {
+          title: { text: "y", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true,
+          zerolinecolor: C.rule
+        },
+        zaxis: {
+          title: { text: "z", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true,
+          zerolinecolor: C.rule
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.55, y: 1.55, z: 0.85 } },
+        camera: responsive.isMobile ? { eye: { x: 1.25, y: 1.25, z: 0.65 } } : { eye: { x: 1.55, y: 1.55, z: 0.85 } },
       },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [scatterData, debouncedM, selectedS]);
 
@@ -823,19 +1084,37 @@ export default function Monograph() {
       x: heatData.x, y: heatData.y, z: heatData.z, type: "heatmap",
       colorscale: [[0, C.plotBg], [0.05, "#1a2640"], [0.3, C.teal], [0.6, C.gold], [0.85, C.crimson], [1, C.inkBr]],
       showscale: true,
-      colorbar: { title: { text: "n", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9, family: FONT_MONO }, len: 0.88, thickness: 9 },
+      colorbar: {
+        title: { text: "n", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+        tickfont: { color: C.inkDim, size: responsive.isMobile ? 7 : 9, family: FONT_MONO },
+        len: responsive.isMobile ? 0.75 : 0.88,
+        thickness: responsive.isMobile ? 6 : 9
+      },
       hovertemplate: "x=%{x}, S=%{y}<br>n=%{z}<extra></extra>",
     }, {
       x: [1, debouncedM], y: [selectedS, selectedS], type: "scatter", mode: "lines",
-      line: { color: C.crimson, width: 1.4, dash: "dash" }, hoverinfo: "skip", showlegend: false,
-    }], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 10, b: 42, l: 52 },
-      xaxis: { title: { text: "x  (smallest part)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "S", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
+      line: { color: C.crimson, width: responsive.isMobile ? 1.2 : 1.4, dash: "dash" },
+      hoverinfo: "skip",
       showlegend: false,
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+    }], {
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 8, b: 32, l: 40 } : { t: 10, r: 10, b: 42, l: 52 },
+      xaxis: {
+        title: { text: "x  (smallest part)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "S", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      showlegend: false,
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [heatData, debouncedM, selectedS]);
 
@@ -859,21 +1138,44 @@ export default function Monograph() {
       },
       selCdf !== null ? {
         x: [selectedS], y: [selCdf], type: "scatter", mode: "markers",
-        marker: { size: 9, color: C.crimson, line: { color: C.inkBr, width: 1.5 }, symbol: "circle" }, showlegend: false,
+        marker: {
+          size: responsive.isMobile ? 7 : 9,
+          color: C.crimson,
+          line: { color: C.inkBr, width: 1.5 },
+          symbol: "circle"
+        },
+        showlegend: false,
         hovertemplate: `S=%{x}<br>F=%{y:.4f}<extra></extra>`,
       } : null,
     ].filter(Boolean), {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 40, l: 50 },
-      xaxis: { title: { text: "S", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "F(S)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, range: [0, 1.02] },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.02, y: 0.98 },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 32, l: 40 } : { t: 10, r: 15, b: 40, l: 50 },
+      xaxis: {
+        title: { text: "S", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "F(S)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        range: [0, 1.02]
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.05 : 0.02,
+        y: responsive.isMobile ? 0.95 : 0.98
+      },
       shapes: selCdf !== null ? [
         { type: "line", x0: selectedS, x1: selectedS, y0: 0, y1: selCdf, line: { color: C.crimson, width: 1, dash: "dot" } },
         { type: "line", x0: partData.minSum, x1: selectedS, y0: selCdf, y1: selCdf, line: { color: C.crimson, width: 1, dash: "dot" } },
       ] : [],
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [partData, cdf, selectedS, theoMean, theoSD]);
 
@@ -889,17 +1191,35 @@ export default function Monograph() {
       } else { naive.push(null); corrected.push(null); }
     }
     Plotly.react(errRef.current, [
-      { x: partData.sums, y: naive, type: "scatter", mode: "lines", line: { color: C.crimson, width: 1.5 }, name: "Cayley–Sylvester", hovertemplate: "S=%{x}<br>ε=%{y:.2f}%<extra>⌊S²/12⌉</extra>" },
-      { x: partData.sums, y: corrected, type: "scatter", mode: "lines", line: { color: C.gold, width: 2 }, name: "Reflected", hovertemplate: "S=%{x}<br>ε=%{y:.2f}%<extra>corrected</extra>" },
+      { x: partData.sums, y: naive, type: "scatter", mode: "lines", line: { color: C.crimson, width: responsive.isMobile ? 1.2 : 1.5 }, name: "Cayley–Sylvester", hovertemplate: "S=%{x}<br>ε=%{y:.2f}%<extra>⌊S²/12⌉</extra>" },
+      { x: partData.sums, y: corrected, type: "scatter", mode: "lines", line: { color: C.gold, width: responsive.isMobile ? 1.8 : 2 }, name: "Reflected", hovertemplate: "S=%{x}<br>ε=%{y:.2f}%<extra>corrected</extra>" },
       { x: [partData.minSum, partData.maxSum], y: [0, 0], type: "scatter", mode: "lines", line: { color: C.inkFaint, width: 1, dash: "dot" }, showlegend: false, hoverinfo: "skip" },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 40, l: 54 },
-      xaxis: { title: { text: "S", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "relative error (%)", font: { size: 11 } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, range: [-100, 100] },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.02, y: 0.02, yanchor: "bottom" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 32, l: 44 } : { t: 10, r: 15, b: 40, l: 54 },
+      xaxis: {
+        title: { text: "S", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "relative error (%)", font: { size: responsive.isMobile ? 9 : 11 } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        range: [-100, 100]
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.05 : 0.02,
+        y: responsive.isMobile ? 0.05 : 0.02,
+        yanchor: "bottom"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [partData, debouncedM]);
 
@@ -909,23 +1229,40 @@ export default function Monograph() {
     Plotly.react(convRef.current, [
       {
         x: conv.xs, y: conv.ys, type: "scatter", mode: "markers",
-        marker: { size: 4, color: conv.xs.map((_, i) => i), colorscale: [[0, C.crimson], [1, C.teal]], line: { width: 0 } },
+        marker: { size: responsive.isMobile ? 3.5 : 4, color: conv.xs.map((_, i) => i), colorscale: [[0, C.crimson], [1, C.teal]], line: { width: 0 } },
         name: "log p₃(S)/S²",
         hovertemplate: "log S=%{x:.2f}<br>log(p/S²)=%{y:.3f}<extra></extra>",
       },
       {
         x: [Math.min(...conv.xs), Math.max(...conv.xs)], y: [conv.ref, conv.ref], type: "scatter", mode: "lines",
-        line: { color: C.gold, width: 1.8, dash: "dash" }, name: "log(1/12) ≈ −1.079",
+        line: { color: C.gold, width: responsive.isMobile ? 1.5 : 1.8, dash: "dash" },
+        name: "log(1/12) ≈ −1.079",
         hovertemplate: "limit: log(1/12)<extra></extra>",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 40, l: 56 },
-      xaxis: { title: { text: "log₁₀ S", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "log₁₀(p₃(S)/S²)", font: { size: 11 } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.02, y: 0.98 },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 32, l: 46 } : { t: 10, r: 15, b: 40, l: 56 },
+      xaxis: {
+        title: { text: "log₁₀ S", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "log₁₀(p₃(S)/S²)", font: { size: responsive.isMobile ? 9 : 11 } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.05 : 0.02,
+        y: responsive.isMobile ? 0.95 : 0.98
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [conv]);
 
@@ -936,23 +1273,44 @@ export default function Monograph() {
     Plotly.react(qqRef.current, [
       {
         x: qq.xs, y: qq.ys, type: "scatter", mode: "markers",
-        marker: { size: 4.5, color: C.teal, line: { color: C.tealBr, width: 0.5 } },
+        marker: { size: responsive.isMobile ? 4 : 4.5, color: C.teal, line: { color: C.tealBr, width: responsive.isMobile ? 0.3 : 0.5 } },
         name: "quantiles",
         hovertemplate: "Φ⁻¹=%{x:.2f}<br>z=%{y:.2f}<extra></extra>",
       },
       {
         x: [-lim, lim], y: [-lim, lim], type: "scatter", mode: "lines",
-        line: { color: C.gold, width: 1.5, dash: "dash" }, name: "y = x",
+        line: { color: C.gold, width: responsive.isMobile ? 1.2 : 1.5, dash: "dash" },
+        name: "y = x",
         hoverinfo: "skip",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 40, l: 52 },
-      xaxis: { title: { text: "theoretical Φ⁻¹(p)", font: { size: 11 } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, range: [-lim, lim], zerolinecolor: C.inkFaint },
-      yaxis: { title: { text: "empirical z-quantile", font: { size: 11 } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, range: [-lim, lim], zerolinecolor: C.inkFaint },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.02, y: 0.98 },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 32, l: 42 } : { t: 10, r: 15, b: 40, l: 52 },
+      xaxis: {
+        title: { text: "theoretical Φ⁻¹(p)", font: { size: responsive.isMobile ? 9 : 11 } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        range: [-lim, lim],
+        zerolinecolor: C.inkFaint
+      },
+      yaxis: {
+        title: { text: "empirical z-quantile", font: { size: responsive.isMobile ? 9 : 11 } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        range: [-lim, lim],
+        zerolinecolor: C.inkFaint
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.05 : 0.02,
+        y: responsive.isMobile ? 0.95 : 0.98
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [qq]);
 
@@ -972,19 +1330,44 @@ export default function Monograph() {
         x: besteinData.sums,
         y: besteinData.weight.map(w => besteinData.Z ? w / besteinData.Z : 0),
         type: "scatter", mode: "lines",
-        line: { color: C.gold, width: 2.2 }, name: "g(S)·e^(−βS) / Z",
+        line: { color: C.gold, width: responsive.isMobile ? 1.8 : 2.2 },
+        name: "g(S)·e^(−βS) / Z",
         hovertemplate: "S=%{x}  π=%{y:.4f}<extra></extra>",
         yaxis: "y2",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 56, b: 44, l: 56 },
-      xaxis: { title: { text: "S = n₁+n₂+n₃ (energy / ħω)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "g(S)  degeneracy", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, side: "left" },
-      yaxis2: { title: { text: "π(S) = Boltzmann", font: { size: 11, style: "italic" } }, overlaying: "y", side: "right", color: C.gold, gridcolor: "rgba(0,0,0,0)" },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.98, y: 0.98, xanchor: "right" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 46, b: 36, l: 46 } : { t: 10, r: 56, b: 44, l: 56 },
+      xaxis: {
+        title: { text: "S = n₁+n₂+n₃ (energy / ħω)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "g(S)  degeneracy", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        side: "left"
+      },
+      yaxis2: {
+        title: { text: "π(S) = Boltzmann", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        overlaying: "y",
+        side: "right",
+        color: C.gold,
+        gridcolor: "rgba(0,0,0,0)"
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.95 : 0.98,
+        y: responsive.isMobile ? 0.95 : 0.98,
+        xanchor: "right"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [besteinData]);
 
@@ -1012,23 +1395,48 @@ export default function Monograph() {
       type: "surface", x: Ms, y: betas, z: zMat,
       colorscale: [[0, "#1a1f3a"], [0.25, C.indigo], [0.5, C.teal], [0.75, C.gold], [1, C.crimson]],
       contours: { z: { show: true, color: C.ink, width: 1, highlight: false } },
-      colorbar: { title: { text: "log₁₀ Z", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9 }, len: 0.7, thickness: 9, x: 1.0 },
+      colorbar: {
+        title: { text: "log₁₀ Z", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+        tickfont: { color: C.inkDim, size: responsive.isMobile ? 8 : 9 },
+        len: responsive.isMobile ? 0.6 : 0.7,
+        thickness: responsive.isMobile ? 7 : 9,
+        x: responsive.isMobile ? 0.95 : 1.0
+      },
       hovertemplate: "M=%{x}  β=%{y:.3f}<br>log Z=%{z:.3f}<extra></extra>",
     }, {
       type: "scatter3d", mode: "markers",
       x: [debouncedM], y: [beta], z: [Math.log10(Math.max(besteinData.Z, 1e-10))],
-      marker: { size: 7, color: C.crimson, symbol: "diamond", line: { color: C.inkBr, width: 1.2 } },
+      marker: { size: responsive.isMobile ? 6 : 7, color: C.crimson, symbol: "diamond", line: { color: C.inkBr, width: responsive.isMobile ? 1 : 1.2 } },
       name: "current", hovertemplate: "current (M,β)<extra></extra>", showlegend: false,
     }], {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 }, showlegend: false,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
+      showlegend: false,
       scene: {
-        xaxis: { title: { text: "M", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "β", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "log Z", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "M", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "β", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "log Z", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.7, y: -1.55, z: 0.9 } },
+        camera: { eye: { x: responsive.isMobile ? 1.5 : 1.7, y: responsive.isMobile ? -1.3 : -1.55, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
     }, { displayModeBar: false, responsive: true });
@@ -1049,12 +1457,24 @@ export default function Monograph() {
         name: "#vacuum bubble topologies",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 42, l: 56 },
-      xaxis: { title: { text: "perturbative order  n (half-sum 2n=S)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "# topologies", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, type: "log" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 34, l: 46 } : { t: 10, r: 15, b: 42, l: 56 },
+      xaxis: {
+        title: { text: "perturbative order  n (half-sum 2n=S)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "# topologies", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        type: "log"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [feynmanData, selectedS]);
 
@@ -1091,17 +1511,38 @@ export default function Monograph() {
     ];
     Plotly.react(feynmanDiagRef.current, traces, {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
       scene: {
-        xaxis: { title: { text: "p_x", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "p_y", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "loop", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "p_x", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "p_y", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "loop", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.6, y: 1.6, z: 0.9 } },
+        camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? 1.4 : 1.6, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [conjTriplet]);
 
@@ -1122,25 +1563,48 @@ export default function Monograph() {
       y: nloData.map(p => p.y),
       z: nloData.map(p => p.z),
       marker: {
-        size: nloData.map(p => Math.max(3, 14 * (1 - p.deltaK / maxDk))),
+        size: nloData.map(p => Math.max(responsive.isMobile ? 2.5 : 3, responsive.isMobile ? 12 : 14 * (1 - p.deltaK / maxDk))),
         color: nloData.map(p => p.deltaK),
         colorscale: [[0, C.teal], [0.35, C.gold], [0.7, C.crimson], [1, "#2b0e0e"]],
         reversescale: false,
         opacity: 0.85,
-        line: { color: C.inkBr, width: 0.3 },
-        colorbar: { title: { text: "|Δk|", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9 }, len: 0.6, thickness: 9 },
+        line: { color: C.inkBr, width: responsive.isMobile ? 0.2 : 0.3 },
+        colorbar: {
+          title: { text: "|Δk|", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+          tickfont: { color: C.inkDim, size: responsive.isMobile ? 8 : 9 },
+          len: responsive.isMobile ? 0.5 : 0.6,
+          thickness: responsive.isMobile ? 7 : 9
+        },
       },
       hovertemplate: "(ω₁,ω₂,ω₃)=(%{x},%{y},%{z})<br>|Δk|=%{marker.color:.3f}<extra></extra>",
     }], {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
       scene: {
-        xaxis: { title: { text: "ω₁", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "ω₂", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "ω₃", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "ω₁", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "ω₂", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "ω₃", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.5, y: 1.5, z: 1.0 } },
+        camera: { eye: { x: responsive.isMobile ? 1.3 : 1.5, y: responsive.isMobile ? 1.3 : 1.5, z: responsive.isMobile ? 0.8 : 1.0 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
     }, { displayModeBar: false, responsive: true });
@@ -1162,7 +1626,8 @@ export default function Monograph() {
     Plotly.react(nloDispRef.current, [
       {
         x: ws, y: kvals, type: "scatter", mode: "lines",
-        line: { color: C.teal, width: 2 }, name: "k(ω) = ω + αω²",
+        line: { color: C.teal, width: responsive.isMobile ? 1.8 : 2 },
+        name: "k(ω) = ω + αω²",
         hovertemplate: "ω=%{x}  k=%{y:.2f}<extra></extra>",
         xaxis: "x", yaxis: "y",
       },
@@ -1174,16 +1639,42 @@ export default function Monograph() {
         xaxis: "x2", yaxis: "y2",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 18, r: 15, b: 42, l: 52 },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 14, r: 12, b: 34, l: 42 } : { t: 18, r: 15, b: 42, l: 52 },
       grid: { rows: 1, columns: 2, pattern: "independent" },
-      xaxis: { domain: [0, 0.45], title: { text: "ω", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "k(ω)", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      xaxis2: { domain: [0.55, 1], title: { text: "|Δk|", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis2: { title: { text: "# triplets", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      xaxis: {
+        domain: responsive.isMobile ? [0, 0.4] : [0, 0.45],
+        title: { text: "ω", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "k(ω)", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      xaxis2: {
+        domain: responsive.isMobile ? [0.5, 1] : [0.55, 1],
+        title: { text: "|Δk|", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis2: {
+        title: { text: "# triplets", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [nloData, nloDispersion, debouncedM]);
 
@@ -1201,27 +1692,45 @@ export default function Monograph() {
       line: {
         color: colors,
         colorscale: [[0, C.indigo], [0.33, C.teal], [0.66, C.gold], [1, C.crimson]],
-        width: 3,
+        width: responsive.isMobile ? 2.5 : 3,
       },
       name: "trajectory",
       hovertemplate: "x=%{x:.2f}  y=%{y:.2f}  z=%{z:.2f}<extra></extra>",
     }, {
       type: "scatter3d", mode: "markers",
       x: [lorenzData.xs[0]], y: [lorenzData.ys[0]], z: [lorenzData.zs[0]],
-      marker: { size: 6, color: C.inkBr, symbol: "cross" },
+      marker: { size: responsive.isMobile ? 5 : 6, color: C.inkBr, symbol: "cross" },
       name: "t=0", showlegend: false,
     }], {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
       scene: {
-        xaxis: { title: { text: "x", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "y", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "z", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "x", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "y", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "z", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.6, y: 1.6, z: 0.7 } },
+        camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? 1.4 : 1.6, z: responsive.isMobile ? 0.5 : 0.7 } },
       },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [lorenzData]);
 
@@ -1240,15 +1749,26 @@ export default function Monograph() {
     }
     Plotly.react(poincareRef.current, [{
       x: px, y: py, type: "scatter", mode: "markers",
-      marker: { size: 4, color: C.gold, opacity: 0.65, line: { color: C.inkBr, width: 0.3 } },
+      marker: { size: responsive.isMobile ? 3.5 : 4, color: C.gold, opacity: 0.65, line: { color: C.inkBr, width: responsive.isMobile ? 0.2 : 0.3 } },
       hovertemplate: "x=%{x:.2f}  y=%{y:.2f}<extra></extra>",
     }], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 12, b: 42, l: 48 },
-      xaxis: { title: { text: "x  (z = ρ−1 section)", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "y", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 10, b: 34, l: 38 } : { t: 10, r: 12, b: 42, l: 48 },
+      xaxis: {
+        title: { text: "x  (z = ρ−1 section)", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "y", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [lorenzData, lorenzRho]);
 
@@ -1262,24 +1782,45 @@ export default function Monograph() {
     Plotly.react(kolmogRef.current, [
       {
         x: kolmogData.ks, y: kolmogData.Ek, type: "scatter", mode: "lines",
-        line: { color: C.gold, width: 2.2 }, name: "E(k) ∝ k^(−5/3)",
+        line: { color: C.gold, width: responsive.isMobile ? 1.8 : 2.2 },
+        name: "E(k) ∝ k^(−5/3)",
         hovertemplate: "k=%{x}  E=%{y:.4e}<extra>K41</extra>",
       },
       {
         x: partData.sums, y: ps.map(v => v !== null ? v / partData.totalCount : null),
         type: "scatter", mode: "lines+markers",
-        line: { color: C.teal, width: 1.6 }, marker: { size: 3, color: C.teal },
+        line: { color: C.teal, width: responsive.isMobile ? 1.3 : 1.6 },
+        marker: { size: responsive.isMobile ? 2.5 : 3, color: C.teal },
         name: "p₃(S|M) / |T_M|",
         hovertemplate: "S=%{x}  density=%{y:.4e}<extra>empirical</extra>",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 44, l: 64 },
-      xaxis: { title: { text: "wavenumber k  (or sum S)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, type: "log" },
-      yaxis: { title: { text: "spectral density", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, type: "log" },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.02, y: 0.02, yanchor: "bottom" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 36, l: 54 } : { t: 10, r: 15, b: 44, l: 64 },
+      xaxis: {
+        title: { text: "wavenumber k  (or sum S)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        type: "log"
+      },
+      yaxis: {
+        title: { text: "spectral density", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        type: "log"
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.05 : 0.02,
+        y: responsive.isMobile ? 0.05 : 0.02,
+        yanchor: "bottom"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [kolmogData, partData]);
 
@@ -1293,25 +1834,48 @@ export default function Monograph() {
       y: triadData.map(p => p.y),
       z: triadData.map(p => p.z),
       marker: {
-        size: 3,
+        size: responsive.isMobile ? 2.5 : 3,
         color: triadData.map(p => p.T),
         colorscale: [[0, "#0c1530"], [0.25, C.indigo], [0.5, C.teal], [0.75, C.gold], [1, C.crimson]],
         opacity: 0.65,
-        colorbar: { title: { text: "T = √(k₁k₂k₃)", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9 }, len: 0.65, thickness: 9 },
+        colorbar: {
+          title: { text: "T = √(k₁k₂k₃)", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+          tickfont: { color: C.inkDim, size: responsive.isMobile ? 8 : 9 },
+          len: responsive.isMobile ? 0.55 : 0.65,
+          thickness: responsive.isMobile ? 7 : 9
+        },
       },
       hovertemplate: "k=(%{x},%{y},%{z})<br>T=%{marker.color:.2f}<extra></extra>",
     }], {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
       scene: {
-        xaxis: { title: { text: "k₁", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "k₂", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "k₃", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "k₁", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "k₂", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "k₃", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.55, y: 1.55, z: 0.9 } },
+        camera: { eye: { x: responsive.isMobile ? 1.3 : 1.55, y: responsive.isMobile ? 1.3 : 1.55, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [triadData]);
 
@@ -1323,24 +1887,43 @@ export default function Monograph() {
     Plotly.react(gutRef.current, [
       {
         x: grData.mags, y: grData.N, type: "scatter", mode: "lines",
-        line: { color: C.crimson, width: 2 }, name: `log N = a − b·m  (b=${grBvalue.toFixed(2)})`,
+        line: { color: C.crimson, width: responsive.isMobile ? 1.8 : 2 },
+        name: `log N = a − b·m  (b=${grBvalue.toFixed(2)})`,
         hovertemplate: "m=%{x}  N=%{y:.3e}<extra>GR</extra>",
       },
       {
         x: grCompare.xs, y: grCompare.yPart.map(v => Math.pow(10, v)),
         type: "scatter", mode: "markers",
-        marker: { size: 4, color: C.teal, opacity: 0.75 },
+        marker: { size: responsive.isMobile ? 3.5 : 4, color: C.teal, opacity: 0.75 },
         name: "p₃(S|M)",
         hovertemplate: "S=%{x}  p=%{y:.2e}<extra>empirical</extra>",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 42, l: 56 },
-      xaxis: { title: { text: "magnitude m  (or scaled sum S/5)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "frequency (log scale)", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, type: "log" },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.98, y: 0.98, xanchor: "right" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 34, l: 46 } : { t: 10, r: 15, b: 42, l: 56 },
+      xaxis: {
+        title: { text: "magnitude m  (or scaled sum S/5)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "frequency (log scale)", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        type: "log"
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.95 : 0.98,
+        y: responsive.isMobile ? 0.95 : 0.98,
+        xanchor: "right"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [grData, grCompare, grBvalue]);
 
@@ -1350,18 +1933,43 @@ export default function Monograph() {
   useEffect(() => {
     if (!bbnRef.current) return;
     Plotly.react(bbnRef.current, [
-      { x: bbnData.T, y: bbnData.Yp, type: "scatter", mode: "lines", line: { color: C.gold, width: 2.2 }, name: "Y_p (⁴He mass fraction)", hovertemplate: "T=%{x:.2f}<br>Y_p=%{y:.4f}<extra></extra>" },
-      { x: bbnData.T, y: bbnData.DH, type: "scatter", mode: "lines", line: { color: C.teal, width: 2 }, name: "D/H", yaxis: "y2", hovertemplate: "T=%{x:.2f}<br>D/H=%{y:.2e}<extra></extra>" },
-      { x: bbnData.T, y: bbnData.Li7, type: "scatter", mode: "lines", line: { color: C.crimson, width: 1.6, dash: "dot" }, name: "⁷Li/H", yaxis: "y2", hovertemplate: "T=%{x:.2f}<br>Li/H=%{y:.2e}<extra></extra>" },
+      { x: bbnData.T, y: bbnData.Yp, type: "scatter", mode: "lines", line: { color: C.gold, width: responsive.isMobile ? 1.8 : 2.2 }, name: "Y_p (⁴He mass fraction)", hovertemplate: "T=%{x:.2f}<br>Y_p=%{y:.4f}<extra></extra>" },
+      { x: bbnData.T, y: bbnData.DH, type: "scatter", mode: "lines", line: { color: C.teal, width: responsive.isMobile ? 1.6 : 2 }, name: "D/H", yaxis: "y2", hovertemplate: "T=%{x:.2f}<br>D/H=%{y:.2e}<extra></extra>" },
+      { x: bbnData.T, y: bbnData.Li7, type: "scatter", mode: "lines", line: { color: C.crimson, width: responsive.isMobile ? 1.3 : 1.6, dash: "dot" }, name: "⁷Li/H", yaxis: "y2", hovertemplate: "T=%{x:.2f}<br>Li/H=%{y:.2e}<extra></extra>" },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 12, r: 56, b: 44, l: 56 },
-      xaxis: { title: { text: "T / T_ref  (cooling →)", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule, autorange: "reversed", type: "log" },
-      yaxis: { title: { text: "Y_p", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis2: { title: { text: "D/H,  ⁷Li/H", font: { size: 11, style: "italic" } }, overlaying: "y", side: "right", color: C.teal, gridcolor: "rgba(0,0,0,0)", type: "log" },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.02, y: 0.98 },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 10, r: 46, b: 36, l: 46 } : { t: 12, r: 56, b: 44, l: 56 },
+      xaxis: {
+        title: { text: "T / T_ref  (cooling →)", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule,
+        autorange: "reversed",
+        type: "log"
+      },
+      yaxis: {
+        title: { text: "Y_p", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis2: {
+        title: { text: "D/H,  ⁷Li/H", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        overlaying: "y",
+        side: "right",
+        color: C.teal,
+        gridcolor: "rgba(0,0,0,0)",
+        type: "log"
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.05 : 0.02,
+        y: responsive.isMobile ? 0.95 : 0.98
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [bbnData]);
 
@@ -1375,7 +1983,7 @@ export default function Monograph() {
     const trBg = {
       type: "scatter3d", mode: "markers",
       x: all.xs, y: all.ys, z: all.zs,
-      marker: { size: debouncedM <= 25 ? 2.2 : 1.4, color: C.indigo, opacity: 0.12 },
+      marker: { size: debouncedM <= 25 ? (responsive.isMobile ? 1.8 : 2.2) : (responsive.isMobile ? 1.2 : 1.4), color: C.indigo, opacity: 0.12 },
       name: "T_M",
       hovertemplate: "(%{x},%{y},%{z})<extra>T_M</extra>",
     };
@@ -1386,28 +1994,51 @@ export default function Monograph() {
       y: sisData.map(p => p.y),
       z: sisData.map(p => p.z),
       marker: {
-        size: 5,
+        size: responsive.isMobile ? 4 : 5,
         color: sisData.map(p => p.norm2),
         colorscale: [[0, C.teal], [0.5, C.gold], [1, C.crimson]],
         opacity: 0.95,
-        line: { color: C.inkBr, width: 0.5 },
-        colorbar: { title: { text: "‖x‖²", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9 }, len: 0.55, thickness: 9 },
+        line: { color: C.inkBr, width: responsive.isMobile ? 0.3 : 0.5 },
+        colorbar: {
+          title: { text: "‖x‖²", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+          tickfont: { color: C.inkDim, size: responsive.isMobile ? 8 : 9 },
+          len: responsive.isMobile ? 0.45 : 0.55,
+          thickness: responsive.isMobile ? 7 : 9
+        },
       },
       name: "SIS solutions",
       hovertemplate: "(%{x},%{y},%{z})<br>‖x‖²=%{marker.color}<extra>SIS</extra>",
     };
     Plotly.react(sisRef.current, [trBg, trSis], {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
       scene: {
-        xaxis: { title: { text: "x₁", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "x₂", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "x₃", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "x₁", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "x₂", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "x₃", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.6, y: 1.6, z: 0.9 } },
+        camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? 1.4 : 1.6, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [sisData, scatterData, debouncedM]);
 
@@ -1427,12 +2058,23 @@ export default function Monograph() {
       marker: { color: rCounts.map((_, i) => i === 0 || i === sisQ - 1 || i === 1 ? C.crimson : C.indigo), line: { width: 0 } },
       hovertemplate: "residue=%{x}<br>count=%{y}<extra></extra>",
     }], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 42, l: 52 },
-      xaxis: { title: { text: "residue class mod q", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "# lattice points", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 34, l: 42 } : { t: 10, r: 15, b: 42, l: 52 },
+      xaxis: {
+        title: { text: "residue class mod q", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "# lattice points", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [debouncedM, sisQ, sisA1, sisA2, sisA3]);
 
@@ -1444,24 +2086,44 @@ export default function Monograph() {
     Plotly.react(qwalkRef.current, [
       {
         x: qwalkData.sums, y: qwalkData.amp, type: "scatter", mode: "lines",
-        line: { color: C.violet, width: 2 }, fill: "tozeroy", fillcolor: `${C.violet}22`,
+        line: { color: C.violet, width: responsive.isMobile ? 1.8 : 2 },
+        fill: "tozeroy",
+        fillcolor: `${C.violet}22`,
         name: "|ψ(S,t)|²",
         hovertemplate: "S=%{x}  |ψ|²=%{y:.4e}<extra></extra>",
       },
       {
         x: partData.sums, y: partData.counts.map(c => partData.totalCount ? c / partData.totalCount : 0),
         type: "scatter", mode: "lines",
-        line: { color: C.gold, width: 1.5, dash: "dot" }, name: "classical p₃(S|M)/|T_M|",
+        line: { color: C.gold, width: responsive.isMobile ? 1.3 : 1.5, dash: "dot" },
+        name: "classical p₃(S|M)/|T_M|",
         hovertemplate: "S=%{x}  π=%{y:.4e}<extra></extra>",
       },
     ], {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: C.plotBg,
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 10, r: 15, b: 42, l: 56 },
-      xaxis: { title: { text: "S", font: { size: 12, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      yaxis: { title: { text: "probability", font: { size: 11, style: "italic" } }, gridcolor: C.rule, color: C.inkDim, linecolor: C.rule },
-      legend: { font: { size: 10, color: C.inkDim, family: FONT_MATH }, bgcolor: "rgba(0,0,0,0)", x: 0.98, y: 0.98, xanchor: "right" },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: C.plotBg,
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 8, r: 12, b: 34, l: 46 } : { t: 10, r: 15, b: 42, l: 56 },
+      xaxis: {
+        title: { text: "S", font: { size: responsive.isMobile ? 10 : 12, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      yaxis: {
+        title: { text: "probability", font: { size: responsive.isMobile ? 9 : 11, style: "italic" } },
+        gridcolor: C.rule,
+        color: C.inkDim,
+        linecolor: C.rule
+      },
+      legend: {
+        font: { size: responsive.isMobile ? 8 : 10, color: C.inkDim, family: FONT_MATH },
+        bgcolor: "rgba(0,0,0,0)",
+        x: responsive.isMobile ? 0.95 : 0.98,
+        y: responsive.isMobile ? 0.95 : 0.98,
+        xanchor: "right"
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [qwalkData, partData]);
 
@@ -1478,20 +2140,43 @@ export default function Monograph() {
       type: "surface", x: Svals, y: tvals, z: zMat,
       colorscale: [[0, "#0a0d20"], [0.25, C.indigo], [0.55, C.violet], [0.8, C.gold], [1, C.crimson]],
       contours: { z: { show: false } },
-      colorbar: { title: { text: "|ψ|²", font: { color: C.inkDim, size: 11, family: FONT_MATH, style: "italic" } }, tickfont: { color: C.inkDim, size: 9 }, len: 0.65, thickness: 9 },
+      colorbar: {
+        title: { text: "|ψ|²", font: { color: C.inkDim, size: responsive.isMobile ? 9 : 11, family: FONT_MATH, style: "italic" } },
+        tickfont: { color: C.inkDim, size: responsive.isMobile ? 8 : 9 },
+        len: responsive.isMobile ? 0.55 : 0.65,
+        thickness: responsive.isMobile ? 7 : 9
+      },
       hovertemplate: "S=%{x}  t=%{y}<br>|ψ|²=%{z:.4e}<extra></extra>",
     }], {
       paper_bgcolor: "rgba(0,0,0,0)",
-      font: { family: FONT_MATH, size: 11, color: C.inkDim },
-      margin: { t: 8, r: 8, b: 8, l: 8 },
+      font: { family: FONT_MATH, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      margin: responsive.isMobile ? { t: 6, r: 6, b: 6, l: 6 } : { t: 8, r: 8, b: 8, l: 8 },
       scene: {
-        xaxis: { title: { text: "S", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        yaxis: { title: { text: "t (steps)", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
-        zaxis: { title: { text: "|ψ|²", font: { style: "italic" } }, gridcolor: C.rule, color: C.inkDim, backgroundcolor: C.plotBg, showbackground: true },
+        xaxis: {
+          title: { text: "S", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        yaxis: {
+          title: { text: "t (steps)", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
+        zaxis: {
+          title: { text: "|ψ|²", font: { style: "italic" } },
+          gridcolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true
+        },
         bgcolor: C.plotBg,
-        camera: { eye: { x: 1.6, y: -1.5, z: 0.9 } },
+        camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? -1.3 : -1.5, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
-      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
   }, [debouncedM, selectedS, qwalkData]);
 
@@ -1519,7 +2204,12 @@ export default function Monograph() {
 
   return (
     <div style={{
-      fontFamily: FONT_MATH, fontSize: 17, background: C.bg, color: C.ink, minHeight: "100vh",
+      fontFamily: FONT_MATH,
+      fontSize: responsiveScale(17),
+      background: C.bg,
+      color: C.ink,
+      minHeight: "100vh",
+      padding: responsive.isMobile ? "0" : "0",
       backgroundImage: `
         radial-gradient(ellipse at 20% 0%, ${C.gold}08 0%, transparent 55%),
         radial-gradient(ellipse at 80% 100%, ${C.indigo}0c 0%, transparent 55%),
@@ -1535,18 +2225,26 @@ export default function Monograph() {
         body { overflow-x: hidden; }
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; outline: none; }
         input[type=range]::-webkit-slider-runnable-track {
-          height: 4px; border-radius: 2px;
+          height: responsive.isMobile ? 6 : 4; border-radius: 3px;
           background: linear-gradient(90deg, ${C.gold} 0%, ${C.gold} var(--pct, 50%), ${C.border} var(--pct, 50%), ${C.border} 100%);
         }
         input[type=range]::-webkit-slider-thumb {
-          -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
-          background: ${C.gold}; margin-top: -4px; cursor: pointer;
+          -webkit-appearance: none; width: responsive.isMobile ? 24 : 12; height: responsive.isMobile ? 24 : 12; border-radius: 50%;
+          background: ${C.gold}; margin-top: responsive.isMobile ? -9 : -4; cursor: pointer;
           box-shadow: 0 0 8px ${C.gold}88; border: 1px solid ${C.bg};
+          transition: transform 0.1s;
         }
-        input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: ${C.border}; }
+        input[type=range]::-webkit-slider-thumb:active {
+          transform: scale(1.1);
+        }
+        input[type=range]::-moz-range-track { height: responsive.isMobile ? 6 : 4; border-radius: 3px; background: ${C.border}; }
         input[type=range]::-moz-range-thumb {
-          width: 12px; height: 12px; border-radius: 50%; background: ${C.gold};
+          width: responsive.isMobile ? 24 : 12; height: responsive.isMobile ? 24 : 12; border-radius: 50%; background: ${C.gold};
           cursor: pointer; border: 1px solid ${C.bg}; box-shadow: 0 0 8px ${C.gold}88;
+          transition: transform 0.1s;
+        }
+        input[type=range]::-moz-range-thumb:active {
+          transform: scale(1.1);
         }
         @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         .pulse { animation: pulseDot 1.6s ease-in-out infinite; }
@@ -1576,59 +2274,179 @@ export default function Monograph() {
         position: "sticky", top: 0, zIndex: 100,
         background: `${C.bg}f0`, backdropFilter: "blur(10px)",
         borderBottom: `1px solid ${C.rule}`,
-        padding: "10px 28px",
-        display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 20, alignItems: "center",
+        padding: responsive.isMobile ? "8px 16px" : "10px 28px",
+        display: "grid",
+        gridTemplateColumns: responsive.isMobile ? "1fr" : "auto 1fr auto auto",
+        gap: responsiveSpacing(20),
+        alignItems: "center",
+        gridTemplateRows: responsive.isMobile ? "auto auto auto" : "auto",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div className="pulse" style={{ width: 8, height: 8, borderRadius: "50%", background: computing ? C.crimson : C.gold, boxShadow: `0 0 10px ${computing ? C.crimson : C.gold}` }} />
-          <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.inkDim, letterSpacing: 2, textTransform: "uppercase" }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: responsiveSpacing(10),
+          gridColumn: responsive.isMobile ? "1 / -1" : "1",
+          justifyContent: responsive.isMobile ? "center" : "flex-start",
+        }}>
+          <div className="pulse" style={{
+            width: responsive.isMobile ? 6 : 8,
+            height: responsive.isMobile ? 6 : 8,
+            borderRadius: "50%",
+            background: computing ? C.crimson : C.gold,
+            boxShadow: `0 0 10px ${computing ? C.crimson : C.gold}`
+          }} />
+          <span style={{
+            fontFamily: FONT_MONO,
+            fontSize: responsive.isMobile ? 9 : 10,
+            color: C.inkDim,
+            letterSpacing: 2,
+            textTransform: "uppercase"
+          }}>
             {computing ? "recomputing" : "p₃(S | M)"}
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <span style={{ fontFamily: FONT_MATH, fontStyle: "italic", fontSize: 13, color: C.inkDim }}>M</span>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: responsiveSpacing(14),
+          gridColumn: responsive.isMobile ? "1 / -1" : "2",
+          justifyContent: responsive.isMobile ? "center" : "flex-start",
+          flexWrap: responsive.isMobile ? "wrap" : "nowrap",
+        }}
+        {...(responsive.isMobile ? swipeHandlers : {})}>
+          <span style={{
+            fontFamily: FONT_MATH,
+            fontStyle: "italic",
+            fontSize: responsiveScale(13),
+            color: C.inkDim
+          }}>M</span>
           <input type="range" min={10} max={150} value={M_}
             onChange={e => setM(+e.target.value)}
-            style={{ flex: 1, maxWidth: 420, "--pct": `${((M_ - 10) / 140) * 100}%` }} />
-          <span style={{ fontFamily: FONT_MONO, fontSize: 18, fontWeight: 500, color: C.gold, minWidth: 42, textAlign: "right", textShadow: `0 0 12px ${C.gold}66` }}>{M_}</span>
-          <div style={{ display: "flex", gap: 3 }}>
+            style={{
+              flex: 1,
+              maxWidth: responsive.isMobile ? 280 : 420,
+              "--pct": `${((M_ - 10) / 140) * 100}%`,
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+            }} />
+          <span style={{
+            fontFamily: FONT_MONO,
+            fontSize: responsive.isMobile ? 16 : 18,
+            fontWeight: 500,
+            color: C.gold,
+            minWidth: responsive.isMobile ? 36 : 42,
+            textAlign: "right",
+            textShadow: `0 0 12px ${C.gold}66`
+          }}>{M_}</span>
+          {responsive.isMobile && (
+            <span style={{
+              fontFamily: FONT_MONO,
+              fontSize: 8,
+              color: C.inkFaint,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              opacity: 0.6,
+              marginLeft: 8,
+            }}>
+              swipe ↔
+            </span>
+          )}
+          <div style={{
+            display: "flex",
+            gap: responsive.isMobile ? 2 : 3,
+            flexWrap: responsive.isMobile ? "wrap" : "nowrap",
+          }}>
             {[10, 25, 50, 100, 150].map(p => (
               <button key={p} onClick={() => setM(p)} style={{
                 background: M_ === p ? `${C.gold}22` : "transparent",
                 color: M_ === p ? C.gold : C.inkFaint,
                 border: `1px solid ${M_ === p ? `${C.gold}66` : C.border}`,
-                padding: "2px 6px", fontSize: 10, fontFamily: FONT_MONO,
-                borderRadius: 2, cursor: "pointer", fontWeight: 500, minWidth: 28,
+                padding: responsive.isMobile ? "6px 10px" : "2px 6px",
+                fontSize: responsive.isMobile ? 11 : 10,
+                fontFamily: FONT_MONO,
+                borderRadius: 4,
+                cursor: "pointer",
+                fontWeight: 500,
+                minWidth: responsive.isMobile ? 44 : 28,
+                minHeight: responsive.isMobile ? 44 : "auto",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+                transition: "all 0.15s",
+                ":active": {
+                  transform: responsive.isMobile ? "scale(0.95)" : "none",
+                  background: M_ === p ? `${C.gold}32` : `${C.border}22`,
+                },
               }}>{p}</button>
             ))}
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{
+          display: "flex",
+          gap: responsiveSpacing(6),
+          gridColumn: responsive.isMobile ? "1 / -1" : "3",
+          justifyContent: responsive.isMobile ? "center" : "flex-start",
+          flexWrap: responsive.isMobile ? "wrap" : "nowrap",
+        }}>
           <Toggle on={symmetry} onClick={() => setSymmetry(p => !p)} tone="indigo">Symmetry</Toggle>
           <Toggle on={gaussianOn} onClick={() => setGaussianOn(p => !p)} tone="gold">𝒩</Toggle>
           <Toggle on={logScale} onClick={() => setLogScale(p => !p)} tone="teal">Log</Toggle>
         </div>
 
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+        <div style={{
+          display: "flex",
+          gap: responsiveSpacing(14),
+          alignItems: "center",
+          gridColumn: responsive.isMobile ? "1 / -1" : "4",
+          justifyContent: responsive.isMobile ? "center" : "flex-end",
+          flexWrap: responsive.isMobile ? "wrap" : "nowrap",
+        }}>
           <Metric label="|T_M|" value={partData.totalCount.toLocaleString()} tone="gold" />
           <Metric label="peak" value={peakS} tone="teal" />
         </div>
       </div>
 
       {/* ═══════════════ COVER ═══════════════ */}
-      <div style={{ maxWidth: 1040, margin: "0 auto", padding: "0 40px" }}>
-        <section style={{ padding: "70px 0 40px", textAlign: "left" }}>
-          <div style={{ fontFamily: FONT_MONO, fontSize: 11.5, color: C.gold, letterSpacing: 4, textTransform: "uppercase", marginBottom: 16 }}>
+      <div style={{
+        maxWidth: responsive.isMobile ? "100%" : responsive.isTablet ? 960 : 1040,
+        margin: "0 auto",
+        padding: responsive.isMobile ? "0 20px" : "0 40px",
+        width: "100%",
+        boxSizing: "border-box",
+      }}>
+        <section id="cover" style={{
+          padding: responsive.isMobile ? "40px 0 20px" : "70px 0 40px",
+          textAlign: responsive.isMobile ? "center" : "left"
+        }}>
+          <div style={{
+            fontFamily: FONT_MONO,
+            fontSize: responsive.isMobile ? 9 : 11.5,
+            color: C.gold,
+            letterSpacing: responsive.isMobile ? 2 : 4,
+            textTransform: "uppercase",
+            marginBottom: responsive.isMobile ? 12 : 16
+          }}>
             MONOGRAPH № III  ·  INTERACTIVE EDITION  ·  MMXXVI
           </div>
-          <div style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", fontSize: 18, color: C.inkDim, marginBottom: 12, letterSpacing: 0.5 }}>
+          <div style={{
+            fontFamily: FONT_DISPLAY,
+            fontStyle: "italic",
+            fontSize: responsive.isMobile ? 14 : 18,
+            color: C.inkDim,
+            marginBottom: responsive.isMobile ? 8 : 12,
+            letterSpacing: 0.5
+          }}>
             On the Enumeration of
           </div>
           <h1 style={{
-            fontFamily: FONT_DISPLAY, fontSize: 72, fontWeight: 500,
-            color: C.inkBr, lineHeight: 1.02, letterSpacing: -1.2, marginBottom: 20,
+            fontFamily: FONT_DISPLAY,
+            fontSize: responsive.isMobile ? 42 : responsive.isTablet ? 58 : 72,
+            fontWeight: 500,
+            color: C.inkBr,
+            lineHeight: 1.02,
+            letterSpacing: responsive.isMobile ? -0.8 : -1.2,
+            marginBottom: responsive.isMobile ? 16 : 20,
           }}>
             Ordered Triplets
             <span style={{ color: C.gold, fontStyle: "italic" }}> of the </span>
@@ -1636,19 +2454,41 @@ export default function Monograph() {
           </h1>
 
           <div style={{
-            fontFamily: FONT_MATH, fontStyle: "italic", fontSize: 26, color: C.gold,
-            margin: "18px 0 22px", letterSpacing: 0.4,
+            fontFamily: FONT_MATH,
+            fontStyle: "italic",
+            fontSize: responsive.isMobile ? 18 : 26,
+            color: C.gold,
+            margin: responsive.isMobile ? "12px 0 16px" : "18px 0 22px",
+            letterSpacing: 0.4,
           }}>
             1 ≤ x ≤ y ≤ z ≤ M  ⊂  ℤ³
           </div>
 
-          <div style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", fontSize: 21, color: C.inkDim, lineHeight: 1.55, marginBottom: 30, maxWidth: 880 }}>
+          <div style={{
+            fontFamily: FONT_DISPLAY,
+            fontStyle: "italic",
+            fontSize: responsive.isMobile ? 16 : 21,
+            color: C.inkDim,
+            lineHeight: 1.55,
+            marginBottom: responsive.isMobile ? 20 : 30,
+            maxWidth: responsive.isMobile ? "100%" : 880,
+          }}>
             An interactive study of the partition function <M>p₃(S | M)</M>, the Cayley–Sylvester closed form,
             the Ehrhart polynomial of the 3-simplex, and the emergence of Gaussian order from combinatorial constraint.
           </div>
 
-          <div className="ruled-box" style={{ padding: "18px 0", marginTop: 28, maxWidth: 880 }}>
-            <p className="drop-cap" style={{ fontFamily: FONT_MATH, fontSize: "1.22em", lineHeight: 1.72, color: C.ink, textAlign: "justify" }}>
+          <div className="ruled-box" style={{
+            padding: responsive.isMobile ? "12px 0" : "18px 0",
+            marginTop: responsive.isMobile ? 20 : 28,
+            maxWidth: responsive.isMobile ? "100%" : 880
+          }}>
+            <p className="drop-cap" style={{
+              fontFamily: FONT_MATH,
+              fontSize: responsive.isMobile ? "1.1em" : "1.22em",
+              lineHeight: 1.72,
+              color: C.ink,
+              textAlign: "justify"
+            }}>
               We enumerate the lattice points of the right tetrahedron <M>T_M = {"{(x,y,z) ∈ ℤ³ : 1 ≤ x ≤ y ≤ z ≤ M}"}</M>
               and study the distribution of their coordinate sums. For moderate <M>M</M> the distribution is discrete
               and finitely-supported; as <M>M → ∞</M> the central bulk converges, after rescaling, to the standard
@@ -1659,15 +2499,41 @@ export default function Monograph() {
           </div>
 
           <div style={{
-            display: "flex", gap: 28, marginTop: 22, paddingTop: 18,
-            borderTop: `1px solid ${C.rule}`, alignItems: "baseline", flexWrap: "wrap",
+            display: "flex",
+            gap: responsive.isMobile ? 16 : 28,
+            marginTop: responsive.isMobile ? 16 : 22,
+            paddingTop: responsive.isMobile ? 12 : 18,
+            borderTop: `1px solid ${C.rule}`,
+            flexDirection: responsive.isMobile ? "column" : "row",
+            alignItems: responsive.isMobile ? "flex-start" : "baseline",
           }}>
-            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkFaint, letterSpacing: 2, textTransform: "uppercase" }}>Keywords</div>
-            <div style={{ fontFamily: FONT_MATH, fontStyle: "italic", fontSize: 15, color: C.ink, letterSpacing: 0.3 }}>
+            <div style={{
+              fontFamily: FONT_MONO,
+              fontSize: responsive.isMobile ? 10 : 11,
+              color: C.inkFaint,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              marginBottom: responsive.isMobile ? 8 : 0,
+            }}>Keywords</div>
+            <div style={{
+              fontFamily: FONT_MATH,
+              fontStyle: "italic",
+              fontSize: responsive.isMobile ? 13 : 15,
+              color: C.ink,
+              letterSpacing: 0.3,
+              lineHeight: responsive.isMobile ? 1.4 : 1.3,
+            }}>
               integer partitions · q-binomial coefficient · 3-simplex · Ehrhart polynomial · central limit theorem · generating functions · Bose-Einstein statistics · Feynman perturbation · non-linear optics · lattice cryptography · Kolmogorov turbulence · Lorenz attractor
             </div>
           </div>
-          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkFaint, letterSpacing: 2, marginTop: 10 }}>
+          <div style={{
+            fontFamily: FONT_MONO,
+            fontSize: responsive.isMobile ? 10 : 11,
+            color: C.inkFaint,
+            letterSpacing: 2,
+            marginTop: responsive.isMobile ? 8 : 10,
+            textAlign: responsive.isMobile ? "center" : "left",
+          }}>
             2020 MSC: 11P81 · 05A17 · 52B20 · 82B05 · 81T18 · 94A60 · 76F55
           </div>
         </section>
@@ -2046,7 +2912,7 @@ export default function Monograph() {
         </div>
 
         {/* ═══════════════ § 8 — BOSE-EINSTEIN ═══════════════ */}
-        <SectionHead number="8" title="The Bose-Einstein Imprint" eyebrow="QUANTUM STATISTICS · HARMONIC PARTITION FUNCTION" />
+        <SectionHead id="bose-einstein" number="8" title="The Bose-Einstein Imprint" eyebrow="QUANTUM STATISTICS · HARMONIC PARTITION FUNCTION" />
 
         <Prose>
           Consider three identical bosons confined to a harmonic trap of fundamental frequency <M>ω</M>, each occupying a level
@@ -2111,7 +2977,7 @@ export default function Monograph() {
         </Theorem>
 
         {/* ═══════════════ § 9 — FEYNMAN ═══════════════ */}
-        <SectionHead number="9" title="Feynman Perturbation & Diagram Topology" eyebrow="QFT · PROPAGATOR CONTRACTIONS" />
+        <SectionHead id="feynman" number="9" title="Feynman Perturbation & Diagram Topology" eyebrow="QFT · PROPAGATOR CONTRACTIONS" />
 
         <Prose>
           In quantum field theory with a cubic interaction <M>L_int = (g/3!)φ³</M>, the perturbative expansion of
@@ -2150,7 +3016,7 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 10 — YOUNG CONJUGATION ═══════════════ */}
-        <SectionHead number="10" title="Antiparticle Conjugation via Young Duality" eyebrow="CHARGE CONJUGATION · REPRESENTATION THEORY" />
+        <SectionHead id="young" number="10" title="Antiparticle Conjugation via Young Duality" eyebrow="CHARGE CONJUGATION · REPRESENTATION THEORY" />
 
         <Prose>
           The representation theory of the special unitary group <M>SU(N)</M> is combinatorially governed by Young tableaux.
@@ -2221,7 +3087,7 @@ export default function Monograph() {
         </Theorem>
 
         {/* ═══════════════ § 11 — NON-LINEAR OPTICS ═══════════════ */}
-        <SectionHead number="11" title="Three-Wave Mixing in Non-Linear Optics" eyebrow="PHASE MATCHING · PARAMETRIC RESONANCE" />
+        <SectionHead id="nlo" number="11" title="Three-Wave Mixing in Non-Linear Optics" eyebrow="PHASE MATCHING · PARAMETRIC RESONANCE" />
 
         <Prose>
           The second-order non-linear susceptibility <M>χ⁽²⁾</M> of a non-centrosymmetric crystal couples three
@@ -2288,7 +3154,7 @@ export default function Monograph() {
         </Theorem>
 
         {/* ═══════════════ § 12 — STRANGE ATTRACTORS ═══════════════ */}
-        <SectionHead number="12" title="Strange Attractors & Non-Linear Dynamics" eyebrow="LORENZ SYSTEM · POINCARÉ SECTIONS" />
+        <SectionHead id="lorenz" number="12" title="Strange Attractors & Non-Linear Dynamics" eyebrow="LORENZ SYSTEM · POINCARÉ SECTIONS" />
 
         <Prose>
           The Lorenz system, originally derived by Edward Lorenz in 1963 as a radical truncation of Saltzman's
@@ -2348,7 +3214,7 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 13 — KOLMOGOROV CASCADE ═══════════════ */}
-        <SectionHead number="13" title="The Kolmogorov Cascade of Turbulence" eyebrow="NON-LINEAR FLUID · TRIADIC INTERACTIONS" />
+        <SectionHead id="kolmogorov" number="13" title="The Kolmogorov Cascade of Turbulence" eyebrow="NON-LINEAR FLUID · TRIADIC INTERACTIONS" />
 
         <Prose>
           Fully developed three-dimensional turbulence, in the inertial subrange, is governed by
@@ -2386,7 +3252,7 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 14 — GUTENBERG-RICHTER ═══════════════ */}
-        <SectionHead number="14" title="Earthquake Pattern Recognition" eyebrow="GUTENBERG-RICHTER · AFTERSHOCK TRIPLETS" />
+        <SectionHead id="gutenberg" number="14" title="Earthquake Pattern Recognition" eyebrow="GUTENBERG-RICHTER · AFTERSHOCK TRIPLETS" />
 
         <Prose>
           The Gutenberg–Richter law (1944) states that the cumulative frequency <M>N(m)</M> of earthquakes of
@@ -2439,7 +3305,7 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 15 — BIG BANG NUCLEOSYNTHESIS ═══════════════ */}
-        <SectionHead number="15" title="Big Bang Nucleosynthesis & Primordial Triplets" eyebrow="COSMOLOGY · FREEZE-OUT ABUNDANCES" />
+        <SectionHead id="bbn" number="15" title="Big Bang Nucleosynthesis & Primordial Triplets" eyebrow="COSMOLOGY · FREEZE-OUT ABUNDANCES" />
 
         <Prose>
           At temperatures <M>T ~ 10⁹ K</M>, roughly three minutes after the Big Bang, the universe cooled through
@@ -2464,7 +3330,7 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 16 — LATTICE CRYPTOGRAPHY ═══════════════ */}
-        <SectionHead number="16" title="Lattice Cryptography & Blockchain Signatures" eyebrow="POST-QUANTUM · SIS · LWE" />
+        <SectionHead id="sis" number="16" title="Lattice Cryptography & Blockchain Signatures" eyebrow="POST-QUANTUM · SIS · LWE" />
 
         <Prose>
           The <em>Short Integer Solution</em> (SIS) problem, introduced by Ajtai (1996) and canonicalized by
@@ -2542,7 +3408,7 @@ export default function Monograph() {
         </Theorem>
 
         {/* ═══════════════ § 17 — QUANTUM WALK ═══════════════ */}
-        <SectionHead number="17" title="Quantum Walk on the Triplet Simplex" eyebrow="QUANTUM COMPUTATION · AMPLITUDE INTERFERENCE" />
+        <SectionHead id="quantum-walk" number="17" title="Quantum Walk on the Triplet Simplex" eyebrow="QUANTUM COMPUTATION · AMPLITUDE INTERFERENCE" />
 
         <Prose>
           A discrete-time quantum walk is the unitary analogue of a classical random walk: a walker's amplitude
@@ -2722,6 +3588,107 @@ export default function Monograph() {
         </div>
 
         <div style={{ height: 80 }} />
+
+        {/* ═══ MOBILE SECTION NAVIGATION ═══ */}
+        {responsive.isMobile && (
+          <div style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: `${C.bg}f8`,
+            backdropFilter: "blur(12px)",
+            borderTop: `1px solid ${C.rule}`,
+            padding: "12px 20px",
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+          }}
+          {...sectionSwipeHandlers}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flex: 1,
+            }}>
+              <span style={{
+                fontFamily: FONT_MONO,
+                fontSize: 9,
+                color: C.inkDim,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                opacity: 0.7,
+              }}>
+                §{sections[currentSection]?.title || 'Cover'}
+              </span>
+            </div>
+
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              flex: 1,
+              justifyContent: "center",
+            }}>
+              {sections.map((section, index) => (
+                <button
+                  key={section.id}
+                  onClick={() => {
+                    setCurrentSection(index);
+                    scrollToSection(section.id);
+                  }}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: index === currentSection ? C.gold : `${C.border}88`,
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    minWidth: 44,
+                    minHeight: 44,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    touchAction: "manipulation",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
+                  aria-label={`Go to ${section.title}`}
+                >
+                  {index === currentSection && (
+                    <div style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      background: C.bg,
+                    }} />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flex: 1,
+              justifyContent: "flex-end",
+            }}>
+              <span style={{
+                fontFamily: FONT_MONO,
+                fontSize: 8,
+                color: C.inkFaint,
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                opacity: 0.6,
+              }}>
+                swipe ↔
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
