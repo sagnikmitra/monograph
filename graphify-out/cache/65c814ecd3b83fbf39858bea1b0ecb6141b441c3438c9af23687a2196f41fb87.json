@@ -1,0 +1,1 @@
+{"nodes": [{"id": "src_unifiedtheory_jsx", "label": "UnifiedTheory.jsx", "file_type": "code", "source_file": "src/UnifiedTheory.jsx", "source_location": "L1"}], "edges": [{"source": "src_unifiedtheory_jsx", "target": "src_monograph", "relation": "imports_from", "confidence": "EXTRACTED", "source_file": "src/UnifiedTheory.jsx", "source_location": "L1", "weight": 1.0}]}
