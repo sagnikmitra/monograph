@@ -1,7 +1,51 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {},
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "h:triplet-kernel-cross-domain",
+        "type": "cross_domain_abstraction",
+        "members": [
+          "concept:triplet_kernel_p3",
+          "fn:cayleySylvester",
+          "fn:p3Corrected",
+          "fn:besteinsteinSpectrum",
+          "fn:feynmanVertexCount",
+          "fn:threeWavePhaseMatching"
+        ],
+        "label": "p3 kernel reused across combinatorics, thermodynamics, field theory, and wave physics"
+      },
+      {
+        "id": "h:normal-toolchain",
+        "type": "statistical_pipeline",
+        "members": [
+          "fn:computeCDF",
+          "fn:normalCDF",
+          "fn:normalQuantile",
+          "fn:generateQQ",
+          "concept:normal_approximation"
+        ],
+        "label": "distribution diagnostics and Gaussian comparison"
+      },
+      {
+        "id": "h:graph-report-hubs",
+        "type": "reported_hub_group",
+        "members": [
+          "component:Monograph",
+          "fn:boseMeanOccupation",
+          "fn:cayleySylvester",
+          "fn:p3Corrected",
+          "fn:ehrhart",
+          "fn:normalCDF",
+          "fn:normalQuantile",
+          "fn:generateQQ",
+          "meta:graph_report_summary"
+        ],
+        "label": "functions called out as core or highly connected in report"
+      }
+    ]
+  },
   "nodes": [
     {
       "label": "vite.config.js",
@@ -9,7 +53,7 @@
       "source_file": "vite.config.js",
       "source_location": "L1",
       "id": "vite_config_js",
-      "community": 5,
+      "community": 9,
       "norm_label": "vite.config.js"
     },
     {
@@ -18,7 +62,7 @@
       "source_file": "src/main.jsx",
       "source_location": "L1",
       "id": "src_main_jsx",
-      "community": 6,
+      "community": 10,
       "norm_label": "main.jsx"
     },
     {
@@ -27,7 +71,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L1",
       "id": "src_responsive_js",
-      "community": 1,
+      "community": 3,
       "norm_label": "responsive.js"
     },
     {
@@ -36,7 +80,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L13",
       "id": "responsive_useresponsive",
-      "community": 1,
+      "community": 3,
       "norm_label": "useresponsive()"
     },
     {
@@ -45,7 +89,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L41",
       "id": "responsive_responsivescale",
-      "community": 1,
+      "community": 3,
       "norm_label": "responsivescale()"
     },
     {
@@ -54,7 +98,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L50",
       "id": "responsive_responsivespacing",
-      "community": 1,
+      "community": 3,
       "norm_label": "responsivespacing()"
     },
     {
@@ -63,7 +107,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L60",
       "id": "responsive_usetouchinteraction",
-      "community": 1,
+      "community": 3,
       "norm_label": "usetouchinteraction()"
     },
     {
@@ -72,7 +116,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L77",
       "id": "responsive_useswipegesture",
-      "community": 1,
+      "community": 3,
       "norm_label": "useswipegesture()"
     },
     {
@@ -81,7 +125,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L115",
       "id": "responsive_usetouchfeedback",
-      "community": 1,
+      "community": 3,
       "norm_label": "usetouchfeedback()"
     },
     {
@@ -90,7 +134,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L133",
       "id": "responsive_uselongpress",
-      "community": 1,
+      "community": 3,
       "norm_label": "uselongpress()"
     },
     {
@@ -99,7 +143,7 @@
       "source_file": "src/responsive.js",
       "source_location": "L175",
       "id": "responsive_getbatchprogress",
-      "community": 1,
+      "community": 3,
       "norm_label": "getbatchprogress()"
     },
     {
@@ -144,7 +188,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L96",
       "id": "monograph_cayleysylvester",
-      "community": 2,
+      "community": 4,
       "norm_label": "cayleysylvester()"
     },
     {
@@ -153,7 +197,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L99",
       "id": "monograph_p3corrected",
-      "community": 2,
+      "community": 4,
       "norm_label": "p3corrected()"
     },
     {
@@ -162,7 +206,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L108",
       "id": "monograph_ehrhart",
-      "community": 2,
+      "community": 4,
       "norm_label": "ehrhart()"
     },
     {
@@ -198,7 +242,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L137",
       "id": "monograph_normalcdf",
-      "community": 2,
+      "community": 4,
       "norm_label": "normalcdf()"
     },
     {
@@ -207,7 +251,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L146",
       "id": "monograph_normalquantile",
-      "community": 4,
+      "community": 7,
       "norm_label": "normalquantile()"
     },
     {
@@ -216,7 +260,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L167",
       "id": "monograph_generateqq",
-      "community": 4,
+      "community": 7,
       "norm_label": "generateqq()"
     },
     {
@@ -243,7 +287,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L230",
       "id": "monograph_besteinsteinspectrum",
-      "community": 2,
+      "community": 4,
       "norm_label": "besteinsteinspectrum()"
     },
     {
@@ -252,7 +296,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L249",
       "id": "monograph_bosemeanoccupation",
-      "community": 2,
+      "community": 4,
       "norm_label": "bosemeanoccupation()"
     },
     {
@@ -369,7 +413,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L502",
       "id": "monograph_readbraced",
-      "community": 3,
+      "community": 5,
       "norm_label": "_readbraced()"
     },
     {
@@ -378,7 +422,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L511",
       "id": "monograph_mathparse",
-      "community": 3,
+      "community": 5,
       "norm_label": "_mathparse()"
     },
     {
@@ -387,7 +431,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L586",
       "id": "monograph_rendermathchildren",
-      "community": 3,
+      "community": 5,
       "norm_label": "_rendermathchildren()"
     },
     {
@@ -396,7 +440,7 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L604",
       "id": "monograph_m",
-      "community": 3,
+      "community": 5,
       "norm_label": "m()"
     },
     {
@@ -486,8 +530,267 @@
       "source_file": "src/Monograph.jsx",
       "source_location": "L881",
       "id": "monograph_monograph",
-      "community": 2,
+      "community": 4,
       "norm_label": "monograph()"
+    },
+    {
+      "type": "file",
+      "label": "Monograph.jsx",
+      "community": 1,
+      "norm_label": "monograph.jsx",
+      "id": "file:src/Monograph.jsx"
+    },
+    {
+      "type": "file",
+      "label": "AGENTS.md",
+      "community": 8,
+      "norm_label": "agents.md",
+      "id": "file:AGENTS.md"
+    },
+    {
+      "type": "file",
+      "label": "GRAPH_REPORT.md",
+      "community": 2,
+      "norm_label": "graph_report.md",
+      "id": "file:graphify-out/GRAPH_REPORT.md"
+    },
+    {
+      "type": "component",
+      "label": "Monograph",
+      "community": 2,
+      "norm_label": "monograph",
+      "id": "component:Monograph"
+    },
+    {
+      "type": "constant",
+      "label": "C",
+      "community": 1,
+      "norm_label": "c",
+      "id": "const:C"
+    },
+    {
+      "type": "constant",
+      "label": "FONT_MATH",
+      "community": 1,
+      "norm_label": "font_math",
+      "id": "const:FONT_MATH"
+    },
+    {
+      "type": "constant",
+      "label": "FONT_DISPLAY",
+      "community": 1,
+      "norm_label": "font_display",
+      "id": "const:FONT_DISPLAY"
+    },
+    {
+      "type": "constant",
+      "label": "FONT_MONO",
+      "community": 1,
+      "norm_label": "font_mono",
+      "id": "const:FONT_MONO"
+    },
+    {
+      "type": "constant",
+      "label": "FONT_SANS",
+      "community": 1,
+      "norm_label": "font_sans",
+      "id": "const:FONT_SANS"
+    },
+    {
+      "type": "function",
+      "label": "generatePartitionData",
+      "community": 1,
+      "norm_label": "generatepartitiondata",
+      "id": "fn:generatePartitionData"
+    },
+    {
+      "type": "function",
+      "label": "generateScatterSample",
+      "community": 1,
+      "norm_label": "generatescattersample",
+      "id": "fn:generateScatterSample"
+    },
+    {
+      "type": "function",
+      "label": "generateXSumDensity",
+      "community": 1,
+      "norm_label": "generatexsumdensity",
+      "id": "fn:generateXSumDensity"
+    },
+    {
+      "type": "function",
+      "label": "cayleySylvester",
+      "community": 2,
+      "norm_label": "cayleysylvester",
+      "id": "fn:cayleySylvester"
+    },
+    {
+      "type": "function",
+      "label": "p3Corrected",
+      "community": 2,
+      "norm_label": "p3corrected",
+      "id": "fn:p3Corrected"
+    },
+    {
+      "type": "function",
+      "label": "ehrhart",
+      "community": 1,
+      "norm_label": "ehrhart",
+      "id": "fn:ehrhart"
+    },
+    {
+      "type": "function",
+      "label": "computeMoments",
+      "community": 1,
+      "norm_label": "computemoments",
+      "id": "fn:computeMoments"
+    },
+    {
+      "type": "function",
+      "label": "computeCDF",
+      "community": 1,
+      "norm_label": "computecdf",
+      "id": "fn:computeCDF"
+    },
+    {
+      "type": "function",
+      "label": "gaussian",
+      "community": 1,
+      "norm_label": "gaussian",
+      "id": "fn:gaussian"
+    },
+    {
+      "type": "function",
+      "label": "normalCDF",
+      "community": 2,
+      "norm_label": "normalcdf",
+      "id": "fn:normalCDF"
+    },
+    {
+      "type": "function",
+      "label": "normalQuantile",
+      "community": 2,
+      "norm_label": "normalquantile",
+      "id": "fn:normalQuantile"
+    },
+    {
+      "type": "function",
+      "label": "generateQQ",
+      "community": 2,
+      "norm_label": "generateqq",
+      "id": "fn:generateQQ"
+    },
+    {
+      "type": "function",
+      "label": "findTriplet",
+      "community": 1,
+      "norm_label": "findtriplet",
+      "id": "fn:findTriplet"
+    },
+    {
+      "type": "function",
+      "label": "convergenceData",
+      "community": 1,
+      "norm_label": "convergencedata",
+      "id": "fn:convergenceData"
+    },
+    {
+      "type": "function",
+      "label": "besteinsteinSpectrum",
+      "community": 6,
+      "norm_label": "besteinsteinspectrum",
+      "id": "fn:besteinsteinSpectrum"
+    },
+    {
+      "type": "function",
+      "label": "boseMeanOccupation",
+      "community": 6,
+      "norm_label": "bosemeanoccupation",
+      "id": "fn:boseMeanOccupation"
+    },
+    {
+      "type": "function",
+      "label": "feynmanVertexCount",
+      "community": 1,
+      "norm_label": "feynmanvertexcount",
+      "id": "fn:feynmanVertexCount"
+    },
+    {
+      "type": "function",
+      "label": "conjugatePartition",
+      "community": 1,
+      "norm_label": "conjugatepartition",
+      "id": "fn:conjugatePartition"
+    },
+    {
+      "type": "function",
+      "label": "threeWavePhaseMatching",
+      "community": 1,
+      "norm_label": "threewavephasematching",
+      "id": "fn:threeWavePhaseMatching"
+    },
+    {
+      "type": "concept",
+      "label": "Triplet kernel p3(S|M)",
+      "community": 2,
+      "norm_label": "triplet kernel p3(s|m)",
+      "id": "concept:triplet_kernel_p3"
+    },
+    {
+      "type": "concept",
+      "label": "Bounded integer partitions",
+      "community": 1,
+      "norm_label": "bounded integer partitions",
+      "id": "concept:bounded_integer_partitions"
+    },
+    {
+      "type": "concept",
+      "label": "Normal approximation",
+      "community": 2,
+      "norm_label": "normal approximation",
+      "id": "concept:normal_approximation"
+    },
+    {
+      "type": "concept",
+      "label": "Bose-Einstein thermodynamics",
+      "community": 6,
+      "norm_label": "bose-einstein thermodynamics",
+      "id": "concept:bose_einstein_thermo"
+    },
+    {
+      "type": "concept",
+      "label": "Feynman diagram enumeration",
+      "community": 1,
+      "norm_label": "feynman diagram enumeration",
+      "id": "concept:feynman_enumeration"
+    },
+    {
+      "type": "concept",
+      "label": "Young-tableau conjugation",
+      "community": 1,
+      "norm_label": "young-tableau conjugation",
+      "id": "concept:young_tableau_conjugation"
+    },
+    {
+      "type": "concept",
+      "label": "Three-wave phase matching",
+      "community": 1,
+      "norm_label": "three-wave phase matching",
+      "id": "concept:three_wave_mixing"
+    },
+    {
+      "type": "metadata",
+      "label": "Graph report summary",
+      "community": 2,
+      "norm_label": "graph report summary",
+      "id": "meta:graph_report_summary"
+    },
+    {
+      "type": "metadata",
+      "label": "Memory context",
+      "community": 8,
+      "norm_label": "memory context",
+      "id": "meta:memory_context"
     }
   ],
   "links": [
@@ -1095,7 +1398,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src/Monograph.jsx",
-      "source_location": "L2332",
+      "source_location": "L2342",
       "weight": 1.0,
       "_src": "monograph_monograph",
       "_tgt": "monograph_cayleysylvester",
@@ -1107,7 +1410,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src/Monograph.jsx",
-      "source_location": "L2333",
+      "source_location": "L2343",
       "weight": 1.0,
       "_src": "monograph_monograph",
       "_tgt": "monograph_p3corrected",
@@ -1119,7 +1422,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src/Monograph.jsx",
-      "source_location": "L2711",
+      "source_location": "L2721",
       "weight": 1.0,
       "_src": "monograph_monograph",
       "_tgt": "monograph_ehrhart",
@@ -1131,7 +1434,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src/Monograph.jsx",
-      "source_location": "L2988",
+      "source_location": "L2998",
       "weight": 1.0,
       "_src": "monograph_monograph",
       "_tgt": "monograph_normalcdf",
@@ -1167,7 +1470,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src/Monograph.jsx",
-      "source_location": "L3105",
+      "source_location": "L3115",
       "weight": 1.0,
       "_src": "monograph_monograph",
       "_tgt": "monograph_bosemeanoccupation",
@@ -1210,7 +1513,457 @@
       "source": "monograph_rendermathchildren",
       "target": "monograph_m",
       "confidence_score": 1.0
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "component:Monograph",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "component:Monograph"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "const:C",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "const:C"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "const:FONT_MATH",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "const:FONT_MATH"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "const:FONT_DISPLAY",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "const:FONT_DISPLAY"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "const:FONT_MONO",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "const:FONT_MONO"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "const:FONT_SANS",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "const:FONT_SANS"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:generatePartitionData",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:generatePartitionData"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:generateScatterSample",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:generateScatterSample"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:generateXSumDensity",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:generateXSumDensity"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:cayleySylvester",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:cayleySylvester"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:p3Corrected",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:p3Corrected"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:ehrhart",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:ehrhart"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:computeMoments",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:computeMoments"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:computeCDF",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:computeCDF"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:gaussian",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:gaussian"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:normalCDF",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:normalCDF"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:normalQuantile",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:normalQuantile"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:generateQQ",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:generateQQ"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:findTriplet",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:findTriplet"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:convergenceData",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:convergenceData"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:besteinsteinSpectrum",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:besteinsteinSpectrum"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:boseMeanOccupation",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:boseMeanOccupation"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:feynmanVertexCount",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:feynmanVertexCount"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:conjugatePartition",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:conjugatePartition"
+    },
+    {
+      "type": "declared_in",
+      "_src": "file:src/Monograph.jsx",
+      "_tgt": "fn:threeWavePhaseMatching",
+      "confidence_score": 1.0,
+      "source": "file:src/Monograph.jsx",
+      "target": "fn:threeWavePhaseMatching"
+    },
+    {
+      "type": "extracted_from",
+      "_src": "file:AGENTS.md",
+      "_tgt": "meta:memory_context",
+      "confidence_score": 1.0,
+      "source": "file:AGENTS.md",
+      "target": "meta:memory_context"
+    },
+    {
+      "type": "extracted_from",
+      "_src": "file:graphify-out/GRAPH_REPORT.md",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "file:graphify-out/GRAPH_REPORT.md",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "references",
+      "_src": "component:Monograph",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "component:Monograph",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:generatePartitionData",
+      "_tgt": "concept:bounded_integer_partitions",
+      "confidence_score": 1.0,
+      "source": "fn:generatePartitionData",
+      "target": "concept:bounded_integer_partitions"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:generateScatterSample",
+      "_tgt": "concept:bounded_integer_partitions",
+      "confidence_score": 1.0,
+      "source": "fn:generateScatterSample",
+      "target": "concept:bounded_integer_partitions"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:generateXSumDensity",
+      "_tgt": "concept:bounded_integer_partitions",
+      "confidence_score": 1.0,
+      "source": "fn:generateXSumDensity",
+      "target": "concept:bounded_integer_partitions"
+    },
+    {
+      "type": "approximates",
+      "_src": "fn:cayleySylvester",
+      "_tgt": "concept:triplet_kernel_p3",
+      "confidence_score": 1.0,
+      "source": "fn:cayleySylvester",
+      "target": "concept:triplet_kernel_p3"
+    },
+    {
+      "type": "references",
+      "_src": "fn:cayleySylvester",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:cayleySylvester",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:p3Corrected",
+      "_tgt": "concept:triplet_kernel_p3",
+      "confidence_score": 1.0,
+      "source": "fn:p3Corrected",
+      "target": "concept:triplet_kernel_p3"
+    },
+    {
+      "type": "references",
+      "_src": "fn:p3Corrected",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:p3Corrected",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:ehrhart",
+      "_tgt": "concept:bounded_integer_partitions",
+      "confidence_score": 1.0,
+      "source": "fn:ehrhart",
+      "target": "concept:bounded_integer_partitions"
+    },
+    {
+      "type": "references",
+      "_src": "fn:ehrhart",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:ehrhart",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:normalCDF",
+      "_tgt": "concept:normal_approximation",
+      "confidence_score": 1.0,
+      "source": "fn:normalCDF",
+      "target": "concept:normal_approximation"
+    },
+    {
+      "type": "references",
+      "_src": "fn:normalCDF",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:normalCDF",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "calls",
+      "_src": "fn:normalQuantile",
+      "_tgt": "fn:generateQQ",
+      "confidence_score": 1.0,
+      "source": "fn:normalQuantile",
+      "target": "fn:generateQQ"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:normalQuantile",
+      "_tgt": "concept:normal_approximation",
+      "confidence_score": 1.0,
+      "source": "fn:normalQuantile",
+      "target": "concept:normal_approximation"
+    },
+    {
+      "type": "references",
+      "_src": "fn:normalQuantile",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:normalQuantile",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "applies",
+      "_src": "fn:generateQQ",
+      "_tgt": "concept:normal_approximation",
+      "confidence_score": 1.0,
+      "source": "fn:generateQQ",
+      "target": "concept:normal_approximation"
+    },
+    {
+      "type": "references",
+      "_src": "fn:generateQQ",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:generateQQ",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "calls",
+      "_src": "fn:besteinsteinSpectrum",
+      "_tgt": "fn:boseMeanOccupation",
+      "confidence_score": 1.0,
+      "source": "fn:besteinsteinSpectrum",
+      "target": "fn:boseMeanOccupation"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:besteinsteinSpectrum",
+      "_tgt": "concept:bose_einstein_thermo",
+      "confidence_score": 1.0,
+      "source": "fn:besteinsteinSpectrum",
+      "target": "concept:bose_einstein_thermo"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:boseMeanOccupation",
+      "_tgt": "concept:bose_einstein_thermo",
+      "confidence_score": 1.0,
+      "source": "fn:boseMeanOccupation",
+      "target": "concept:bose_einstein_thermo"
+    },
+    {
+      "type": "references",
+      "_src": "fn:boseMeanOccupation",
+      "_tgt": "meta:graph_report_summary",
+      "confidence_score": 1.0,
+      "source": "fn:boseMeanOccupation",
+      "target": "meta:graph_report_summary"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:feynmanVertexCount",
+      "_tgt": "concept:feynman_enumeration",
+      "confidence_score": 1.0,
+      "source": "fn:feynmanVertexCount",
+      "target": "concept:feynman_enumeration"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:conjugatePartition",
+      "_tgt": "concept:young_tableau_conjugation",
+      "confidence_score": 1.0,
+      "source": "fn:conjugatePartition",
+      "target": "concept:young_tableau_conjugation"
+    },
+    {
+      "type": "implements",
+      "_src": "fn:threeWavePhaseMatching",
+      "_tgt": "concept:three_wave_mixing",
+      "confidence_score": 1.0,
+      "source": "fn:threeWavePhaseMatching",
+      "target": "concept:three_wave_mixing"
     }
   ],
-  "hyperedges": []
+  "hyperedges": [
+    {
+      "id": "h:triplet-kernel-cross-domain",
+      "type": "cross_domain_abstraction",
+      "members": [
+        "concept:triplet_kernel_p3",
+        "fn:cayleySylvester",
+        "fn:p3Corrected",
+        "fn:besteinsteinSpectrum",
+        "fn:feynmanVertexCount",
+        "fn:threeWavePhaseMatching"
+      ],
+      "label": "p3 kernel reused across combinatorics, thermodynamics, field theory, and wave physics"
+    },
+    {
+      "id": "h:normal-toolchain",
+      "type": "statistical_pipeline",
+      "members": [
+        "fn:computeCDF",
+        "fn:normalCDF",
+        "fn:normalQuantile",
+        "fn:generateQQ",
+        "concept:normal_approximation"
+      ],
+      "label": "distribution diagnostics and Gaussian comparison"
+    },
+    {
+      "id": "h:graph-report-hubs",
+      "type": "reported_hub_group",
+      "members": [
+        "component:Monograph",
+        "fn:boseMeanOccupation",
+        "fn:cayleySylvester",
+        "fn:p3Corrected",
+        "fn:ehrhart",
+        "fn:normalCDF",
+        "fn:normalQuantile",
+        "fn:generateQQ",
+        "meta:graph_report_summary"
+      ],
+      "label": "functions called out as core or highly connected in report"
+    }
+  ]
 }

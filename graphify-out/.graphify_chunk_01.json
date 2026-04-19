@@ -1,0 +1,147 @@
+{
+  "nodes": [
+    {"id": "file:src/Monograph.jsx", "type": "file", "label": "Monograph.jsx"},
+    {"id": "file:AGENTS.md", "type": "file", "label": "AGENTS.md"},
+    {"id": "file:graphify-out/GRAPH_REPORT.md", "type": "file", "label": "GRAPH_REPORT.md"},
+
+    {"id": "component:Monograph", "type": "component", "label": "Monograph"},
+    {"id": "const:C", "type": "constant", "label": "C"},
+    {"id": "const:FONT_MATH", "type": "constant", "label": "FONT_MATH"},
+    {"id": "const:FONT_DISPLAY", "type": "constant", "label": "FONT_DISPLAY"},
+    {"id": "const:FONT_MONO", "type": "constant", "label": "FONT_MONO"},
+    {"id": "const:FONT_SANS", "type": "constant", "label": "FONT_SANS"},
+
+    {"id": "fn:generatePartitionData", "type": "function", "label": "generatePartitionData"},
+    {"id": "fn:generateScatterSample", "type": "function", "label": "generateScatterSample"},
+    {"id": "fn:generateXSumDensity", "type": "function", "label": "generateXSumDensity"},
+    {"id": "fn:cayleySylvester", "type": "function", "label": "cayleySylvester"},
+    {"id": "fn:p3Corrected", "type": "function", "label": "p3Corrected"},
+    {"id": "fn:ehrhart", "type": "function", "label": "ehrhart"},
+    {"id": "fn:computeMoments", "type": "function", "label": "computeMoments"},
+    {"id": "fn:computeCDF", "type": "function", "label": "computeCDF"},
+    {"id": "fn:gaussian", "type": "function", "label": "gaussian"},
+    {"id": "fn:normalCDF", "type": "function", "label": "normalCDF"},
+    {"id": "fn:normalQuantile", "type": "function", "label": "normalQuantile"},
+    {"id": "fn:generateQQ", "type": "function", "label": "generateQQ"},
+    {"id": "fn:findTriplet", "type": "function", "label": "findTriplet"},
+    {"id": "fn:convergenceData", "type": "function", "label": "convergenceData"},
+    {"id": "fn:besteinsteinSpectrum", "type": "function", "label": "besteinsteinSpectrum"},
+    {"id": "fn:boseMeanOccupation", "type": "function", "label": "boseMeanOccupation"},
+    {"id": "fn:feynmanVertexCount", "type": "function", "label": "feynmanVertexCount"},
+    {"id": "fn:conjugatePartition", "type": "function", "label": "conjugatePartition"},
+    {"id": "fn:threeWavePhaseMatching", "type": "function", "label": "threeWavePhaseMatching"},
+
+    {"id": "concept:triplet_kernel_p3", "type": "concept", "label": "Triplet kernel p3(S|M)"},
+    {"id": "concept:bounded_integer_partitions", "type": "concept", "label": "Bounded integer partitions"},
+    {"id": "concept:normal_approximation", "type": "concept", "label": "Normal approximation"},
+    {"id": "concept:bose_einstein_thermo", "type": "concept", "label": "Bose-Einstein thermodynamics"},
+    {"id": "concept:feynman_enumeration", "type": "concept", "label": "Feynman diagram enumeration"},
+    {"id": "concept:young_tableau_conjugation", "type": "concept", "label": "Young-tableau conjugation"},
+    {"id": "concept:three_wave_mixing", "type": "concept", "label": "Three-wave phase matching"},
+
+    {"id": "meta:graph_report_summary", "type": "metadata", "label": "Graph report summary"},
+    {"id": "meta:memory_context", "type": "metadata", "label": "Memory context"}
+  ],
+  "edges": [
+    {"source": "component:Monograph", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "const:C", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "const:FONT_MATH", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "const:FONT_DISPLAY", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "const:FONT_MONO", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "const:FONT_SANS", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+
+    {"source": "fn:generatePartitionData", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:generateScatterSample", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:generateXSumDensity", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:cayleySylvester", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:p3Corrected", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:ehrhart", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:computeMoments", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:computeCDF", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:gaussian", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:normalCDF", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:normalQuantile", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:generateQQ", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:findTriplet", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:convergenceData", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:besteinsteinSpectrum", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:boseMeanOccupation", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:feynmanVertexCount", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:conjugatePartition", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+    {"source": "fn:threeWavePhaseMatching", "target": "file:src/Monograph.jsx", "type": "declared_in"},
+
+    {"source": "fn:generateQQ", "target": "fn:normalQuantile", "type": "calls"},
+    {"source": "fn:boseMeanOccupation", "target": "fn:besteinsteinSpectrum", "type": "calls"},
+
+    {"source": "fn:generatePartitionData", "target": "concept:bounded_integer_partitions", "type": "implements"},
+    {"source": "fn:generateScatterSample", "target": "concept:bounded_integer_partitions", "type": "implements"},
+    {"source": "fn:generateXSumDensity", "target": "concept:bounded_integer_partitions", "type": "implements"},
+    {"source": "fn:cayleySylvester", "target": "concept:triplet_kernel_p3", "type": "approximates"},
+    {"source": "fn:p3Corrected", "target": "concept:triplet_kernel_p3", "type": "implements"},
+    {"source": "fn:ehrhart", "target": "concept:bounded_integer_partitions", "type": "implements"},
+    {"source": "fn:normalCDF", "target": "concept:normal_approximation", "type": "implements"},
+    {"source": "fn:normalQuantile", "target": "concept:normal_approximation", "type": "implements"},
+    {"source": "fn:generateQQ", "target": "concept:normal_approximation", "type": "applies"},
+    {"source": "fn:besteinsteinSpectrum", "target": "concept:bose_einstein_thermo", "type": "implements"},
+    {"source": "fn:boseMeanOccupation", "target": "concept:bose_einstein_thermo", "type": "implements"},
+    {"source": "fn:feynmanVertexCount", "target": "concept:feynman_enumeration", "type": "implements"},
+    {"source": "fn:conjugatePartition", "target": "concept:young_tableau_conjugation", "type": "implements"},
+    {"source": "fn:threeWavePhaseMatching", "target": "concept:three_wave_mixing", "type": "implements"},
+
+    {"source": "meta:graph_report_summary", "target": "file:graphify-out/GRAPH_REPORT.md", "type": "extracted_from"},
+    {"source": "meta:memory_context", "target": "file:AGENTS.md", "type": "extracted_from"},
+    {"source": "meta:graph_report_summary", "target": "component:Monograph", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:boseMeanOccupation", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:cayleySylvester", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:p3Corrected", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:ehrhart", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:normalCDF", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:normalQuantile", "type": "references"},
+    {"source": "meta:graph_report_summary", "target": "fn:generateQQ", "type": "references"}
+  ],
+  "hyperedges": [
+    {
+      "id": "h:triplet-kernel-cross-domain",
+      "type": "cross_domain_abstraction",
+      "members": [
+        "concept:triplet_kernel_p3",
+        "fn:cayleySylvester",
+        "fn:p3Corrected",
+        "fn:besteinsteinSpectrum",
+        "fn:feynmanVertexCount",
+        "fn:threeWavePhaseMatching"
+      ],
+      "label": "p3 kernel reused across combinatorics, thermodynamics, field theory, and wave physics"
+    },
+    {
+      "id": "h:normal-toolchain",
+      "type": "statistical_pipeline",
+      "members": [
+        "fn:computeCDF",
+        "fn:normalCDF",
+        "fn:normalQuantile",
+        "fn:generateQQ",
+        "concept:normal_approximation"
+      ],
+      "label": "distribution diagnostics and Gaussian comparison"
+    },
+    {
+      "id": "h:graph-report-hubs",
+      "type": "reported_hub_group",
+      "members": [
+        "component:Monograph",
+        "fn:boseMeanOccupation",
+        "fn:cayleySylvester",
+        "fn:p3Corrected",
+        "fn:ehrhart",
+        "fn:normalCDF",
+        "fn:normalQuantile",
+        "fn:generateQQ",
+        "meta:graph_report_summary"
+      ],
+      "label": "functions called out as core or highly connected in report"
+    }
+  ],
+  "input_tokens": 81540,
+  "output_tokens": 1218
+}

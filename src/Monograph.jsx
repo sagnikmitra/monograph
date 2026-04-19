@@ -210,6 +210,78 @@ function convergenceData(partData) {
   return { xs, ys, ref };
 }
 
+function generateRegimeConstellation() {
+  const names = [
+    ["Kernel", "explicit"],
+    ["Bose", "inferred"],
+    ["Feynman", "analogical"],
+    ["Young", "analogical"],
+    ["NLO", "analogical"],
+    ["Lorenz", "analogical"],
+    ["K41", "analogical"],
+    ["GR", "analogical"],
+    ["BBN", "analogical"],
+    ["SIS", "inferred"],
+    ["QW", "inferred"],
+  ];
+  return names.map(([name, cls], i) => {
+    const theta = (i / names.length) * Math.PI * 2;
+    const radius = i === 0 ? 0 : 2.2 + 0.35 * Math.sin(i * 1.71);
+    const z = i === 0 ? 0 : -1.35 + (i % 4) * 0.82;
+    return {
+      name, cls,
+      x: radius * Math.cos(theta),
+      y: radius * Math.sin(theta),
+      z,
+    };
+  });
+}
+
+function generateLayerArchitecture() {
+  const layers = [
+    { name: "Defs", z: 0.0, size: 3.4, color: "#5fa8a8" },
+    { name: "Safe", z: 1.0, size: 2.8, color: "#7a8fd4" },
+    { name: "Mid",  z: 2.0, size: 2.2, color: "#d4a574" },
+    { name: "Flag", z: 3.0, size: 1.6, color: "#c45050" },
+  ];
+  const assumptions = [
+    { name: "H1", x: -1.65, y: -1.65, z: 0.25 },
+    { name: "H2", x:  1.65, y: -1.65, z: 0.55 },
+    { name: "H3", x:  1.65, y:  1.65, z: 0.85 },
+    { name: "H4", x: -1.65, y:  1.65, z: 1.15 },
+    { name: "H5", x: -1.2,  y: -1.2,  z: 1.75 },
+    { name: "H6", x:  1.2,  y: -1.2,  z: 2.05 },
+    { name: "H7", x:  1.2,  y:  1.2,  z: 2.35 },
+    { name: "H8", x: -1.2,  y:  1.2,  z: 2.65 },
+  ];
+  return { layers, assumptions };
+}
+
+function generateTripShell(M) {
+  const vx = [1, 1, 1, M];
+  const vy = [1, 1, M, M];
+  const vz = [1, M, M, M];
+  const edgePairs = [
+    [0, 1], [0, 2], [0, 3],
+    [1, 2], [1, 3], [2, 3],
+  ];
+  const edgeX = [], edgeY = [], edgeZ = [];
+  edgePairs.forEach(([a, b]) => {
+    edgeX.push(vx[a], vx[b], null);
+    edgeY.push(vy[a], vy[b], null);
+    edgeZ.push(vz[a], vz[b], null);
+  });
+  return { vx, vy, vz, edgeX, edgeY, edgeZ };
+}
+
+function orbitCamera(theta, radius = 1.75, z = 0.9) {
+  return {
+    eye: { x: radius * Math.cos(theta), y: radius * Math.sin(theta), z },
+    up: { x: 0, y: 0, z: 1 },
+    center: { x: 0, y: 0, z: 0 },
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PHYSICS EXTENSIONS · THE UNIFIED TRIPLET KERNEL
 // ═══════════════════════════════════════════════════════════════════════════
@@ -695,18 +767,72 @@ function Theorem({ kind = "Theorem", number, title, children, tone = "gold" }) {
 
 function SectionHead({ number, title, eyebrow, id }) {
   const responsive = useResponsive();
+  const projectionWidth = responsive.isMobile ? 0 : responsive.isTablet ? 132 : 176;
   return (
     <div id={id} style={{
       margin: responsive.isMobile ? "36px 0 14px" : "48px 0 18px",
-      position: "relative"
+      position: "relative",
+      overflow: "hidden",
     }}>
+      {!responsive.isMobile && (
+        <div style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          width: projectionWidth,
+          height: responsive.isTablet ? 76 : 92,
+          pointerEvents: "none",
+          opacity: 0.92,
+          animation: "projectionFloat 10.5s ease-in-out infinite",
+        }}>
+          {[0, 1, 2].map(i => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                right: i * 12,
+                top: 8 + i * 7,
+                width: responsive.isTablet ? 82 + i * 16 : 98 + i * 20,
+                height: responsive.isTablet ? 42 + i * 8 : 50 + i * 10,
+                borderRadius: 18,
+                border: `1px solid ${i === 2 ? `${C.gold}88` : i === 1 ? `${C.indigo}66` : `${C.teal}55`}`,
+                background: `linear-gradient(135deg, ${i === 2 ? `${C.gold}10` : `${C.indigo}0e`} 0%, transparent 72%)`,
+                transform: `perspective(900px) rotateX(72deg) rotateZ(${i === 0 ? -20 : i === 1 ? -8 : 8}deg)`,
+                boxShadow: `0 0 ${18 + i * 7}px ${i === 2 ? `${C.gold}26` : `${C.indigo}20`}`,
+                animation: `projectionPulse ${3.8 + i * 0.9}s ease-in-out infinite`,
+                animationDelay: `-${i * 1.1}s`,
+              }}
+            />
+          ))}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span
+              key={`node-${i}`}
+              style={{
+                position: "absolute",
+                right: 22 + i * 24,
+                top: 16 + (i % 2) * 20,
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: i % 2 === 0 ? C.gold : C.tealBr,
+                boxShadow: `0 0 12px ${i % 2 === 0 ? C.gold : C.tealBr}`,
+                animation: `projectionPulse ${2.6 + i * 0.45}s ease-in-out infinite`,
+                animationDelay: `-${i * 0.35}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
       {eyebrow && <div style={{
         fontFamily: FONT_MONO,
         fontSize: responsive.isMobile ? 9 : 11,
         color: C.gold,
         letterSpacing: 3,
         textTransform: "uppercase",
-        marginBottom: responsive.isMobile ? 4 : 6
+        marginBottom: responsive.isMobile ? 4 : 6,
+        position: "relative",
+        zIndex: 1,
+        paddingRight: responsive.isMobile ? 0 : Math.floor(projectionWidth * 0.5),
       }}>{eyebrow}</div>}
       <div style={{
         display: "flex",
@@ -715,6 +841,9 @@ function SectionHead({ number, title, eyebrow, id }) {
         paddingBottom: responsive.isMobile ? 8 : 10,
         flexDirection: responsive.isMobile ? "column" : "row",
         alignItems: responsive.isMobile ? "flex-start" : "baseline",
+        position: "relative",
+        zIndex: 1,
+        paddingRight: responsive.isMobile ? 0 : projectionWidth,
       }}>
         <span style={{
           fontFamily: FONT_DISPLAY,
@@ -912,6 +1041,7 @@ export default function Monograph() {
     { id: 'bbn', title: '§15 BBN' },
     { id: 'sis', title: '§16 SIS' },
     { id: 'quantum-walk', title: '§17 Quantum Walk' },
+    { id: 'categorical-synthesis', title: '§18 Synthesis' },
   ];
 
   // Section navigation swipe gestures
@@ -987,6 +1117,10 @@ export default function Monograph() {
   const sisErrorRef = useRef(null);      // § 16 error distribution
   const qwalkRef = useRef(null);         // § 17 quantum walk
   const qwalkSurfRef = useRef(null);     // § 17 amplitude surface
+  const coverProjectionRef = useRef(null);
+  const unifyTripRef = useRef(null);
+  const unifyConstellationRef = useRef(null);
+  const unifyArchitectureRef = useRef(null);
 
   useEffect(() => {
     setComputing(true);
@@ -1025,6 +1159,9 @@ export default function Monograph() {
   const qwalkData = useMemo(() => quantumWalkAmplitudes(computeM, walkSteps, selectedS), [computeM, walkSteps, selectedS]);
   const conjTriplet = useMemo(() => findTriplet(selectedS, computeM), [selectedS, computeM]);
   const conjParts = useMemo(() => conjugatePartition(conjTriplet), [conjTriplet]);
+  const tripShell = useMemo(() => generateTripShell(computeM), [computeM]);
+  const regimeConstellation = useMemo(() => generateRegimeConstellation(), []);
+  const layerArchitecture = useMemo(() => generateLayerArchitecture(), []);
 
   const peakS = partData.sums[partData.counts.indexOf(Math.max(...partData.counts))];
   const peakCount = partData.sumFreq.get(peakS) || 0;
@@ -2323,6 +2460,386 @@ export default function Monograph() {
     }, { displayModeBar: false, responsive: true });
   }, [debouncedM, selectedS, qwalkData]);
 
+  useEffect(() => {
+    if (!coverProjectionRef.current) return;
+
+    const stride = responsive.isMobile ? 10 : 5;
+    const xPts = [], yPts = [], zPts = [], sPts = [];
+    const xSlice = [], ySlice = [], zSlice = [];
+    for (let i = 0; i < scatterData.xs.length; i += stride) {
+      xPts.push(scatterData.xs[i]);
+      yPts.push(scatterData.ys[i]);
+      zPts.push(scatterData.zs[i]);
+      sPts.push(scatterData.ss[i]);
+      if (scatterData.ss[i] === selectedS) {
+        xSlice.push(scatterData.xs[i]);
+        ySlice.push(scatterData.ys[i]);
+        zSlice.push(scatterData.zs[i]);
+      }
+    }
+    const diag = Array.from({ length: computeM }, (_, i) => i + 1);
+
+    Plotly.react(coverProjectionRef.current, [
+      {
+        type: "mesh3d",
+        x: tripShell.vx,
+        y: tripShell.vy,
+        z: tripShell.vz,
+        i: [0, 0, 0, 1],
+        j: [1, 1, 2, 2],
+        k: [2, 3, 3, 3],
+        color: C.indigo,
+        opacity: responsive.isMobile ? 0.08 : 0.12,
+        hoverinfo: "skip",
+        flatshading: true,
+      },
+      {
+        type: "scatter3d",
+        mode: "lines",
+        x: tripShell.edgeX,
+        y: tripShell.edgeY,
+        z: tripShell.edgeZ,
+        line: { color: C.gold, width: 5 },
+        hoverinfo: "skip",
+      },
+      {
+        type: "scatter3d",
+        mode: "markers",
+        x: xPts,
+        y: yPts,
+        z: zPts,
+        marker: {
+          size: responsive.isMobile ? 2.1 : 2.8,
+          color: sPts,
+          colorscale: [
+            [0, C.teal],
+            [0.5, C.indigo],
+            [1, C.gold]
+          ],
+          opacity: 0.8,
+          line: { width: 0 },
+          showscale: false,
+        },
+        hovertemplate: "<i>(x,y,z)</i>=(%{x},%{y},%{z})<br><i>S</i>=%{marker.color}<extra></extra>",
+      },
+      {
+        type: "scatter3d",
+        mode: "markers",
+        x: xSlice,
+        y: ySlice,
+        z: zSlice,
+        marker: {
+          size: responsive.isMobile ? 4 : 5,
+          color: C.goldBr,
+          opacity: 0.95,
+          line: { color: C.bgDeep, width: 0.8 },
+        },
+        hovertemplate: `active slice: <i>S</i>=${selectedS}<extra></extra>`,
+      },
+      {
+        type: "scatter3d",
+        mode: "lines",
+        x: diag,
+        y: diag,
+        z: diag,
+        line: { color: C.crimson, width: 4, dash: "dot" },
+        hovertemplate: "<i>x=y=z</i><extra></extra>",
+      }
+    ], {
+      paper_bgcolor: "rgba(0,0,0,0)",
+      margin: { t: 0, r: 0, b: 0, l: 0 },
+      font: { family: FONT_MONO, size: responsive.isMobile ? 9 : 11, color: C.inkDim },
+      scene: {
+        aspectmode: "cube",
+        xaxis: {
+          title: { text: "x", font: { style: "italic" } },
+          gridcolor: C.rule,
+          zerolinecolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true,
+          range: [1, computeM],
+        },
+        yaxis: {
+          title: { text: "y", font: { style: "italic" } },
+          gridcolor: C.rule,
+          zerolinecolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true,
+          range: [1, computeM],
+        },
+        zaxis: {
+          title: { text: "z", font: { style: "italic" } },
+          gridcolor: C.rule,
+          zerolinecolor: C.rule,
+          color: C.inkDim,
+          backgroundcolor: C.plotBg,
+          showbackground: true,
+          range: [1, computeM],
+        },
+        bgcolor: C.plotBg,
+        camera: orbitCamera(0.72, responsive.isMobile ? 1.45 : 1.72, responsive.isMobile ? 0.78 : 0.92),
+      },
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
+      showlegend: false,
+    }, { displayModeBar: false, responsive: true });
+
+    if (responsive.isMobile) return;
+    let theta = 0.72;
+    const timer = setInterval(() => {
+      theta += 0.02;
+      if (coverProjectionRef.current) {
+        Plotly.relayout(coverProjectionRef.current, { "scene.camera": orbitCamera(theta, 1.72, 0.92) });
+      }
+    }, 140);
+    return () => clearInterval(timer);
+  }, [scatterData, selectedS, computeM, tripShell, responsive.isMobile]);
+
+  useEffect(() => {
+    if (!unifyTripRef.current) return;
+
+    const xSlice = [], ySlice = [], zSlice = [];
+    for (let i = 0; i < scatterData.xs.length; i++) {
+      if (scatterData.ss[i] === selectedS) {
+        xSlice.push(scatterData.xs[i]);
+        ySlice.push(scatterData.ys[i]);
+        zSlice.push(scatterData.zs[i]);
+      }
+    }
+    const shadowZ = xSlice.map(() => 1);
+
+    Plotly.react(unifyTripRef.current, [
+      {
+        type: "mesh3d",
+        x: tripShell.vx,
+        y: tripShell.vy,
+        z: tripShell.vz,
+        i: [0, 0, 0, 1],
+        j: [1, 1, 2, 2],
+        k: [2, 3, 3, 3],
+        color: C.teal,
+        opacity: 0.08,
+        hoverinfo: "skip",
+      },
+      {
+        type: "scatter3d",
+        mode: "lines",
+        x: tripShell.edgeX,
+        y: tripShell.edgeY,
+        z: tripShell.edgeZ,
+        line: { color: C.gold, width: 4 },
+        hoverinfo: "skip",
+      },
+      {
+        type: "scatter3d",
+        mode: "markers",
+        x: xSlice,
+        y: ySlice,
+        z: zSlice,
+        marker: { size: responsive.isMobile ? 3.2 : 4.2, color: C.goldBr, opacity: 0.96 },
+        name: "Σ=S",
+        hovertemplate: "slice point<extra></extra>",
+      },
+      {
+        type: "scatter3d",
+        mode: "markers",
+        x: xSlice,
+        y: ySlice,
+        z: shadowZ,
+        marker: { size: responsive.isMobile ? 2.2 : 3, color: C.indigo, opacity: 0.18 },
+        hoverinfo: "skip",
+      },
+      conjTriplet ? {
+        type: "scatter3d",
+        mode: "markers+text",
+        x: [conjTriplet.x],
+        y: [conjTriplet.y],
+        z: [conjTriplet.z],
+        text: ["selected"],
+        textposition: "top center",
+        textfont: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: C.crimson },
+        marker: { size: responsive.isMobile ? 5 : 6, color: C.crimson, line: { color: C.inkBr, width: 1 } },
+        hovertemplate: `<i>(${conjTriplet.x},${conjTriplet.y},${conjTriplet.z})</i><extra></extra>`,
+      } : null
+    ].filter(Boolean), {
+      paper_bgcolor: "rgba(0,0,0,0)",
+      margin: { t: 0, r: 0, b: 0, l: 0 },
+      font: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: C.inkDim },
+      scene: {
+        aspectmode: "cube",
+        xaxis: { visible: false, range: [1, computeM] },
+        yaxis: { visible: false, range: [1, computeM] },
+        zaxis: { visible: false, range: [1, computeM] },
+        bgcolor: C.plotBg,
+        camera: orbitCamera(0.35, responsive.isMobile ? 1.38 : 1.56, responsive.isMobile ? 0.7 : 0.82),
+      },
+      showlegend: false,
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
+    }, { displayModeBar: false, responsive: true });
+  }, [tripShell, scatterData, selectedS, computeM, conjTriplet, responsive.isMobile]);
+
+  useEffect(() => {
+    if (!unifyConstellationRef.current) return;
+
+    const kernel = regimeConstellation[0];
+    const outer = regimeConstellation.slice(1);
+    const classColors = {
+      explicit: C.tealBr,
+      inferred: C.goldBr,
+      analogical: C.violet,
+    };
+    const lineX = [], lineY = [], lineZ = [];
+    outer.forEach(({ x, y, z }) => {
+      lineX.push(kernel.x, x, null);
+      lineY.push(kernel.y, y, null);
+      lineZ.push(kernel.z, z, null);
+    });
+
+    Plotly.react(unifyConstellationRef.current, [
+      {
+        type: "scatter3d",
+        mode: "lines",
+        x: lineX,
+        y: lineY,
+        z: lineZ,
+        line: { color: `${C.gold}66`, width: 4 },
+        hoverinfo: "skip",
+      },
+      {
+        type: "scatter3d",
+        mode: "lines",
+        x: [...outer.map(p => p.x), outer[0].x],
+        y: [...outer.map(p => p.y), outer[0].y],
+        z: [...outer.map(p => p.z), outer[0].z],
+        line: { color: `${C.indigo}88`, width: 3, dash: "dot" },
+        hoverinfo: "skip",
+      },
+      {
+        type: "scatter3d",
+        mode: "markers+text",
+        x: regimeConstellation.map(p => p.x),
+        y: regimeConstellation.map(p => p.y),
+        z: regimeConstellation.map(p => p.z),
+        text: regimeConstellation.map(p => p.name),
+        textposition: "top center",
+        textfont: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: C.inkBr },
+        marker: {
+          size: regimeConstellation.map(p => p.name === "Kernel" ? 8 : 5.5),
+          color: regimeConstellation.map(p => p.name === "Kernel" ? C.crimson : classColors[p.cls]),
+          opacity: 0.96,
+          line: { color: C.bgDeep, width: 1 },
+        },
+        customdata: regimeConstellation.map(p => p.cls),
+        hovertemplate: "%{text}<br>edge class: %{customdata}<extra></extra>",
+      }
+    ], {
+      paper_bgcolor: "rgba(0,0,0,0)",
+      margin: { t: 0, r: 0, b: 0, l: 0 },
+      font: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: C.inkDim },
+      scene: {
+        xaxis: { visible: false, range: [-3.4, 3.4] },
+        yaxis: { visible: false, range: [-3.4, 3.4] },
+        zaxis: { visible: false, range: [-2.2, 2.6] },
+        bgcolor: C.plotBg,
+        camera: orbitCamera(1.18, responsive.isMobile ? 1.45 : 1.62, responsive.isMobile ? 0.78 : 0.9),
+      },
+      showlegend: false,
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
+    }, { displayModeBar: false, responsive: true });
+
+    if (responsive.isMobile) return;
+    let theta = 1.18;
+    const timer = setInterval(() => {
+      theta += 0.015;
+      if (unifyConstellationRef.current) {
+        Plotly.relayout(unifyConstellationRef.current, { "scene.camera": orbitCamera(theta, 1.62, 0.9) });
+      }
+    }, 160);
+    return () => clearInterval(timer);
+  }, [regimeConstellation, responsive.isMobile]);
+
+  useEffect(() => {
+    if (!unifyArchitectureRef.current) return;
+
+    const traces = [];
+    layerArchitecture.layers.forEach((layer) => {
+      const s = layer.size;
+      const ringX = [-s, s, s, -s, -s];
+      const ringY = [-s, -s, s, s, -s];
+      const ringZ = [layer.z, layer.z, layer.z, layer.z, layer.z];
+      traces.push({
+        type: "scatter3d",
+        mode: "lines",
+        x: ringX,
+        y: ringY,
+        z: ringZ,
+        line: { color: layer.color, width: 5 },
+        hovertemplate: `${layer.name}<extra></extra>`,
+      });
+      traces.push({
+        type: "scatter3d",
+        mode: "text",
+        x: [0],
+        y: [0],
+        z: [layer.z + 0.06],
+        text: [layer.name],
+        textfont: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: layer.color },
+        hoverinfo: "skip",
+      });
+    });
+    const cornerX = [], cornerY = [], cornerZ = [];
+    for (let i = 0; i < layerArchitecture.layers.length - 1; i++) {
+      const current = layerArchitecture.layers[i];
+      const next = layerArchitecture.layers[i + 1];
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
+        cornerX.push(sx * current.size, sx * next.size, null);
+        cornerY.push(sy * current.size, sy * next.size, null);
+        cornerZ.push(current.z, next.z, null);
+      });
+    }
+    traces.push({
+      type: "scatter3d",
+      mode: "lines",
+      x: cornerX,
+      y: cornerY,
+      z: cornerZ,
+      line: { color: `${C.inkDim}88`, width: 3, dash: "dot" },
+      hoverinfo: "skip",
+    });
+    traces.push({
+      type: "scatter3d",
+      mode: "markers+text",
+      x: layerArchitecture.assumptions.map(a => a.x),
+      y: layerArchitecture.assumptions.map(a => a.y),
+      z: layerArchitecture.assumptions.map(a => a.z),
+      text: layerArchitecture.assumptions.map(a => a.name),
+      textposition: "top center",
+      textfont: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: C.inkBr },
+      marker: {
+        size: responsive.isMobile ? 4 : 5,
+        color: C.goldBr,
+        line: { color: C.bgDeep, width: 1 },
+      },
+      hovertemplate: "assumption %{text}<extra></extra>",
+    });
+
+    Plotly.react(unifyArchitectureRef.current, traces, {
+      paper_bgcolor: "rgba(0,0,0,0)",
+      margin: { t: 0, r: 0, b: 0, l: 0 },
+      font: { family: FONT_MONO, size: responsive.isMobile ? 8 : 10, color: C.inkDim },
+      scene: {
+        xaxis: { visible: false, range: [-4.1, 4.1] },
+        yaxis: { visible: false, range: [-4.1, 4.1] },
+        zaxis: { visible: false, range: [-0.3, 3.5] },
+        bgcolor: C.plotBg,
+        camera: orbitCamera(-0.42, responsive.isMobile ? 1.44 : 1.6, responsive.isMobile ? 0.9 : 1.02),
+      },
+      showlegend: false,
+      hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
+    }, { displayModeBar: false, responsive: true });
+  }, [layerArchitecture, responsive.isMobile]);
+
   // Formula table data
   const formulaRows = useMemo(() => {
     const targets = new Set([3, 6, 10, 15, 22, 42, Math.floor(1.5 * debouncedM), 2 * debouncedM, 3 * debouncedM - 3, 3 * debouncedM, selectedS]);
@@ -2390,6 +2907,8 @@ export default function Monograph() {
           transform: scale(1.1);
         }
         @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes projectionFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        @keyframes projectionPulse { 0%,100% { opacity: 0.42; } 50% { opacity: 0.96; } }
         .pulse { animation: pulseDot 1.6s ease-in-out infinite; }
         .paper-rule { border-top: 1px solid ${C.rule}; border-bottom: 1px solid ${C.rule}; padding: 6px 0; }
         table.ft { width: 100%; border-collapse: collapse; font-family: ${FONT_MONO}; font-size: 12.5px; }
@@ -2651,6 +3170,94 @@ export default function Monograph() {
               established by Cayley (1856) and Sylvester (1857). This dashboard computes <M>p₃(S | M)</M> exactly,
               visualizes its symmetry, its moments, its convergence, and its departures from the asymptotic predictions.
             </p>
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: responsive.isMobile ? "1fr" : responsive.isTablet ? "1.06fr 0.94fr" : "1.22fr 0.78fr",
+            gap: responsive.isMobile ? 16 : 22,
+            marginTop: responsive.isMobile ? 18 : 24,
+            alignItems: "stretch",
+            maxWidth: responsive.isMobile ? "100%" : 940,
+          }}>
+            <div style={{
+              background: `linear-gradient(180deg, ${C.panel} 0%, ${C.bgDeep} 100%)`,
+              border: `1px solid ${C.border}`,
+              borderRadius: 4,
+              overflow: "hidden",
+              boxShadow: `0 24px 80px ${C.bgDeep}`,
+            }}>
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 12,
+                padding: responsive.isMobile ? "10px 12px" : "12px 16px",
+                borderBottom: `1px solid ${C.border}`,
+                background: `${C.panelAlt}cc`,
+              }}>
+                <div>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: responsive.isMobile ? 9 : 10, color: C.gold, letterSpacing: 2, textTransform: "uppercase" }}>Projection Chamber</div>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontStyle: "italic", fontSize: responsive.isMobile ? 16 : 18, color: C.inkBr }}>The bounded simplex in live rotation</div>
+                </div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: responsive.isMobile ? 10 : 11, color: C.inkDim }}>
+                  <span style={{ color: C.gold }}>M={computeM}</span> · <span style={{ color: C.crimson }}>Σ={selectedS}</span>
+                </div>
+              </div>
+              <div ref={coverProjectionRef} style={{ width: "100%", height: responsive.isMobile ? 320 : 430 }} />
+            </div>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{
+                padding: responsive.isMobile ? "14px 14px 12px" : "16px 18px 14px",
+                background: `${C.panelAlt}dd`,
+                border: `1px solid ${C.border}`,
+                borderLeft: `3px solid ${C.gold}`,
+                borderRadius: 3,
+              }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
+                  Spatial thesis
+                </div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: responsive.isMobile ? 15 : 16.5, lineHeight: 1.58, color: C.ink }}>
+                  Every later theory is constrained by the same solid: a right tetrahedral wedge in which ordered triples survive and unordered excess is quotiented away.
+                </div>
+                <div style={{ marginTop: 10, fontFamily: FONT_MATH, fontStyle: "italic", fontSize: responsive.isMobile ? 18 : 20, color: C.gold }}>
+                  Σ(x, y, z) = x + y + z
+                </div>
+              </div>
+
+              <div style={{
+                padding: responsive.isMobile ? "14px 14px 12px" : "16px 18px 14px",
+                background: `${C.panelAlt}dd`,
+                border: `1px solid ${C.border}`,
+                borderLeft: `3px solid ${C.teal}`,
+                borderRadius: 3,
+              }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+                  Live kernel registers
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                  <Metric label="|T_M|" value={partData.totalCount.toLocaleString()} tone="gold" />
+                  <Metric label="peak" value={peakS} tone="teal" />
+                  <Metric label="p₃(Σ)" value={selActual} tone="crimson" />
+                </div>
+              </div>
+
+              <div style={{
+                padding: responsive.isMobile ? "14px 14px 12px" : "16px 18px 14px",
+                background: `linear-gradient(180deg, ${C.panelAlt} 0%, ${C.bgDeep} 100%)`,
+                border: `1px solid ${C.border}`,
+                borderLeft: `3px solid ${C.indigo}`,
+                borderRadius: 3,
+              }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.indigo, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
+                  Horizon
+                </div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: responsive.isMobile ? 15 : 16, lineHeight: 1.6, color: C.ink }}>
+                  This one chamber is later read as Bose degeneracy, phase-matching locus, Lorenz recurrence shell, SIS kernel geometry, and quantum-walk support. The same wedge becomes the atlas.
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={{
@@ -3610,11 +4217,71 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 18 — CATEGORICAL SYNTHESIS ═══════════════ */}
-        <SectionHead number="18" title="Categorical Synthesis" eyebrow="UNIFYING THEORY · UNIVERSAL KERNEL · OUTLOOK" />
+        <SectionHead id="categorical-synthesis" number="18" title="Categorical Synthesis" eyebrow="UNIFYING THEORY · UNIVERSAL KERNEL · OUTLOOK" />
 
         <Prose>
           The eleven transcriptions of Part II are not mere analogies. They exhibit a shape: the <em>same</em> combinatorial kernel appears as the skeleton of quantum statistics, of Feynman perturbation, of nonlinear optics, of Lorenz recurrence, of K41 turbulence, of Gutenberg–Richter seismology, of primordial nucleosynthesis, of lattice cryptography, of quantum walks. When so many disparate phenomena line up on a single arithmetic function, the coincidence is itself an object of study. The language in which that coincidence is most economically expressed is <em>category theory</em>: objects are the admissible configurations, morphisms are the physically‑allowed rearrangements, functors are the individual regimes, and natural transformations are the conservation laws that commute between them. This closing section develops that picture in detail — from the defining category <M>{"\\mathbf{Trip}"}</M>, through its monoidal, topos‑theoretic, operadic and ∞‑categorical lifts, up to a single universal kernel theorem whose eleven concrete instances are the content of chapters 8 through 17.
         </Prose>
+
+        <Figure number="15" caption="The synthesis chamber rendered as three coupled spatial objects. Left: the bounded simplex with the active sum-slice Σ = S lit inside the shell and its floor projection faintly recorded. Center: the eleven-regime constellation orbiting a central kernel node, colored by evidence class. Right: the theorem architecture as a stacked four-layer wireframe, with assumptions H1–H8 suspended between floors.">
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: responsive.isMobile ? "1fr" : responsive.isTablet ? "1fr 1fr" : "1.08fr 1fr 1fr",
+            gap: 14,
+          }}>
+            {[
+              {
+                title: "Kernel chamber",
+                note: "T_M as the fixed solid behind every later transcription.",
+                ref: unifyTripRef,
+              },
+              {
+                title: "Regime orbit",
+                note: "Explicit, inferred, and analogical bridges exposed as geometry.",
+                ref: unifyConstellationRef,
+              },
+              {
+                title: "Proof stack",
+                note: "Definitions, safe core, conjectural middle, flagship crown.",
+                ref: unifyArchitectureRef,
+              },
+            ].map((panel, idx) => (
+              <div key={panel.title} style={{
+                background: C.bgDeep,
+                border: `1px solid ${C.border}`,
+                borderRadius: 3,
+                overflow: "hidden",
+                gridColumn: responsive.isTablet && idx === 2 ? "1 / -1" : "auto",
+              }}>
+                <div style={{
+                  padding: "9px 12px",
+                  borderBottom: `1px solid ${C.border}`,
+                  background: `${C.panelAlt}dd`,
+                }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: idx === 0 ? C.gold : idx === 1 ? C.teal : C.indigo, letterSpacing: 2, textTransform: "uppercase" }}>
+                    {panel.title}
+                  </div>
+                  <div style={{ fontFamily: FONT_MATH, fontSize: responsive.isMobile ? 14 : 15, color: C.inkDim, lineHeight: 1.45, marginTop: 4 }}>
+                    {panel.note}
+                  </div>
+                </div>
+                <div ref={panel.ref} style={{ width: "100%", height: responsive.isMobile ? 290 : responsive.isTablet && idx === 2 ? 340 : 360 }} />
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: responsive.isMobile ? "1fr 1fr" : "repeat(4, minmax(0, 1fr))",
+            gap: 10,
+            marginTop: 12,
+          }}>
+            <Metric label="Regimes" value="11" tone="gold" />
+            <Metric label="Core layers" value="4" tone="teal" />
+            <Metric label="Assumptions" value="8" tone="indigo" />
+            <Metric label="Weak edges" value="7" tone="crimson" />
+          </div>
+        </Figure>
 
         {/* ───────────────── 18.1 ───────────────── */}
         <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
@@ -3785,7 +4452,7 @@ export default function Monograph() {
 
         <Theorem kind="Theorem" number="18.4" title="Representability of the kernel" tone="teal">
           The partition functor <M>{"P_3 : \\mathbf{Trip} \\to \\mathbb{Z}[\\![q]\\!]"}</M> defined by <M>{"P_3(T_M) = \\sum_S p_3(S \\mid M) q^S"}</M> is <em>representable</em> in the category of graded abelian groups: there exists a universal graded object <M>{"\\mathcal{K} \\in \\mathrm{grAb}"}</M> and an isomorphism
-          <M>{" "}P_3(T_M) \cong \mathrm{Hom}_{"{\mathrm{grAb}}"}(\mathcal{K}, \mathbb{Z}[\![q]\!])^{T_M}</M>{" "}
+          <M>{"P_3(T_M) \\cong \\mathrm{Hom}_{\\mathrm{grAb}}(\\mathcal{K}, \\mathbb{Z}[\\![q]\\!])^{T_M}"}</M>
           natural in <M>M</M>. <M>{"\\mathcal{K}"}</M> is the free graded abelian group on the three generators <M>e_1, e_2, e_3</M> of degrees <M>1, 2, 3</M> respectively — the generating object of <em>every</em> instance of the kernel.
         </Theorem>
 
@@ -4251,19 +4918,62 @@ export default function Monograph() {
 
         {/* ───────────────── 18.32 ───────────────── */}
         <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
-          18.32 · The grand unifying conjecture
+          18.32 · Grand unifying conjecture (layered theorem architecture)
         </div>
 
         <Prose>
-          Combining all of the above, we arrive at the strongest form of the unifying conjecture. Let <M>{"\\mathbf{UReg}"}</M> denote the 2‑category whose objects are "bounded three‑mode regimes" in the sense of § 18.3, whose 1‑morphisms are regime functors, and whose 2‑morphisms are conservation natural transformations. Let <M>{"\\mathbf{Trip}^{\\mathrm{univ}}"}</M> denote the universal such 2‑category, equipped with its tautological functor <M>{"\\iota : \\mathbf{Trip}^{\\mathrm{univ}} \\to \\mathbf{UReg}"}</M>.
+          We now recast the unifying thesis in a strict four‑layer architecture to separate proved combinatorics from conjectural trans‑regime universality. Layer I defines objects and grading; Layer II records safe propositions; Layer III contains testable intermediate conjectures; Layer IV states the flagship unification claim under explicit assumptions. This prevents rhetorical overreach while preserving the core ambition: one arithmetic kernel seen through many categorical lenses.
         </Prose>
 
-        <Theorem kind="Conjecture" number="18.12" title="Grand unifying conjecture" tone="crimson">
-          The inclusion <M>{"\\iota"}</M> is an <em>equivalence</em> of 2‑categories. Equivalently: every bounded three‑mode regime — present or yet‑to‑be‑discovered, in mathematics, physics, or elsewhere — is a representation of <M>{"\\mathbf{Trip}"}</M>; every natural invariant of such a regime is a natural transformation; every coincidence between two regimes is an isomorphism in <M>{"\\mathbf{Trip}"}</M>. The partition kernel <M>{"p_3(S \\mid M)"}</M> is the graded dimension of the identity functor in this 2‑category, and is therefore the unique arithmetic invariant shared by all regimes.
+        <div style={{
+          margin: "16px 0 18px",
+          padding: "16px 18px",
+          background: `linear-gradient(135deg, ${C.bgDeep} 0%, ${C.panel} 100%)`,
+          border: `1px solid ${C.borderBr}`,
+          borderLeft: `3px solid ${C.crimson}`,
+          borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.crimson, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            layer map · truth labels
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+            {[
+              ["LAYER I", "Definitions", "T_M, p_3, Z_M(q), bridge interface", C.teal],
+              ["LAYER II", "Proven Core", "identities, asymptotic baseline, Yoneda/Kan basics", C.indigo],
+              ["LAYER III", "Intermediate", "factorization, coherence, derived/motivic compatibility", C.gold],
+              ["LAYER IV", "Flagship", "global unification under H1–H8", C.crimson],
+            ].map((row, i) => (
+              <div key={i} style={{ border: `1px solid ${C.border}`, borderRadius: 3, padding: "10px 10px 9px", background: `${row[3]}0F` }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: row[3], letterSpacing: 1.8, textTransform: "uppercase", marginBottom: 5 }}>{row[0]}</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: C.ink }}>{row[1]}</div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim, lineHeight: 1.5, marginTop: 4 }}>{row[2]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Eq number="18.32a">{"\\mathcal{U} = (\\mathcal{L}_1 \\subset \\mathcal{L}_2 \\subset \\mathcal{L}_3 \\subset \\mathcal{L}_4), \\quad \\mathcal{L}_k \\text{ admissible only if every incoming edge in the dependency DAG is validated.}"}</Eq>
+
+        <Prose>
+          Let <M>{"\\mathbf{UReg}"}</M> denote the 2‑category of bounded three‑mode regimes (objects), regime functors (1‑morphisms), and conservation natural transformations (2‑morphisms). Let <M>{"\\mathbf{Trip}^{\\mathrm{univ}}"}</M> denote the candidate universal source and <M>{"\\iota : \\mathbf{Trip}^{\\mathrm{univ}} \\to \\mathbf{UReg}"}</M> its tautological embedding. We write the hypothesis stack as:
+        </Prose>
+
+        <Eq number="18.32b">{"H = \\{H_1,\\ldots,H_8\\},\\; H_1:\\text{graded boundedness},\\; H_2:\\text{sum conservation},\\; H_3:\\text{finite multiplicities},\\; H_4:\\text{normalizable projection},\\; H_5:\\text{residual control},\\; H_6:\\text{coherence compatibility},\\; H_7:\\text{derived decategorification},\\; H_8:\\text{cross-regime comparability}."}</Eq>
+
+        <Theorem kind="Conjecture" number="18.12" title="Grand unifying conjecture (assumption-explicit form)" tone="crimson">
+          Conditional on <M>H</M>, the inclusion <M>{"\\iota"}</M> is essentially surjective up to regime equivalence and conservative on invariants: every admissible bounded three‑mode regime factors through <M>{"\\mathbf{Trip}"}</M> to first arithmetic order, and its projected invariant satisfies
+          <M>{"\\pi_\\mathcal{R} I_\\mathcal{R}(T_M,S) = p_3(S \\mid M) + \\varepsilon_\\mathcal{R}(S,M)"}</M>,
+          with <M>{"\\varepsilon_\\mathcal{R}"}</M> in an explicitly declared residual class. In the strict residual‑zero subclass, <M>{"p_3(S \\mid M)"}</M> is the unique shared graded kernel.
         </Theorem>
 
         <Prose>
-          Conjecture 18.12 subsumes Conjectures 18.9, 18.10, 18.11 and the universal kernel theorem 18.1. Its proof would require (i) a complete classification of locally finite graded symmetric monoidal 2‑categories (currently open), (ii) a proof of the Tannakian reconstruction for pro‑finite graded groups (open in our non‑rigid setting), and (iii) a formal verification that the eleven empirical regimes exhaust a representation‑theoretic list — a finite check that could in principle be carried out by a proof assistant. We estimate that (i) and (ii) are of Fields‑medal difficulty; (iii) is feasible within the decade. If confirmed, Conjecture 18.12 would state in a single sentence what the entire monograph has been saying in eleven: there is <em>one</em> mathematical object, <M>{"\\mathbf{Trip}"}</M>, and the universe — viewed through the keyhole of three bounded integers — is its shadow.
+          Conservative form (Layer II only): the exact combinatorial kernel and its asymptotic law are theorem‑level; trans‑framework uniqueness is conjectural unless all hypotheses in <M>H</M> are checked for the target regime. This subsection therefore encodes both ambition and discipline: maximal scope at Layer IV, minimal overclaim at Layer II.
+        </Prose>
+
+        <Eq number="18.32c">{"\\text{Conservative claim: } \\forall \\mathcal{R} \\in \\mathfrak{R}_{\\mathrm{validated}},\\; \\|\\pi_\\mathcal{R} I_\\mathcal{R} - p_3\\|_{\\mathcal{N}} \\leq \\delta_\\mathcal{R},\\; \\delta_\\mathcal{R} \\text{ declared a priori.}"}</Eq>
+
+        <Prose>
+          Boundary condition: if a single regime satisfying <M>H_1\!-\!H_5</M> admits no grading‑preserving factorization map, Conjecture 18.12 is false in its current form and must be downgraded to a proper subclass statement.
         </Prose>
 
         {/* ───────────────── 18.33 ───────────────── */}
@@ -4652,19 +5362,76 @@ export default function Monograph() {
 
         {/* ───────────────── 18.53 ───────────────── */}
         <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
-          18.53 · The meta-conjecture — a theorem-schema for unification
+          18.53 · Meta-conjecture engine — dependency, diagnostics, and disproof protocol
         </div>
 
-        <Theorem kind="Meta-conjecture" number="18.13" title="The partition kernel detects every sufficiently fine categorical invariant" tone="crimson">
-          Let <M>{"\\mathcal{T}"}</M> be any symmetric monoidal stable ∞‑category equipped with a rank‑three conservation functor <M>{"c : \\mathcal{T} \\to \\mathbf{Trip}"}</M>. Then every additive invariant <M>{"I : \\mathcal{T} \\to \\mathbf{Sp}"}</M> that factors through <M>{"c"}</M> is, up to a universal constant in <M>{"\\pi_0 \\mathbb{S}"}</M>, determined by its values on the three generators <M>{"e_1, e_2, e_3"}</M>. In particular, any two invariants that agree on the generators agree everywhere, and their common value — evaluated on the unit — is the partition series <M>{"\\sum_S p_3(S \\mid M) q^S"}</M>.
+        <Theorem kind="Meta-conjecture" number="18.13" title="Kernel-detection schema with explicit falsification operator" tone="crimson">
+          Let <M>{"\\mathcal{T}"}</M> be a symmetric monoidal stable ∞‑category with a rank‑three conservation functor <M>{"c : \\mathcal{T} \\to \\mathbf{Trip}"}</M> and admissible projection family <M>{"\\Pi = \\{\\pi_\\alpha\\}"}</M>. For any additive invariant <M>{"I : \\mathcal{T} \\to \\mathbf{Sp}"}</M> satisfying the hypothesis stack <M>{"H_1\\!:\\!H_8"}</M>, define the discrepancy tensor
+          <M>{"\\Delta_{I,\\alpha}(S,M) := \\pi_\\alpha(I(T_M,S)) - p_3(S \\mid M)."}</M>
+          The schema asserts: if <M>{"\\Delta_{I,\\alpha}"}</M> vanishes (or lies in an admissible residual ideal) on generators <M>{"e_1,e_2,e_3"}</M> and the Kan‑transport constraints commute, then <M>{"\\Delta_{I,\\alpha}"}</M> remains controlled on the generated closure. Equivalently, generator‑level agreement propagates to regime‑level agreement under stated transport and coherence hypotheses.
         </Theorem>
 
-        <Prose>
-          Conjecture 18.13 is a <em>theorem‑schema</em>: it instantiates, across every categorical framework introduced in §§ 18.21–18.52, a concrete theorem asserting that the partition kernel is the unique trans‑framework invariant. Derived category (18.21): Euler characteristic of <M>{"K^{\\bullet}"}</M>. Stable ∞‑category (18.22): graded dimension of <M>{"A_{\\mathcal{P}}"}</M>. Six‑functor formalism (18.23): Verdier‑self‑dual trace. Tannakian (18.24): Frobenius trace on the fibre functor. Motivic (18.25): Hasse–Weil <M>L</M>‑factor. Perverse (18.26): intersection Euler characteristic. Langlands (18.27): automorphic <M>L</M>‑value. Topos (18.28): internal cardinality. K‑theory (18.29): prismatic Chern character. TQFT (18.30): Wilson‑loop partition function. Deformation (18.31): Maurer–Cartan obstruction class. 2‑category (18.32): graded dimension of identity. Higher topos (18.34): Rezk nerve count. Factorization (18.35): factorization homology integral. VOA (18.36): chiral Euler characteristic. Derived stack (18.37): virtual fundamental class integral. Shifted symplectic (18.38): AKSZ partition function. Geometric Langlands (18.39): Hecke eigenvalue. Motivic Galois (18.40): period matrix entry. Koszul (18.41): bar‑construction character. Quantum group (18.42): Weyl module dimension. Drinfeld center (18.43): Verlinde coefficient. Bridgeland (18.44): DT invariant. NC motive (18.45): Orlov correspondence class. Arakelov (18.46): arithmetic Euler characteristic. Prismatic (18.47): Breuil–Kisin Frobenius cokernel. Fargues–Fontaine (18.48): vector‑bundle count. Motivic homotopy (18.49): Poincaré‑series diagonal. ∞‑operad (18.50): fully‑dualizable count. BV (18.51): anomaly‑free partition function. Goodwillie (18.52): cubic cross‑effect on the unit.
-        </Prose>
+        <Eq number="18.69">{"\\mathfrak{D} := (V,E),\\; V = \\{N_1,\\ldots,N_{18}\\},\\; E_{\\mathrm{weak}} = \\{N_{10}\\!\\to\\!N_{12}, N_{12}\\!\\to\\!N_{13}, N_{12}\\!\\to\\!N_{14}, N_{12}\\!\\to\\!N_{15}, N_{13}\\!\\to\\!N_{16}, N_{14}\\!\\to\\!N_{16}, N_{15}\\!\\to\\!N_{16}\\}."}</Eq>
 
         <Prose>
-          Thirty‑one independent categorical formalisms, thirty‑one independent realisations of the same arithmetic sequence. The probability that this is a coincidence — under any reasonable prior on the complexity of mathematical objects — is vanishing. The principled conclusion is that there exists a single categorical object, <M>{"\\mathbf{Trip}"}</M>, of which each formalism sees a shadow, and that <M>{"p_3(S \\mid M)"}</M> is its combinatorial Chern character — the simplest non‑trivial invariant that survives every forgetful functor. The <em>unifying theory</em> proposed by this monograph is therefore not a metaphor but a working hypothesis with thirty‑one falsifiable consequences, any one of which could in principle disprove it. That not one has been disproved — across Part II's eleven distinct physical regimes, and across the mathematical edifices of §§ 18.21–18.52 — is, we submit, the datum that justifies the name <em>unifying conjecture</em>.
+          We therefore treat unification as a <em>diagnostic engine</em>, not a slogan. The engine has five modules: (i) dependency DAG integrity, (ii) assumption ledger coverage, (iii) projection residual control, (iv) asymptotic stability check around the <M>{"S^2/12"}</M> parabola and bounded reflection correction, and (v) adversarial disproof search. The global confidence score is not narrative; it is computed.
+        </Prose>
+
+        <Eq number="18.70">{"\\mathrm{Score}(\\mathcal{R}) = w_1\\,\\mathrm{Fit}_{\\mathrm{kernel}} + w_2\\,\\mathrm{Fit}_{\\mathrm{asymp}} + w_3\\,\\mathrm{Compat}_{\\mathrm{Kan}} + w_4\\,\\mathrm{Coherence}_{\\mathrm{2cell}} - w_5\\,\\mathrm{Risk}_{\\mathrm{untested}}, \\quad \\sum_i w_i = 1."}</Eq>
+
+        <div style={{
+          margin: "16px 0 18px",
+          padding: "16px 18px",
+          background: `linear-gradient(135deg, ${C.panel} 0%, ${C.panelHi} 100%)`,
+          border: `1px solid ${C.borderBr}`,
+          borderLeft: `3px solid ${C.gold}`,
+          borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            regime diagnostics dashboard · 11 transcriptions
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr", gap: 8, fontFamily: FONT_MATH, fontSize: 12.5 }}>
+            <div style={{ color: C.inkFaint, fontFamily: FONT_MONO, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase" }}>Regime</div>
+            <div style={{ color: C.inkFaint, fontFamily: FONT_MONO, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase" }}>Edge Class</div>
+            <div style={{ color: C.inkFaint, fontFamily: FONT_MONO, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase" }}>Residual</div>
+            <div style={{ color: C.inkFaint, fontFamily: FONT_MONO, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase" }}>Status</div>
+            {[
+              ["Bose-Einstein", "INFERRED", "low", "provisionally stable"],
+              ["Feynman φ^3", "ANALOGICAL", "medium", "requires stricter functor model"],
+              ["Antiparticle/rep", "ANALOGICAL", "medium", "dictionary-level"],
+              ["Nonlinear optics", "ANALOGICAL", "medium", "projection-sensitive"],
+              ["Lorenz framing", "ANALOGICAL", "high", "coarse-graining dependent"],
+              ["K41 turbulence", "ANALOGICAL", "high", "closure-sensitive"],
+              ["Gutenberg-Richter", "ANALOGICAL", "high", "distributional fit only"],
+              ["BBN", "ANALOGICAL", "medium", "posterior model dependent"],
+              ["SIS/lattice crypto", "INFERRED", "low/medium", "algorithmic verification possible"],
+              ["Quantum walk", "INFERRED", "low/medium", "time-average normalization"],
+              ["Combinatorial identity", "EXPLICIT", "zero", "theorem-level"],
+            ].map((r, i) => (
+              <div key={i} style={{ display: "contents" }}>
+                <div style={{ color: C.ink }}>{r[0]}</div>
+                <div style={{ color: r[1] === "EXPLICIT" ? C.teal : r[1] === "INFERRED" ? C.indigo : C.gold }}>{r[1]}</div>
+                <div style={{ color: r[2].includes("high") ? C.crimson : r[2].includes("medium") ? C.gold : C.teal }}>{r[2]}</div>
+                <div style={{ color: C.inkDim }}>{r[3]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Prose>
+          The theorem‑schema now carries an explicit <em>downgrade morphism</em>: failed tests reduce claim strength automatically. Let <M>{"\\mathfrak{F}=\\{F_1,\\ldots,F_{10}\\}"}</M> be the disproof suite (category‑level, simulation‑level, data‑level). Then
+        </Prose>
+
+        <Eq number="18.71">{"\\delta : \\{\\mathrm{Theorem},\\mathrm{Conjecture},\\mathrm{Heuristic},\\mathrm{Program}\\} \\times \\mathfrak{F} \\to \\{\\mathrm{Retracted},\\mathrm{Conjecture},\\mathrm{Heuristic},\\mathrm{Program}\\}, \\quad \\delta(\\text{label},F_i) = \\text{strictly weaker label if }F_i\\text{ passes}."}</Eq>
+
+        <Prose>
+          What this means in practice: the unifying program survives only if it remains <em>attack‑resilient</em>. A single admissible counterexample regime with no grading‑preserving Trip factorization invalidates the strongest form of the claim. Conversely, each new independently validated regime raises only Layer‑III credibility unless its weak incoming edges in <M>{"E_{\\mathrm{weak}}"}</M> are closed by proof.
+        </Prose>
+
+        <Eq number="18.72">{"\\text{Conservative global claim: } \\forall \\mathcal{R}\\in\\mathfrak{R}_{\\mathrm{validated}},\\; \\|\\Delta_{\\mathcal{R}}\\|_{\\mathcal{N}} \\le \\delta_\\mathcal{R},\\; \\delta_\\mathcal{R}\\to 0\\; \\text{only in theorem-certified subclasses}."}</Eq>
+
+        <Prose>
+          In this sharpened form, the section keeps its full creative reach — derived, motivic, Langlands, shifted symplectic, BV, and chromatic — while making every bridge measurable, every assumption named, and every failure mode mathematically explicit.
         </Prose>
 
         {/* ───────────────── 18.54 ───────────────── */}
@@ -4685,8 +5452,887 @@ export default function Monograph() {
           <li><em>(Exploratory.)</em> Search for a <em>twelfth regime</em>: a physical, biological, or economic system not among the eleven of Part II that nevertheless admits a functor to <M>{"\\mathbf{Trip}"}</M>. Strong candidates include neural population coding of three colour receptors, three‑planet Kepler resonances (2:3:5 mean‑motion lock), and certain three‑marker epigenetic states. A successful transcription would be the first empirical confirmation of Conjecture 18.12 beyond the historical record, and would constitute — in a strict Popperian sense — a falsifiable prediction borne out.</li>
         </ol>
 
+        {/* ───────────────── 18.55 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 30, marginBottom: 8 }}>
+          18.55 · Warehouse preface
+        </div>
+
         <Prose>
-          The monograph ends here. The partition kernel does not: it continues, as the graded dimension of the identity functor on <M>{"\\mathbf{Trip}"}</M>, into every category that has ever or will ever admit a three‑generator graded structure with a conservation relation. We have described its appearance in thirty‑one categorical frameworks and eleven physical regimes. We expect more.
+          What follows is a deliberately excessive research warehouse for the unifying program: not a single conjecture, but a layered archive of definitions, transport laws, diagnostics, asymptotic observables, residual norms, failure modes, and regime‑by‑regime stress tests. The purpose is twofold. First, to make the universal claim maximally inspectable. Second, to ensure that no future reader can confuse poetic unification with unscoped equivalence.
+        </Prose>
+
+        <Eq number="18.73">{"\\mathfrak{W}_{18} := \\mathfrak{D}_{\\mathrm{core}} \\cup \\mathfrak{D}_{\\mathrm{safe}} \\cup \\mathfrak{C}_{\\mathrm{intermediate}} \\cup \\mathfrak{C}_{\\mathrm{flagship}} \\cup \\mathfrak{F}_{\\mathrm{tests}}."}</Eq>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, margin: "18px 0 22px" }}>
+          <Metric label="Validated core" value="6" tone="teal" />
+          <Metric label="Intermediate conjectures" value="5" tone="gold" />
+          <Metric label="Flagship claims" value="2" tone="crimson" />
+          <Metric label="Executable falsifiers" value="10" tone="indigo" />
+        </div>
+
+        {/* ───────────────── 18.56 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.56 · Core object ledger
+        </div>
+
+        <Prose>
+          The universal object remains the bounded ordered simplex and its sum fibres. Every later formalism, however elaborate, must ultimately descend to this ledger or surrender the claim of describing the same kernel.
+        </Prose>
+
+        <Eq number="18.74">{"\\mathfrak{L}_0(T_M) = \\big(T_M,\\; T_M(S),\\; p_3(S \\mid M),\\; Z_M(q),\\; \\Sigma,\\; \\rho_M\\big), \\quad \\rho_M(S):=\\frac{p_3(S\\mid M)}{|T_M|}."}</Eq>
+
+        <Prose>
+          Boundary sentence: any framework whose decategorified output fails to recover <M>{"\\mathfrak{L}_0(T_M)"}</M> is not a realization of the present program.
+        </Prose>
+
+        {/* ───────────────── 18.57 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.57 · Exact counting shell and reflection symmetry
+        </div>
+
+        <Prose>
+          At finite cutoff the kernel is not merely asymptotic; it is exact, palindromic in the bounded sense, and sharply sensitive to truncation walls.
+        </Prose>
+
+        <Eq number="18.75">{"p_3(S \\mid M) = p_3(3M+3-S \\mid M), \\qquad 3 \\le S \\le 3M."}</Eq>
+
+        <Prose>
+          Boundary sentence: this symmetry belongs to the bounded ordered model only; it is not to be exported unchanged to coarse‑grained physical observables without declared normalization.
+        </Prose>
+
+        {/* ───────────────── 18.58 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.58 · Asymptotic geometry of the parabola
+        </div>
+
+        <Prose>
+          The familiar parabola <M>{"S^2/12"}</M> is best viewed as the visible ridge of a richer finite‑cutoff geometry: bulk quadratic growth, wall reflection, and a narrow transition strip where the combinatorial lattice remembers the polytope boundary.
+        </Prose>
+
+        <Eq number="18.76">{"p_3(S \\mid M) = \\frac{S^2}{12} + a_1(S,M)\\,S + a_0(S,M), \\quad a_i(S,M) \\text{ piecewise-bounded and reflection-coupled.}"}</Eq>
+
+        <div style={{
+          margin: "16px 0 18px", padding: "16px 18px", background: `${C.indigo}0D`,
+          border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.indigo}`, borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.indigo, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            asymptotic zones
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {[
+              ["left boundary", "small-S lattice effects dominate", "wall regime"],
+              ["bulk", "quadratic profile dominant", "parabolic regime"],
+              ["right boundary", "reflection-corrected decay", "mirror regime"],
+            ].map((r, i) => (
+              <div key={i} style={{ padding: "10px 10px 9px", border: `1px solid ${C.border}`, borderRadius: 3, background: C.panel }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: C.gold, letterSpacing: 1.6, textTransform: "uppercase" }}>{r[0]}</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: C.ink, marginTop: 5 }}>{r[1]}</div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim, marginTop: 4 }}>{r[2]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ───────────────── 18.59 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.59 · Morphism audit of Trip
+        </div>
+
+        <Prose>
+          The categorical ambition rises or falls with the morphism class. We therefore audit the chosen morphisms not cosmetically but structurally: what they preserve, what they destroy, and which downstream claims rely on them.
+        </Prose>
+
+        <Eq number="18.77">{"\\mathrm{Aut}_{\\mathbf{Trip}}(T_M) \\subseteq \\{f:T_M\\to T_M : \\Sigma\\circ f = \\Sigma,\\; f \\text{ monotone}\\}, \\qquad \\mathrm{Stab}(S)=\\{f : T_M(S)\\to T_M(S)\\}."}</Eq>
+
+        <Prose>
+          Boundary sentence: any later theorem invoking terminality, rigidity, or monoidal exactness must be read relative to this audited morphism class and not to an unspecified ambient category.
+        </Prose>
+
+        {/* ───────────────── 18.60 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.60 · Four-layer theorem stack
+        </div>
+
+        <Prose>
+          The unifying section now comes with its own internal constitution: every statement belongs to one of four force levels and inherits only the rights of that level.
+        </Prose>
+
+        <Eq number="18.78">{"\\mathcal{L}_1 \\Rightarrow \\mathcal{L}_2 \\Rightarrow \\mathcal{L}_3 \\Rightarrow \\mathcal{L}_4 \\quad \\text{is forbidden as an inference chain unless all intermediate assumptions are discharged.}"}</Eq>
+
+        <div style={{
+          margin: "16px 0 22px", padding: "16px 18px", background: `linear-gradient(135deg, ${C.bgDeep} 0%, ${C.panelAlt} 100%)`,
+          border: `1px solid ${C.borderBr}`, borderLeft: `3px solid ${C.gold}`, borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            force hierarchy
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+            {[
+              ["Definitions", "objects and bookkeeping only", C.teal],
+              ["Safe propositions", "standard consequences only", C.indigo],
+              ["Intermediate conjectures", "testable but unproved", C.gold],
+              ["Flagship claim", "global thesis under H1–H8", C.crimson],
+            ].map((r, i) => (
+              <div key={i} style={{ padding: "10px 10px 9px", borderRadius: 3, border: `1px solid ${C.border}`, background: `${r[2]}11` }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: r[2], letterSpacing: 1.6, textTransform: "uppercase" }}>{r[0]}</div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim, marginTop: 4 }}>{r[1]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ───────────────── 18.61 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.61 · Regime interface
+        </div>
+
+        <Prose>
+          A regime enters the warehouse only through a complete interface: functor, invariant, projection, normalization, residual, and failure certificate.
+        </Prose>
+
+        <Eq number="18.79">{"\\mathcal{I}(\\mathcal{R}) := \\big(\\mathcal{F}_{\\mathcal{R}},\\; I_{\\mathcal{R}},\\; \\pi_{\\mathcal{R}},\\; \\nu_{\\mathcal{R}},\\; \\varepsilon_{\\mathcal{R}},\\; \\Phi_{\\mathcal{R}}\\big)."}</Eq>
+
+        <Prose>
+          Boundary sentence: prose analogy without a declared interface does not count as evidence.
+        </Prose>
+
+        {/* ───────────────── 18.62 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.62 · Regime atlas and projection wall
+        </div>
+
+        <div style={{
+          margin: "14px 0 22px", padding: "16px 18px",
+          background: `linear-gradient(135deg, ${C.panel} 0%, ${C.panelHi} 100%)`,
+          border: `1px solid ${C.borderBr}`, borderLeft: `3px solid ${C.teal}`, borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            projection wall · 11 regimes
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+            {[
+              ["Bose-Einstein", "degeneracy of ordered occupations", "exact count / inferred functor"],
+              ["Feynman φ^3", "diagram count shadow", "analogical"],
+              ["Antiparticle / rep.", "character shadow", "analogical"],
+              ["Nonlinear optics", "phase-match triplet count", "analogical"],
+              ["Lorenz framing", "return-window density", "analogical"],
+              ["K41 turbulence", "triad shell occupancy / flux shadow", "analogical"],
+              ["Gutenberg-Richter", "tripletized event frequency", "analogical"],
+              ["BBN", "abundance simplex posterior shadow", "analogical"],
+              ["SIS / lattice", "short-vector shell count", "inferred"],
+              ["Quantum walk", "time-sliced probability envelope", "inferred"],
+              ["Combinatorics", "graded fiber cardinality", "explicit theorem"],
+            ].map((r, i) => (
+              <div key={i} style={{ padding: "10px 12px", borderRadius: 3, border: `1px solid ${C.border}`, background: C.panelAlt }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 13.5, color: C.ink }}>{r[0]}</div>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: r[2].includes("theorem") ? C.teal : r[2].includes("inferred") ? C.indigo : C.gold, letterSpacing: 1.3, textTransform: "uppercase" }}>{r[2]}</div>
+                </div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim, marginTop: 5 }}>{r[1]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ───────────────── 18.63 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.63 · Dependency DAG
+        </div>
+
+        <Prose>
+          The warehouse is not linear prose but a directed acyclic proof graph whose weak edges are highlighted rather than hidden.
+        </Prose>
+
+        <Eq number="18.80">{"N_1: T_M \\to N_2: T_M(S) \\to N_3: p_3(S\\mid M) \\to N_4: Z_M(q) \\to N_5: \\text{closed form} \\to N_6: S^2/12, \\quad N_{10}\\to N_{12}\\to\\{N_{13},N_{14},N_{15}\\}\\to N_{16}."}</Eq>
+
+        <div style={{
+          margin: "16px 0 18px", padding: "16px 18px", background: `${C.violet}0D`,
+          border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.violet}`, borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.violet, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            dependency strip
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 8 }}>
+            {[
+              "objects",
+              "fibres",
+              "kernel",
+              "series",
+              "closed form",
+              "asymptotic law",
+            ].map((label, i) => (
+              <div key={i} style={{ padding: "10px 8px 9px", textAlign: "center", borderRadius: 3, border: `1px solid ${C.border}`, background: C.panel }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: i < 4 ? C.teal : i === 4 ? C.indigo : C.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>N{i + 1}</div>
+                <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim, marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ───────────────── 18.64 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.64 · Weak-edge register
+        </div>
+
+        <Prose>
+          The ambitious part of the program is concentrated, not uniform. We therefore register the weak edges where proof debt is highest.
+        </Prose>
+
+        <Eq number="18.81">{"E_{\\mathrm{weak}} = \\{N_{10}\\!\\to\\!N_{12},\\; N_{12}\\!\\to\\!N_{13},\\; N_{12}\\!\\to\\!N_{14},\\; N_{12}\\!\\to\\!N_{15},\\; N_{13}\\!\\to\\!N_{16},\\; N_{14}\\!\\to\\!N_{16},\\; N_{15}\\!\\to\\!N_{16}\\}."}</Eq>
+
+        <Prose>
+          Boundary sentence: no global universality statement may cite a weak edge as if it were theorem-level.
+        </Prose>
+
+        {/* ───────────────── 18.65 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.65 · Assumption ledger
+        </div>
+
+        <Prose>
+          Hidden assumptions are promoted to explicit mathematical liabilities. This turns rhetoric into a balance sheet.
+        </Prose>
+
+        <Eq number="18.82">{"\\mathcal{R}_{\\mathrm{assump}} = \\sum_{i=1}^{12} w_i\\,\\mathbf{1}_{\\mathrm{untested}}(A_i), \\qquad A_i \\in \\{\\text{morphism choice},\\text{factorization existence},\\text{projection exactness},\\ldots\\}."}</Eq>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, margin: "16px 0 20px" }}>
+          {[
+            ["A1", "morphism class soundness", "high risk"],
+            ["A2", "11 functors exist", "high risk"],
+            ["A3", "projection exactness", "high risk"],
+            ["A4", "monoidal compatibility", "medium risk"],
+            ["A5", "representability", "high risk"],
+            ["A6", "1/12 coherence trend", "high risk"],
+            ["A7", "derived decategorification", "high risk"],
+            ["A8", "motivic / prismatic compatibility", "high risk"],
+            ["A9", "eleven-regime completeness", "medium risk"],
+            ["A10", "asymptotic transfer", "medium risk"],
+            ["A11", "coarse-graining stability", "high risk"],
+            ["A12", "language discipline", "medium risk"],
+          ].map((r, i) => (
+            <div key={i} style={{ padding: "10px 12px", borderRadius: 3, border: `1px solid ${C.border}`, background: C.panelAlt }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: C.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>{r[0]}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: r[2].includes("high") ? C.crimson : C.gold, letterSpacing: 1.3, textTransform: "uppercase" }}>{r[2]}</div>
+              </div>
+              <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim, marginTop: 5 }}>{r[1]}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ───────────────── 18.66 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.66 · Residual tensor and comparison norms
+        </div>
+
+        <Prose>
+          Once a regime is projected onto the kernel axis, agreement is measured, not guessed.
+        </Prose>
+
+        <Eq number="18.83">{"\\Delta_\\mathcal{R}(S,M) := \\pi_\\mathcal{R} I_\\mathcal{R}(T_M,S) - p_3(S\\mid M), \\quad \\|\\Delta_\\mathcal{R}\\|_{\\ell^2(M)} := \\Big(\\sum_{S=3}^{3M} |\\Delta_\\mathcal{R}(S,M)|^2\\Big)^{1/2}."}</Eq>
+
+        <Prose>
+          Boundary sentence: a regime with large irreducible <M>{"\\ell^2"}</M> residual is not a weak confirmation of universality; it is evidence against the claimed bridge.
+        </Prose>
+
+        {/* ───────────────── 18.67 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.67 · Intermediate conjecture I: broad factorization class
+        </div>
+
+        <Prose>
+          The first nontrivial conjecture is not that all regimes are identical, but that a large family of bounded three‑mode systems factor through a common Trip-interface.
+        </Prose>
+
+        <Eq number="18.84">{"H_1\\!:\\!H_5 \\Longrightarrow \\exists\\, \\mathcal{F}_\\mathcal{R}: \\mathbf{Trip}\\to\\mathcal{C}_\\mathcal{R} \\text{ with } \\|\\Delta_\\mathcal{R}\\|_{\\mathcal{N}} \\le \\delta_\\mathcal{R}."}</Eq>
+
+        <Prose>
+          Boundary sentence: a single admissible regime satisfying <M>{"H_1\\!:\\!H_5"}</M> but lacking such a factorization falsifies this conjecture.
+        </Prose>
+
+        {/* ───────────────── 18.68 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.68 · Intermediate conjecture II: coherence trend and higher lifts
+        </div>
+
+        <Prose>
+          The second conjectural layer concerns what survives passage to bicategorical, derived, and motivic enhancement: not raw equality, but stable trend under decategorification.
+        </Prose>
+
+        <Eq number="18.85">{"\\chi\\big(\\mathcal{L}_\\star(T_M)\\big) = Z_M(q) + \\eta_\\star(M,q), \\qquad \\eta_\\star \\text{ controlled or vanishing in the admissible lift class.}"}</Eq>
+
+        <Prose>
+          Boundary sentence: incompatible decategorifications from two legitimate lift models would falsify lift‑compatibility in its current form.
+        </Prose>
+
+        {/* ───────────────── 18.69 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.69 · Conservative version of the unifying claim
+        </div>
+
+        <Prose>
+          The conservative statement is intentionally narrow: a validated subclass of regimes shares a common counting skeleton after declared normalization, and nothing stronger is claimed at theorem level.
+        </Prose>
+
+        <Eq number="18.86">{"\\forall \\mathcal{R} \\in \\mathfrak{R}_{\\mathrm{validated}},\\quad \\pi_\\mathcal{R} I_\\mathcal{R}(T_M,S) = p_3(S\\mid M) + \\varepsilon_\\mathcal{R}(S,M), \\qquad \\varepsilon_\\mathcal{R} \\text{ bounded in the stated regime.}"}</Eq>
+
+        <Prose>
+          Boundary sentence: this conservative claim does <em>not</em> assert uniqueness of Trip among all possible organizing categories.
+        </Prose>
+
+        {/* ───────────────── 18.70 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.70 · What would falsify this program
+        </div>
+
+        <Prose>
+          The warehouse is Popperian: it advertises the conditions of its own defeat.
+        </Prose>
+
+        <Eq number="18.87">{"\\mathfrak{F}_{\\mathrm{tests}} = \\{F_1,\\ldots,F_{10}\\}, \\quad F_i \\text{ executable at theorem-, simulation-, or data-level.}"}</Eq>
+
+        <div style={{
+          margin: "16px 0 22px", padding: "16px 18px", background: `${C.crimson}0D`,
+          border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.crimson}`, borderRadius: 3,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.crimson, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            falsification suite
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+            {[
+              "construct admissible regime with no Trip factorization",
+              "disprove representability of the kernel object",
+              "compute non-1/12 coherence asymptotic in-class",
+              "find incompatible derived decategorifications",
+              "produce motivic realization mismatch",
+              "show large irreducible residual in validated regime",
+              "Lorenz fit rejection under fixed normalization",
+              "turbulence DNS mismatch under shell projection",
+              "crypto short-vector counts diverge from kernel law",
+              "discover twelfth regime outside current closure",
+            ].map((item, i) => (
+              <div key={i} style={{ padding: "10px 12px", borderRadius: 3, border: `1px solid ${C.border}`, background: C.panel }}>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: C.crimson, letterSpacing: 1.4, textTransform: "uppercase", minWidth: 26 }}>F{i + 1}</div>
+                  <div style={{ fontFamily: FONT_MATH, fontSize: 11.5, color: C.inkDim }}>{item}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ───────────────── 18.71 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.71 · Downgrade operator
+        </div>
+
+        <Prose>
+          A warehouse without downgrade rules becomes a museum of frozen overclaim. We therefore specify the morphism that weakens labels when evidence fails.
+        </Prose>
+
+        <Eq number="18.88">{"\\delta : \\{\\mathrm{Theorem},\\mathrm{Conjecture},\\mathrm{Heuristic},\\mathrm{Program}\\} \\times \\mathfrak{F}_{\\mathrm{tests}} \\to \\{\\mathrm{Retracted},\\mathrm{Conjecture},\\mathrm{Heuristic},\\mathrm{Program}\\}."}</Eq>
+
+        <Prose>
+          Boundary sentence: refusal to apply <M>{"\\delta"}</M> after a successful falsifier is a methodological error, not a substantive disagreement.
+        </Prose>
+
+        {/* ───────────────── 18.72 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.72 · Visualization atlas
+        </div>
+
+        <Prose>
+          The warehouse includes a visual grammar for the conjecture: layer maps, regime walls, risk cards, residual norms, and weak-edge strips. These are not decorative. They are cognitive compression devices for a proof architecture too large to hold in linear prose.
+        </Prose>
+
+        <Eq number="18.89">{"\\mathcal{V}_{18} := \\{\\text{layer map},\\; \\text{regime atlas},\\; \\text{dependency strip},\\; \\text{assumption grid},\\; \\text{falsification suite}\\}."}</Eq>
+
+        <Prose>
+          Boundary sentence: visualization without accompanying formal equation does not change claim status.
+        </Prose>
+
+        {/* ───────────────── 18.73 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.73 · Research queue
+        </div>
+
+        <Prose>
+          The queue is threefold: prove, simulate, attack. A unification program that omits any one of the three becomes either metaphysics, numerics, or combinatorics alone.
+        </Prose>
+
+        <Eq number="18.90">{"\\mathcal{Q} = \\mathcal{Q}_{\\mathrm{proof}} \\sqcup \\mathcal{Q}_{\\mathrm{simulation}} \\sqcup \\mathcal{Q}_{\\mathrm{counterexample}}, \\qquad \\mathrm{promote} : \\mathrm{Program}\\to\\mathrm{Conjecture}\\to\\mathrm{Theorem}."}</Eq>
+
+        <Prose>
+          Boundary sentence: no claim is promoted unless all relevant queues touching its incoming edges are discharged.
+        </Prose>
+
+        {/* ───────────────── 18.74 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.74 · Twelfth-regime horizon
+        </div>
+
+        <Prose>
+          The strongest test of a unifying theory is not internal elegance but new capture. The warehouse therefore reserves space for a twelfth regime not yet canonized in Part II.
+        </Prose>
+
+        <Eq number="18.91">{"\\exists\\, \\mathcal{R}_{12}\\; ? \\quad \\text{with} \\quad \\mathcal{I}(\\mathcal{R}_{12}) \\text{ complete and } \\|\\Delta_{\\mathcal{R}_{12}}\\|_{\\mathcal{N}} \\text{ acceptably small.}"}</Eq>
+
+        <Prose>
+          Boundary sentence: discovery of a valid twelfth regime strengthens the program; discovery of a valid three‑mode regime outside all Trip-compatible closures weakens it.
+        </Prose>
+
+        {/* ───────────────── 18.75 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.75 · Warehouse closing theorem-schema
+        </div>
+
+        <Prose>
+          The proper ending is therefore not a slogan but a theorem‑schema with a declared radius of validity. The exact kernel, the asymptotic parabola, the bounded reflection law, and the reusable categorical skeleton are secure. The trans‑framework universality of that skeleton remains a live conjectural program, now rendered in sufficient detail to be proved, refined, or broken.
+        </Prose>
+
+        <Eq number="18.92">{"\\text{Warehouse conclusion: } \\mathfrak{L}_0 \\subset \\mathfrak{D}_{\\mathrm{safe}} \\subset \\mathfrak{C}_{\\mathrm{intermediate}} \\subset \\mathfrak{C}_{\\mathrm{flagship}}, \\quad \\mathfrak{C}_{\\mathrm{flagship}} \\text{ survives iff } \\forall F_i \\in \\mathfrak{F}_{\\mathrm{tests}},\\; F_i \\text{ fails to refute.}"}</Eq>
+
+        <Prose>
+          The formal narrative closes here. The partition kernel does not: it continues, as the graded dimension of the identity functor on <M>{"\\mathbf{Trip}"}</M>, into every category that can credibly carry a three‑generator graded conservation law. We have now recorded not only its appearances, but the machinery by which those appearances are to be audited.
+        </Prose>
+
+        {/* ───────────────── 18.76 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 30, marginBottom: 8 }}>
+          18.76 · Universal property in constrained form
+        </div>
+
+        <Prose>
+          We now state the unifying target in a strictly constrained form. Let <M>{"\\mathfrak{Reg}_H"}</M> denote the 2‑category of regimes satisfying a fixed hypothesis stack <M>{"H"}</M> (defined in §18.77). The universal claim is no longer "all three‑mode systems", but only systems in <M>{"\\mathfrak{Reg}_H"}</M> with verified grading, normalization, and projection interfaces.
+        </Prose>
+
+        <Eq number="18.93">{"\\text{[Program]}\\quad \\exists\\, U_H \\in \\mathfrak{Reg}_H\\;\\text{s.t.}\\; \\forall \\mathcal{R}\\in\\mathfrak{Reg}_H,\\; \\exists\\, \\Phi_{\\mathcal{R}}:U_H\\to\\mathcal{R},\\; \\pi_{\\mathcal{R}}\\circ I_{\\mathcal{R}}\\circ \\Phi_{\\mathcal{R}} \\sim p_3(\\cdot\\mid M)."}
+</Eq>
+
+        <Prose>
+          Boundary sentence: failure to construct <M>{"\\Phi_{\\mathcal{R}}"}</M> for one regime already certified to satisfy <M>{"H"}</M> invalidates this universal formulation.
+        </Prose>
+
+        {/* ───────────────── 18.77 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.77 · Hypothesis stack H as predicates
+        </div>
+
+        <Prose>
+          To prevent scope drift, each admissibility condition is encoded as a predicate on regime data. These are not decorative assumptions; they are the contract under which any "unifying" sentence is permitted.
+        </Prose>
+
+        <Eq number="18.94">{"H := \\bigwedge_{i=1}^8 H_i,\\; H_1=\\text{graded boundedness},\\; H_2=\\text{order-compatible conservation},\\; H_3=\\text{finite multiplicity},\\; H_4=\\text{projection definability},\\; H_5=\\text{normalization stability},\\; H_6=\\text{residual measurability},\\; H_7=\\text{comparison naturality},\\; H_8=\\text{falsifier executability}."}</Eq>
+
+        <Prose>
+          Boundary sentence: every theorem-level statement in §18 is interpreted as conditional on <M>{"H"}</M> unless explicitly marked otherwise.
+        </Prose>
+
+        {/* ───────────────── 18.78 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.78 · Residual operator and normed discrepancy
+        </div>
+
+        <Prose>
+          The bridge between regime invariants and the Trip kernel is quantified by a residual operator, not by qualitative fit language. This allows strict pass/fail auditing.
+        </Prose>
+
+        <Eq number="18.95">{"\\Delta_{\\mathcal{R}}(S,M):=\\pi_{\\mathcal{R}}\\!\\left(I_{\\mathcal{R}}(\\mathcal{F}_{\\mathcal{R}}(T_M))(S)\\right)-p_3(S\\mid M),\\qquad \\|\\Delta_{\\mathcal{R}}\\|_{w,2}^2:=\\sum_{M}\\sum_{S} w_{S,M}\\,\\Delta_{\\mathcal{R}}(S,M)^2."}</Eq>
+
+        <Prose>
+          Boundary sentence: a regime is unvalidated for unification whenever <M>{"\\|\\Delta_{\\mathcal{R}}\\|_{w,2}"}</M> exceeds its declared tolerance envelope.
+        </Prose>
+
+        {/* ───────────────── 18.79 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.79 · Obstruction complex for factorization
+        </div>
+
+        <Prose>
+          Existence of a regime factorization through <M>{"\\mathbf{Trip}"}</M> is controlled by obstruction classes. This converts vague non-existence claims into explicit cohomological targets.
+        </Prose>
+
+        <Eq number="18.96">{"\\text{[Conjecture]}\\quad o_1(\\mathcal{R})\\in H^1(\\mathcal{C}_{\\mathcal{R}},\\mathcal{A}_1),\\; o_2(\\mathcal{R})\\in H^2(\\mathcal{C}_{\\mathcal{R}},\\mathcal{A}_2),\\; o_1=o_2=0\\;\\Longrightarrow\\; \\exists\\, \\mathcal{F}_{\\mathcal{R}}:\\mathbf{Trip}\\to\\mathcal{C}_{\\mathcal{R}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: a non-vanishing certified obstruction class immediately demotes the corresponding factorization claim to analogy only.
+        </Prose>
+
+        {/* ───────────────── 18.80 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.80 · Comparison natural transformation and defect cocycle
+        </div>
+
+        <Prose>
+          Even when a regime functor exists, the left and right transport procedures need not agree. Their mismatch is encoded by a defect cocycle that can be measured.
+        </Prose>
+
+        <Eq number="18.97">{"\\eta_{\\mathcal{R}}: \\mathrm{Lan}_{Y}(\\mathcal{F}_{\\mathcal{R}}) \\Rightarrow \\mathrm{Ran}_{Y}(\\mathcal{F}_{\\mathcal{R}}),\\qquad \\partial\\eta_{\\mathcal{R}}=c_{\\mathcal{R}}\\in Z^2(\\mathcal{C}_{\\mathcal{R}},\\mathcal{B}),\\; [c_{\\mathcal{R}}]=0\\Rightarrow \\eta_{\\mathcal{R}}\\;\\text{strictifiable}."}</Eq>
+
+        <Prose>
+          Boundary sentence: if <M>{"[c_{\\mathcal{R}}]\\neq 0"}</M>, one cannot claim transport-equivalence for that regime.
+        </Prose>
+
+        {/* ───────────────── 18.81 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.81 · Cutoff flow and renormalization of finite-M corrections
+        </div>
+
+        <Prose>
+          The bounded correction should be treated as a scale flow in <M>{"M"}</M>, not as a nuisance term. This makes finite-size drift across regimes comparable on a common axis.
+        </Prose>
+
+        <Eq number="18.98">{"\\beta_\\Delta(S,M):=M\\,\\partial_M\\Delta_{\\mathcal{R}}(S,M),\\qquad \\Delta_{\\mathcal{R}}(S,M)=\\Delta_{\\mathcal{R}}^{\\mathrm{bulk}}(S)+\\Delta_{\\mathcal{R}}^{\\mathrm{wall}}(S,M),\\; \\Delta_{\\mathcal{R}}^{\\mathrm{wall}}\\to 0\\;(M\\to\\infty)."}
+</Eq>
+
+        <Prose>
+          Boundary sentence: regimes whose residual does not exhibit wall-decay cannot be grouped with bounded-simplex universality classes.
+        </Prose>
+
+        {/* ───────────────── 18.82 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.82 · Spectral fingerprint of the unification kernel
+        </div>
+
+        <Prose>
+          Beyond pointwise counts, each regime induces a transfer operator whose leading spectrum acts as a compact fingerprint. Kernel agreement then becomes a spectral comparison problem.
+        </Prose>
+
+        <Eq number="18.99">{"\\mathcal{T}_{\\mathcal{R},M}f(S):=\\sum_{S'}K_{\\mathcal{R},M}(S,S')f(S'),\\qquad \\Lambda_{\\mathcal{R},M}:=\\{\\lambda_1\\ge\\lambda_2\\ge\\cdots\\},\\qquad d_{\\mathrm{spec}}(\\mathcal{R},\\mathbf{Trip}):=\\|\\Lambda_{\\mathcal{R},M}-\\Lambda_{\\mathbf{Trip},M}\\|_{\\ell^2}."}</Eq>
+
+        <Prose>
+          Boundary sentence: persistent spectral gap mismatch across <M>{"M"}</M> falsifies strong universality even when first-moment fits look good.
+        </Prose>
+
+        {/* ───────────────── 18.83 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.83 · Conservative theorem core (hardened)
+        </div>
+
+        <Prose>
+          The mathematically hard core is intentionally narrow: exact combinatorics, generating identities, and asymptotic law with bounded correction narrative. Everything else is explicitly conditional.
+        </Prose>
+
+        <Eq number="18.100">{"\\text{[Theorem core]}\\quad \\{|T_M(S)|=p_3(S\\mid M),\\; Z_M(q)=\\sum_S p_3(S\\mid M)q^S,\\; p_3(S)=S^2/12+O(S)\\}\\;\\subset\\;\\mathfrak{D}_{\\mathrm{safe}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: no cross-regime ontological identification is claimed by (18.100); only kernel transport hypotheses are entertained.
+        </Prose>
+
+        {/* ───────────────── 18.84 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.84 · Upgrade protocol for claim status
+        </div>
+
+        <Prose>
+          To avoid rhetorical inflation, claim promotion is algorithmic. A statement advances only if all incoming assumptions are tested and all relevant falsifiers fail.
+        </Prose>
+
+        <Eq number="18.101">{"\\mathrm{promote}(X)=\\begin{cases}\\mathrm{Theorem},&\\text{if }H(X)\\text{ verified and }\\forall F_i\\in\\mathfrak{F}(X),\\,F_i\\text{ fails},\\\\\\mathrm{Conjecture},&\\text{if }H(X)\\text{ partially verified},\\\\\\mathrm{Heuristic},&\\text{if evidence is analogical/data-fit only}.\\end{cases}"}</Eq>
+
+        <Prose>
+          Boundary sentence: any successful falsifier triggers immediate downgrade under the map <M>{"\\delta"}</M> of §18.71, with no discretionary exception.
+        </Prose>
+
+        {/* ───────────────── 18.85 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.85 · Identifiability of regime projections
+        </div>
+
+        <Prose>
+          A deeper unification claim requires identifiability: distinct regime parameters should not collapse to indistinguishable Trip projections unless that degeneracy is itself classified. Without identifiability, universality can be spuriously manufactured by over-flexible projection maps.
+        </Prose>
+
+        <Eq number="18.102">{"\\text{[Conjecture]}\\quad \\pi_{\\mathcal{R},\\theta_1}I_{\\mathcal{R},\\theta_1}=\\pi_{\\mathcal{R},\\theta_2}I_{\\mathcal{R},\\theta_2}\\;\\forall(S,M)\\;\\Longrightarrow\\;\\theta_1\\sim\\theta_2\\;\\text{in the gauge group}\\;\\mathcal{G}_{\\mathcal{R}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: existence of non-gauge-equivalent parameters with identical projected kernels invalidates parameter-level explanatory claims for that regime.
+        </Prose>
+
+        {/* ───────────────── 18.86 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.86 · Bayesian evidence over regime classes
+        </div>
+
+        <Prose>
+          Regime comparison is elevated from visual fit to model evidence. Each regime class receives a posterior weight penalized for complexity and rewarded for residual compression against <M>{"p_3(S\\mid M)"}</M>.
+        </Prose>
+
+        <Eq number="18.103">{"\\text{[Program]}\\quad \\mathbb{P}(\\mathcal{R}\\mid \\mathcal{D}) \\propto \\mathbb{P}(\\mathcal{D}\\mid \\mathcal{R})\\,\\mathbb{P}(\\mathcal{R}),\\quad \\log \\mathbb{P}(\\mathcal{D}\\mid \\mathcal{R}) \\approx -\\frac{1}{2\\sigma^2}\\|\\Delta_{\\mathcal{R}}\\|_{w,2}^2 - \\frac{\\kappa_{\\mathcal{R}}}{2}\\log N."}</Eq>
+
+        <Prose>
+          Boundary sentence: a regime with poor posterior evidence may remain pedagogically useful, but it is excluded from any high-confidence unifying subset.
+        </Prose>
+
+        {/* ───────────────── 18.87 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.87 · Coherence-stress tensor and edge fragility
+        </div>
+
+        <Prose>
+          Weak edges in the dependency DAG are promoted to measurable stress channels. This prevents smooth prose from masking brittle inferential joints.
+        </Prose>
+
+        <Eq number="18.104">{"\\text{[Heuristic]}\\quad \\Sigma^{\\mathrm{coh}}_{ij}:=\\partial_{\\alpha_i}\\partial_{\\alpha_j}\\,\\mathcal{J}(\\alpha),\\qquad \\mathcal{J}(\\alpha):=\\sum_{e\\in E_{\\mathrm{weak}}}\\omega_e\\,\\|\\Delta_e(\\alpha)\\|_{w,2}^2,\\qquad \\rho(\\Sigma^{\\mathrm{coh}})\\uparrow\\Rightarrow\\text{fragility}."}</Eq>
+
+        <Prose>
+          Boundary sentence: if spectral radius <M>{"\\rho(\\Sigma^{\\mathrm{coh}})"}</M> remains high under perturbation calibration, theorem-level aggregation across weak edges is blocked.
+        </Prose>
+
+        {/* ───────────────── 18.88 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.88 · Proof-obligation compiler
+        </div>
+
+        <Prose>
+          To operationalize rigor, each conjectural statement is compiled into a finite set of proof obligations, simulation obligations, and disproof obligations. The compiler emits a verifiable checklist rather than narrative intent.
+        </Prose>
+
+        <Eq number="18.105">{"\\text{[Program]}\\quad \\mathsf{Compile}:\\mathsf{Claim}\\to\\mathcal{O}_{\\mathrm{thm}}\\sqcup\\mathcal{O}_{\\mathrm{sim}}\\sqcup\\mathcal{O}_{\\mathrm{refute}},\\qquad \\mathsf{status}(X)=\\mathrm{closed}\\iff\\forall o\\in\\mathsf{Compile}(X),\\;o\\;\\text{discharged}."}</Eq>
+
+        <Prose>
+          Boundary sentence: unresolved obligations force claim status to remain conjectural regardless of aesthetic coherence.
+        </Prose>
+
+        {/* ───────────────── 18.89 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.89 · Regime atlas as a stratified stack
+        </div>
+
+        <Prose>
+          The eleven-regime collection is best interpreted as a stratified stack whose strata encode evidence class (explicit, inferred, analogical) and whose gluing maps carry downgrade data.
+        </Prose>
+
+        <Eq number="18.106">{"\\text{[Conjecture]}\\quad \\mathfrak{A}_{11}\\simeq\\bigsqcup_{c\\in\\{\\mathrm{exp},\\mathrm{inf},\\mathrm{ana}\\}}\\mathfrak{A}_c,\\qquad \\mathrm{Glue}_{c\\to c'}:\\mathfrak{A}_c\\to\\mathfrak{A}_{c'}\\;\\text{exists only if}\\;\\delta\\text{-compatibility holds}."}</Eq>
+
+        <Prose>
+          Boundary sentence: if glue maps fail compatibility with downgrade dynamics, cross-class synthesis must be presented as heuristic only.
+        </Prose>
+
+        {/* ───────────────── 18.90 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.90 · Deep conservative closure
+        </div>
+
+        <Prose>
+          The deepest conservative closure of the program is now explicit: universality is accepted only as a conditional fixed-point under admissibility, residual control, and non-refutation.
+        </Prose>
+
+        <Eq number="18.107">{"\\text{[Conservative closure]}\\quad \\mathfrak{U}_{\\mathrm{cons}}:=\\{\\mathcal{R}:H(\\mathcal{R})=1,\\;\\|\\Delta_{\\mathcal{R}}\\|_{w,2}\\le\\delta_{\\mathcal{R}},\\;\\forall F_i\\in\\mathfrak{F}(\\mathcal{R}),\\;F_i\\text{ not validated}\\},\\qquad \\mathfrak{U}_{\\mathrm{cons}}\\subseteq\\mathfrak{R}_{\\mathrm{validated}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: this closure makes no claim that all three-mode systems belong to <M>{"\\mathfrak{U}_{\\mathrm{cons}}"}</M>; it claims only that membership is testable and revocable.
+        </Prose>
+
+        {/* ───────────────── 18.91 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.91 · Canonical unification data model
+        </div>
+
+        <Prose>
+          Absolute detail begins by fixing the schema of every admissible unification statement. Each claim is represented by typed data rather than prose fragments, so dependency tracking, falsifier routing, and claim demotion are machine-auditable.
+        </Prose>
+
+        <Eq number="18.108">{"\\mathbb{U}_{\\mathrm{record}} := \\big(\\mathcal{R},\\;H,\\;\\mathcal{F}_{\\mathcal{R}},\\;I_{\\mathcal{R}},\\;\\pi_{\\mathcal{R}},\\;\\nu_{\\mathcal{R}},\\;\\Delta_{\\mathcal{R}},\\;\\mathfrak{F}(\\mathcal{R}),\\;\\lambda(\\mathcal{R}),\\;t_{\\mathrm{stamp}}\\big),\\qquad \\mathbb{U}_{\\mathrm{warehouse}}=\\prod_{\\mathcal{R}\\in\\mathfrak{R}}\\mathbb{U}_{\\mathrm{record}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: any unifying sentence not encodable in <M>{"\\mathbb{U}_{\\mathrm{record}}"}</M> is non-operative rhetoric and carries no theorem weight.
+        </Prose>
+
+        {/* ───────────────── 18.92 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.92 · Typed commutative square for every regime
+        </div>
+
+        <Prose>
+          Every regime must satisfy the same typed commutative target: the projected invariant should coincide with the Trip kernel up to declared residual class. This enforces identical semantics across all eleven bridges.
+        </Prose>
+
+        <Eq number="18.109">{"\\begin{CD}\\mathbf{Trip} @>{\\mathcal{F}_{\\mathcal{R}}}>> \\mathcal{C}_{\\mathcal{R}} \\\\ @V{|\\cdot|_\\Sigma}VV @VV{I_{\\mathcal{R}}}V \\\\ \\mathbb{Z}^{\\mathcal{S}\\times\\mathcal{M}} @<<{\\pi_{\\mathcal{R}}}< \\mathbb{V}_{\\mathcal{R}} \\end{CD} \\qquad \\pi_{\\mathcal{R}} I_{\\mathcal{R}} \\mathcal{F}_{\\mathcal{R}} = |\\cdot|_\\Sigma + \\Delta_{\\mathcal{R}},\\; \\Delta_{\\mathcal{R}}\\in\\mathcal{E}_{\\mathcal{R}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: if the square fails to type-check (domains/codomains mismatch), the regime is excluded before any numerical comparison.
+        </Prose>
+
+        {/* ───────────────── 18.93 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.93 · Residual decomposition into bulk, wall, and transport defects
+        </div>
+
+        <Prose>
+          Residuals are decomposed into interpretable channels so that mismatch is localizable: asymptotic bulk mismatch, finite-cutoff wall mismatch, and categorical transport mismatch.
+        </Prose>
+
+        <Eq number="18.110">{"\\Delta_{\\mathcal{R}}(S,M) = \\Delta^{\\mathrm{bulk}}_{\\mathcal{R}}(S) + \\Delta^{\\mathrm{wall}}_{\\mathcal{R}}(S,M) + \\Delta^{\\mathrm{transport}}_{\\mathcal{R}}(S,M),\\qquad \\mathfrak{D}^{\\mathrm{res}}_{\\mathcal{R}} := \\big(\\|\\Delta^{\\mathrm{bulk}}\\|_{w,2},\\|\\Delta^{\\mathrm{wall}}\\|_{w,2},\\|\\Delta^{\\mathrm{transport}}\\|_{w,2}\\big)."}</Eq>
+
+        <Prose>
+          Boundary sentence: claims of "good agreement" are invalid unless all three residual channels are reported separately.
+        </Prose>
+
+        {/* ───────────────── 18.94 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.94 · Gauge fixing and identifiability protocol
+        </div>
+
+        <Prose>
+          To avoid non-identifiable parameterizations masquerading as universal structure, each regime is gauge-fixed by a canonical slice before evidence scoring and before conjecture promotion.
+        </Prose>
+
+        <Eq number="18.111">{"\\text{GaugeFix}_{\\mathcal{R}}(\\theta):\\; g(\\theta)=0,\\quad J_{\\mathcal{R}}(\\theta):=\\partial_\\theta\\big(\\pi_{\\mathcal{R}}I_{\\mathcal{R}}\\mathcal{F}_{\\mathcal{R}}\\big),\\quad \\mathrm{rank}\\,J_{\\mathcal{R}}(\\theta_\\star)=d_\\theta-\\dim\\mathcal{G}_{\\mathcal{R}}\\Rightarrow \\text{local identifiability at }\\theta_\\star."}</Eq>
+
+        <Prose>
+          Boundary sentence: if rank deficiency persists after gauge fixing, parameter-level interpretations are demoted to heuristic regardless of low residual norm.
+        </Prose>
+
+        {/* ───────────────── 18.95 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.95 · Likelihood-ratio and posterior regime ordering
+        </div>
+
+        <Prose>
+          Detailed unification requires explicit regime ordering criteria. We therefore score every admissible regime by residual likelihood, complexity penalty, and falsifier exposure.
+        </Prose>
+
+        <Eq number="18.112">{"\\mathcal{S}_{\\mathrm{uni}}(\\mathcal{R}) := -\\frac{1}{2\\sigma^2}\\|\\Delta_{\\mathcal{R}}\\|_{w,2}^2 - \\frac{\\kappa_{\\mathcal{R}}}{2}\\log N - \\gamma\\,\\#\\{F_i\\in\\mathfrak{F}(\\mathcal{R})\\text{ unresolved}\\},\\qquad \\mathcal{R}_a\\succ\\mathcal{R}_b\\iff \\mathcal{S}_{\\mathrm{uni}}(\\mathcal{R}_a) > \\mathcal{S}_{\\mathrm{uni}}(\\mathcal{R}_b)."}
+</Eq>
+
+        <Prose>
+          Boundary sentence: a regime cannot be called "core" if it is outranked under the declared scoring rule by simpler or better-fit alternatives.
+        </Prose>
+
+        {/* ───────────────── 18.96 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.96 · Refutation lattice and maximal detailed closure
+        </div>
+
+        <Prose>
+          The fully detailed closure is a refutation-aware lattice: each node is a claim-state pair and each edge is a monotone action under new evidence. This gives a complete dynamic semantics for "go deeper" without overclaim drift.
+        </Prose>
+
+        <Eq number="18.113">{"\\mathfrak{L}_{\\mathrm{ref}} := \\big(\\mathcal{C}\\times\\Lambda,\\;\\preceq\\big),\\quad (X,\\lambda)\\preceq(Y,\\mu)\\iff X\\to Y\\text{ in DAG and }\\mu\\le\\lambda\\text{ under }\\delta,\\quad \\mathfrak{U}_{\\mathrm{max-detail}}:=\\mathrm{Fix}\\big(\\mathrm{promote}\\circ\\mathrm{compile}\\circ\\mathrm{audit}\\big)."}
+</Eq>
+
+        <Prose>
+          Boundary sentence: if the fixed-point <M>{"\\mathfrak{U}_{\\mathrm{max-detail}}"}</M> is unstable under one validated falsifier, the flagship claim contracts to the conservative closure of §18.90 by rule, not by editorial choice.
+        </Prose>
+
+        {/* ───────────────── 18.97 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.97 · Physics unification taxonomy: EW, GUT, UFT, TOE
+        </div>
+
+        <Prose>
+          The phrase "unifying theory" is overloaded. To prevent category error, we separate four targets: electroweak unification (experimentally established), grand unification of gauge forces (hypothesized), unified field formulations including gravity (open), and full theory of everything (open). The present monograph belongs to a <em>structural unification</em> class and should not be conflated with a completed quantum-gravity unification.
+        </Prose>
+
+        <Eq number="18.114">{"\\text{EW (tested)}\\subset\\text{GUT (conjectural)}\\subset\\text{UFT including gravity (open)}\\subset\\text{TOE (open)},\\qquad \\mathfrak{U}_{\\mathrm{Trip}}\\text{ is a structural kernel program, not a completed TOE claim}."}</Eq>
+
+        <Prose>
+          Boundary sentence: any sentence equating <M>{"\\mathfrak{U}_{\\mathrm{Trip}}"}</M> with a solved unified field theory is outside domain and must be downgraded.
+        </Prose>
+
+        {/* ───────────────── 18.98 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.98 · Gauge-coupling convergence as analogy, not equivalence
+        </div>
+
+        <Prose>
+          Grand unification in high-energy physics is often diagnosed by renormalization-group flow of gauge couplings. We borrow this as an analogy for regime-flow coherence, while preserving non-identity between particle-physics coupling constants and Trip residual flows.
+        </Prose>
+
+        <Eq number="18.115">{"\\alpha_i^{-1}(\\mu)=\\alpha_i^{-1}(\\mu_0)-\\frac{b_i}{2\\pi}\\log\\frac{\\mu}{\\mu_0},\\qquad \\text{GUT-style convergence requires }\\alpha_1(\\mu_G)\\approx\\alpha_2(\\mu_G)\\approx\\alpha_3(\\mu_G).\\quad \\text{Trip-analogue: }\\|\\Delta_{\\mathcal{R}}(\\mu_G)\\|\\to\\min."}</Eq>
+
+        <Prose>
+          Boundary sentence: convergence-like behavior in Trip diagnostics does not constitute evidence for particle-physics gauge unification.
+        </Prose>
+
+        {/* ───────────────── 18.99 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.99 · Symmetry-breaking chain and regime projection chain
+        </div>
+
+        <Prose>
+          GUT narratives are organized by symmetry breaking chains. The monograph’s regime map can be read in parallel as projection/refinement steps from a shared kernel object to specialized observables.
+        </Prose>
+
+        <Eq number="18.116">{"G_{\\mathrm{unif}}\\Rightarrow G_{\\mathrm{SM}}\\Rightarrow U(1)_{\\mathrm{EM}}\\times SU(3)_c,\\qquad \\mathbf{Trip}\\Rightarrow (\\mathcal{F}_{\\mathcal{R}},I_{\\mathcal{R}},\\pi_{\\mathcal{R}})\\Rightarrow \\text{regime observables with residual }\\Delta_{\\mathcal{R}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: this is a categorical parallelism statement, not a claim that Trip supplies the gauge group of particle physics.
+        </Prose>
+
+        {/* ───────────────── 18.100 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.100 · Proton-decay-style falsifier for kernel universality
+        </div>
+
+        <Prose>
+          In GUT physics, proton decay is the canonical sharp falsifier class. By analogy, the unification program requires one or more high-power regime-level observables whose failure forces immediate downgrade of flagship claims.
+        </Prose>
+
+        <Eq number="18.117">{"\\tau_p^{-1}\\sim \\frac{\\alpha_G^2 m_p^5}{M_X^4}\\;\\text{(dimension-6 scale law, schematic)},\\qquad \\text{Trip analogue: if }\\sup_M\\|\\Delta_{\\mathcal{R}}(\\cdot,M)\\|_{w,2}>\\delta_{\\mathcal{R}}\\text{ for one }\\mathcal{R}\\in\\mathfrak{R}_H,\\;\\text{then }\\lambda(\\text{flagship})\\downarrow."}</Eq>
+
+        <Prose>
+          Boundary sentence: without hard falsifiers of this type, the program remains interpretive synthesis rather than strict unification theory.
+        </Prose>
+
+        {/* ───────────────── 18.101 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.101 · Supersymmetry lessons for structural unification
+        </div>
+
+        <Prose>
+          The SUSY lesson is methodological: mathematically elegant extensions can improve high-scale coherence yet remain experimentally unconfirmed. We therefore treat elegant categorical completions as admissible only under explicit evidence-weight and unresolved-risk accounting.
+        </Prose>
+
+        <Eq number="18.118">{"\\mathcal{S}_{\\mathrm{uni}}(\\mathcal{R}) = \\mathcal{S}_{\\mathrm{fit}} - \\mathcal{S}_{\\mathrm{complexity}} - \\mathcal{S}_{\\mathrm{unverified}},\\qquad \\mathcal{S}_{\\mathrm{unverified}} := \\eta\\,\\#\\{\\text{major untested assumptions in }\\mathcal{R}\\}."}</Eq>
+
+        <Prose>
+          Boundary sentence: high formal beauty never upgrades status without commensurate closure of disproof obligations.
+        </Prose>
+
+        {/* ───────────────── 18.102 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.102 · Source hierarchy and reliability protocol
+        </div>
+
+        <Prose>
+          The supplied external links are useful for framing but heterogeneous in evidentiary quality. We therefore define a source hierarchy: primary literature and major-collaboration results dominate; encyclopedia and research-starter summaries are contextual; advocacy claims of "solved UFT" are non-authoritative unless backed by peer-reviewed reproducible results.
+        </Prose>
+
+        <Eq number="18.119">{"\\text{Tier-1}:\\;\\text{peer-reviewed primary papers / collaboration limits}\\;\\succ\\;\\text{Tier-2}:\\;\\text{technical summaries}\\;\\succ\\;\\text{Tier-3}:\\;\\text{popular/expository pieces}\\;\\succ\\;\\text{Tier-4}:\\;\\text{advocacy claims without independent validation}."}</Eq>
+
+        <Prose>
+          Boundary sentence: Tier-4 sources may motivate hypotheses but cannot increase theorem-level confidence in any §18 claim.
+        </Prose>
+
+        {/* ───────────────── 18.103 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.103 · Crosswalk from external unification discourse to Trip program
+        </div>
+
+        <Prose>
+          To avoid semantic drift, each external unification statement is translated into Trip-compatible claim classes: ontology claim, mechanism claim, or structural-encoding claim. Only the third class is natively admissible in this monograph.
+        </Prose>
+
+        <Eq number="18.120">{"\\mathsf{Crosswalk}:\\;\\mathsf{Claim}_{\\mathrm{external}}\\to\\{\\mathsf{Ontology},\\mathsf{Mechanism},\\mathsf{Structure}\\},\\qquad \\mathsf{admissible}_{\\mathbf{Trip}}=\\mathsf{Structure}\\cup\\mathsf{Mechanism}_{\\mathrm{with\\ bridge\\ +\\ residual\\ control}}."}</Eq>
+
+        <Prose>
+          Boundary sentence: ontology-level statements from external UFT discourse are included only as commentary unless fully translated into measurable Trip interfaces.
+        </Prose>
+
+        {/* ───────────────── 18.104 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.104 · Final deep clause for unifying theory
+        </div>
+
+        <Prose>
+          The strongest defensible deep claim is now precise: Trip defines a high-resolution structural unification framework across the eleven regimes with explicit failure conditions, but does not claim to have solved the open high-energy unified-field problem including quantum gravity.
+        </Prose>
+
+        <Eq number="18.121">{"\\text{Deep clause}:\\;\\mathfrak{U}_{\\mathrm{Trip}}\\text{ is a falsifiable structural unification program }\\land\\neg\\big(\\text{proved complete UFT/TOE}\\big),\\qquad \\text{status upgraded only under }\\mathsf{Compile}\\circ\\mathsf{Audit}\\circ\\mathsf{Refute}^{-1}."}</Eq>
+
+        <Prose>
+          Boundary sentence: any future claim that §18 has solved unified field theory must be interpreted as false unless accompanied by closure of the full proof-and-falsifier ledger.
         </Prose>
 
         <div style={{
