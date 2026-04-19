@@ -1044,6 +1044,18 @@ export default function Monograph() {
     { id: 'categorical-synthesis', title: '§18 Synthesis' },
   ];
 
+  // Mobile performance gating: only compute/render deep sections once reached.
+  const canRenderBose = !responsive.isMobile || currentSection >= 1;
+  const canRenderFeynman = !responsive.isMobile || currentSection >= 2;
+  const canRenderNlo = !responsive.isMobile || currentSection >= 4;
+  const canRenderLorenz = !responsive.isMobile || currentSection >= 5;
+  const canRenderKolmog = !responsive.isMobile || currentSection >= 6;
+  const canRenderGutenberg = !responsive.isMobile || currentSection >= 7;
+  const canRenderBbn = !responsive.isMobile || currentSection >= 8;
+  const canRenderSis = !responsive.isMobile || currentSection >= 9;
+  const canRenderQwalk = !responsive.isMobile || currentSection >= 10;
+  const canRenderSynthesis = !responsive.isMobile || currentSection >= 11;
+
   // Section navigation swipe gestures
   const sectionSwipeHandlers = useSwipeGesture(
     () => setCurrentSection(Math.min(currentSection + 1, sections.length - 1)), // Swipe left: next section
@@ -1135,10 +1147,13 @@ export default function Monograph() {
   }, []);
 
   const computeM = deferHeavyModels ? Math.min(debouncedM, 20) : debouncedM;
-  const lorenzSteps = deferHeavyModels ? 1200 : 6000;
+  const lorenzSteps = deferHeavyModels ? 1200 : (responsive.isMobile ? 2600 : 6000);
 
   const partData = useMemo(() => generatePartitionData(computeM), [computeM]);
-  const scatterData = useMemo(() => generateScatterSample(computeM), [computeM]);
+  const scatterData = useMemo(
+    () => generateScatterSample(computeM, responsive.isMobile ? 6500 : 18000),
+    [computeM, responsive.isMobile]
+  );
   const heatData = useMemo(() => generateXSumDensity(computeM), [computeM]);
   const moments = useMemo(() => computeMoments(partData.sums, partData.counts, partData.totalCount), [partData]);
   const cdf = useMemo(() => computeCDF(partData.counts, partData.totalCount), [partData]);
@@ -1146,17 +1161,76 @@ export default function Monograph() {
   const conv = useMemo(() => convergenceData(partData), [partData]);
 
   // Physics memoization
-  const besteinData = useMemo(() => besteinsteinSpectrum(computeM, beta), [computeM, beta]);
-  const feynmanData = useMemo(() => feynmanVertexCount(computeM), [computeM]);
-  const nloData = useMemo(() => threeWavePhaseMatching(computeM, selectedS, nloDispersion), [computeM, selectedS, nloDispersion]);
-  const lorenzData = useMemo(() => lorenzTrajectory(lorenzSteps, 0.009, 10, lorenzRho, 8 / 3), [lorenzRho, lorenzSteps]);
-  const kolmogData = useMemo(() => kolmogorovSpectrum(computeM), [computeM]);
-  const triadData = useMemo(() => triadicCoupling(Math.min(computeM, 30)), [computeM]);
-  const grData = useMemo(() => gutenbergRichter(computeM, 6, grBvalue), [computeM, grBvalue]);
-  const grCompare = useMemo(() => scaleComparison(partData, grBvalue), [partData, grBvalue]);
-  const bbnData = useMemo(() => bbnAbundanceEvolution(80), []);
-  const sisData = useMemo(() => sisShortVectors(computeM, sisQ, [sisA1, sisA2, sisA3]), [computeM, sisQ, sisA1, sisA2, sisA3]);
-  const qwalkData = useMemo(() => quantumWalkAmplitudes(computeM, walkSteps, selectedS), [computeM, walkSteps, selectedS]);
+  const besteinData = useMemo(
+    () => (canRenderBose ? besteinsteinSpectrum(computeM, beta) : { sums: [], degen: [], weight: [], cumZ: [], Z: 0 }),
+    [canRenderBose, computeM, beta]
+  );
+  const feynmanData = useMemo(
+    () => (canRenderFeynman ? feynmanVertexCount(computeM) : []),
+    [canRenderFeynman, computeM]
+  );
+  const nloData = useMemo(
+    () => (canRenderNlo ? threeWavePhaseMatching(computeM, selectedS, nloDispersion) : []),
+    [canRenderNlo, computeM, selectedS, nloDispersion]
+  );
+  const lorenzData = useMemo(
+    () => (canRenderLorenz ? lorenzTrajectory(lorenzSteps, 0.009, 10, lorenzRho, 8 / 3) : { xs: [], ys: [], zs: [] }),
+    [canRenderLorenz, lorenzRho, lorenzSteps]
+  );
+  const kolmogData = useMemo(
+    () => (canRenderKolmog ? kolmogorovSpectrum(computeM) : { ks: [], Ek: [], cumE: [], E: 0 }),
+    [canRenderKolmog, computeM]
+  );
+  const triadData = useMemo(
+    () => (canRenderKolmog ? triadicCoupling(Math.min(computeM, responsive.isMobile ? 22 : 30)) : []),
+    [canRenderKolmog, computeM, responsive.isMobile]
+  );
+  const grData = useMemo(
+    () => (canRenderGutenberg ? gutenbergRichter(computeM, 6, grBvalue) : { mags: [], N: [], a: 6, b: grBvalue }),
+    [canRenderGutenberg, computeM, grBvalue]
+  );
+  const grCompare = useMemo(
+    () => (canRenderGutenberg ? scaleComparison(partData, grBvalue) : { xs: [], yPart: [], yGR: [] }),
+    [canRenderGutenberg, partData, grBvalue]
+  );
+  const bbnData = useMemo(
+    () => (canRenderBbn ? bbnAbundanceEvolution(80) : { T: [], Yp: [], DH: [], Li7: [] }),
+    [canRenderBbn]
+  );
+  const sisData = useMemo(
+    () => (canRenderSis ? sisShortVectors(computeM, sisQ, [sisA1, sisA2, sisA3]) : []),
+    [canRenderSis, computeM, sisQ, sisA1, sisA2, sisA3]
+  );
+  const qwalkData = useMemo(
+    () => (canRenderQwalk ? quantumWalkAmplitudes(computeM, walkSteps, selectedS) : { sums: [], amp: [] }),
+    [canRenderQwalk, computeM, walkSteps, selectedS]
+  );
+  const boseSurfaceGrid = useMemo(() => {
+    if (!canRenderBose) return null;
+    const mStep = responsive.isMobile ? 5 : 3;
+    const bStep = responsive.isMobile ? 0.025 : 0.015;
+    const Ms = [];
+    for (let m = 5; m <= 50; m += mStep) Ms.push(m);
+    const betas = [];
+    for (let b = 0.005; b <= 0.3; b += bStep) betas.push(+b.toFixed(3));
+    const zMat = betas.map((b) =>
+      Ms.map((m) => {
+        let Z = 0;
+        for (let S = 0; S <= 3 * m; S++) {
+          let d = 0;
+          for (let x = 0; x <= m; x++) {
+            for (let y = x; y <= m; y++) {
+              const z = S - x - y;
+              if (z >= y && z <= m) d++;
+            }
+          }
+          Z += d * Math.exp(-b * S);
+        }
+        return Math.log10(Math.max(Z, 1e-10));
+      })
+    );
+    return { Ms, betas, zMat };
+  }, [canRenderBose, responsive.isMobile]);
   const conjTriplet = useMemo(() => findTriplet(selectedS, computeM), [selectedS, computeM]);
   const conjParts = useMemo(() => conjugatePartition(conjTriplet), [conjTriplet]);
   const tripShell = useMemo(() => generateTripShell(computeM), [computeM]);
@@ -1278,6 +1352,7 @@ export default function Monograph() {
       },
     }, { displayModeBar: false, responsive: true });
 
+    if (barRef.current.removeAllListeners) barRef.current.removeAllListeners("plotly_click");
     barRef.current.on("plotly_click", (d) => {
       if (d.points?.[0]?.x !== undefined) setSelectedS(d.points[0].x);
     });
@@ -1598,6 +1673,7 @@ export default function Monograph() {
   // PHYSICS PLOTS · § 8 — BOSE-EINSTEIN OCCUPATION SPECTRUM
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderBose) return;
     if (!besteinRef.current) return;
     Plotly.react(besteinRef.current, [
       {
@@ -1649,28 +1725,14 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [besteinData]);
+  }, [canRenderBose, besteinData]);
 
   // § 8 — 3D PARTITION FUNCTION SURFACE Z(β, M)
   useEffect(() => {
+    if (!canRenderBose) return;
     if (!besteinSurfRef.current) return;
-    const Mgrid = [], betaGrid = [], Zgrid = [];
-    const Ms = []; for (let m = 5; m <= 50; m += 3) Ms.push(m);
-    const betas = []; for (let b = 0.005; b <= 0.3; b += 0.015) betas.push(b);
-    // Z values per row (one row per β)
-    const zMat = betas.map(b => Ms.map(m => {
-      let Z = 0;
-      for (let S = 0; S <= 3 * m; S++) {
-        let d = 0;
-        for (let x = 0; x <= m; x++)
-          for (let y = x; y <= m; y++) {
-            const z = S - x - y;
-            if (z >= y && z <= m) d++;
-          }
-        Z += d * Math.exp(-b * S);
-      }
-      return Math.log10(Math.max(Z, 1e-10));
-    }));
+    if (!boseSurfaceGrid) return;
+    const { Ms, betas, zMat } = boseSurfaceGrid;
     Plotly.react(besteinSurfRef.current, [{
       type: "surface", x: Ms, y: betas, z: zMat,
       colorscale: [[0, "#1a1f3a"], [0.25, C.indigo], [0.5, C.teal], [0.75, C.gold], [1, C.crimson]],
@@ -1720,12 +1782,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [debouncedM, beta, besteinData]);
+  }, [canRenderBose, boseSurfaceGrid, debouncedM, beta, besteinData, responsive.isMobile]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 9 — FEYNMAN VERTEX COUNT
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderFeynman) return;
     if (!feynmanRef.current) return;
     const nvals = feynmanData.map(d => d.n);
     const cvals = feynmanData.map(d => d.count);
@@ -1756,10 +1819,11 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [feynmanData, selectedS]);
+  }, [canRenderFeynman, feynmanData, selectedS]);
 
   // § 9 — 3D FEYNMAN VERTEX MOMENTUM STAR
   useEffect(() => {
+    if (!canRenderFeynman) return;
     if (!feynmanDiagRef.current) return;
     // Three incoming/outgoing lines at vertex, colored by valence
     const tri = conjTriplet || { x: 1, y: 1, z: 1 };
@@ -1824,7 +1888,7 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [conjTriplet]);
+  }, [canRenderFeynman, conjTriplet]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 10 — YOUNG CONJUGATION (antiparticle duality)
@@ -1835,6 +1899,7 @@ export default function Monograph() {
   // § 11 — NON-LINEAR OPTICS PHASE-MATCHING 3D
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderNlo) return;
     if (!nloRef.current) return;
     const maxDk = Math.max(...nloData.map(p => p.deltaK), 1);
     Plotly.react(nloRef.current, [{
@@ -1888,10 +1953,11 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [nloData]);
+  }, [canRenderNlo, nloData]);
 
   // § 11 — dispersion curve k(ω) and Δk histogram
   useEffect(() => {
+    if (!canRenderNlo) return;
     if (!nloDispRef.current) return;
     const ws = Array.from({ length: debouncedM }, (_, i) => i + 1);
     const kvals = ws.map(w => w + nloDispersion * w * w);
@@ -1956,12 +2022,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [nloData, nloDispersion, debouncedM]);
+  }, [canRenderNlo, nloData, nloDispersion, debouncedM]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 12 — LORENZ ATTRACTOR
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderLorenz) return;
     if (!lorenzRef.current) return;
     const N = lorenzData.xs.length;
     // color by time
@@ -2012,10 +2079,11 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [lorenzData]);
+  }, [canRenderLorenz, lorenzData]);
 
   // § 12 — Poincaré section z = ρ−1 plane
   useEffect(() => {
+    if (!canRenderLorenz) return;
     if (!poincareRef.current) return;
     const zPlane = lorenzRho - 1;
     const px = [], py = [];
@@ -2050,12 +2118,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [lorenzData, lorenzRho]);
+  }, [canRenderLorenz, lorenzData, lorenzRho]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 13 — KOLMOGOROV SPECTRUM
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderKolmog) return;
     if (!kolmogRef.current) return;
     // Reference K41 and measured partition energy distribution
     const ps = partData.counts.map((c, i) => c > 0 ? c : null);
@@ -2102,10 +2171,11 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [kolmogData, partData]);
+  }, [canRenderKolmog, kolmogData, partData]);
 
   // § 13 — Triadic coupling 3D
   useEffect(() => {
+    if (!canRenderKolmog) return;
     if (!triadRef.current) return;
     const maxT = Math.max(...triadData.map(p => p.T), 1);
     Plotly.react(triadRef.current, [{
@@ -2157,12 +2227,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [triadData]);
+  }, [canRenderKolmog, triadData]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 14 — GUTENBERG-RICHTER LAW
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderGutenberg) return;
     if (!gutRef.current) return;
     Plotly.react(gutRef.current, [
       {
@@ -2205,12 +2276,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [grData, grCompare, grBvalue]);
+  }, [canRenderGutenberg, grData, grCompare, grBvalue]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 15 — BBN ABUNDANCES
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderBbn) return;
     if (!bbnRef.current) return;
     Plotly.react(bbnRef.current, [
       { x: bbnData.T, y: bbnData.Yp, type: "scatter", mode: "lines", line: { color: C.gold, width: responsive.isMobile ? 1.8 : 2.2 }, name: "Y_p (⁴He mass fraction)", hovertemplate: "T=%{x:.2f}<br>Y_p=%{y:.4f}<extra></extra>" },
@@ -2251,12 +2323,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [bbnData]);
+  }, [canRenderBbn, bbnData]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 16 — SIS LATTICE SHORT VECTORS 3D
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderSis) return;
     if (!sisRef.current) return;
     const all = scatterData;
     // Full lattice T_M (background cloud)
@@ -2320,10 +2393,11 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [sisData, scatterData, debouncedM]);
+  }, [canRenderSis, sisData, scatterData, debouncedM]);
 
   // § 16 — SIS residue distribution
   useEffect(() => {
+    if (!canRenderSis) return;
     if (!sisErrorRef.current) return;
     // Compute residue A·x mod q over the full T_M
     const rCounts = new Array(sisQ).fill(0);
@@ -2356,12 +2430,13 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [debouncedM, sisQ, sisA1, sisA2, sisA3]);
+  }, [canRenderSis, debouncedM, sisQ, sisA1, sisA2, sisA3]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 17 — QUANTUM WALK AMPLITUDE
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (!canRenderQwalk) return;
     if (!qwalkRef.current) return;
     Plotly.react(qwalkRef.current, [
       {
@@ -2405,12 +2480,14 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [qwalkData, partData]);
+  }, [canRenderQwalk, qwalkData, partData]);
 
   // § 17 — 3D amplitude surface (S vs t vs |ψ|²)
   useEffect(() => {
+    if (!canRenderQwalk) return;
     if (!qwalkSurfRef.current) return;
-    const tvals = []; for (let t = 1; t <= 30; t++) tvals.push(t);
+    const tMax = responsive.isMobile ? 16 : 30;
+    const tvals = []; for (let t = 1; t <= tMax; t++) tvals.push(t);
     const Svals = qwalkData.sums;
     const zMat = tvals.map(t => {
       const w = quantumWalkAmplitudes(debouncedM, t, selectedS);
@@ -2458,7 +2535,7 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [debouncedM, selectedS, qwalkData]);
+  }, [canRenderQwalk, debouncedM, selectedS, qwalkData, responsive.isMobile]);
 
   useEffect(() => {
     if (!coverProjectionRef.current) return;
@@ -2597,6 +2674,7 @@ export default function Monograph() {
   }, [scatterData, selectedS, computeM, tripShell, responsive.isMobile]);
 
   useEffect(() => {
+    if (!canRenderSynthesis) return;
     if (!unifyTripRef.current) return;
 
     const xSlice = [], ySlice = [], zSlice = [];
@@ -2677,9 +2755,10 @@ export default function Monograph() {
       showlegend: false,
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [tripShell, scatterData, selectedS, computeM, conjTriplet, responsive.isMobile]);
+  }, [canRenderSynthesis, tripShell, scatterData, selectedS, computeM, conjTriplet, responsive.isMobile]);
 
   useEffect(() => {
+    if (!canRenderSynthesis) return;
     if (!unifyConstellationRef.current) return;
 
     const kernel = regimeConstellation[0];
@@ -2757,9 +2836,10 @@ export default function Monograph() {
       }
     }, 160);
     return () => clearInterval(timer);
-  }, [regimeConstellation, responsive.isMobile]);
+  }, [canRenderSynthesis, regimeConstellation, responsive.isMobile]);
 
   useEffect(() => {
+    if (!canRenderSynthesis) return;
     if (!unifyArchitectureRef.current) return;
 
     const traces = [];
@@ -2838,7 +2918,7 @@ export default function Monograph() {
       showlegend: false,
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
     }, { displayModeBar: false, responsive: true });
-  }, [layerArchitecture, responsive.isMobile]);
+  }, [canRenderSynthesis, layerArchitecture, responsive.isMobile]);
 
   // Formula table data
   const formulaRows = useMemo(() => {
