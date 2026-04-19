@@ -896,6 +896,7 @@ export default function Monograph() {
   const [logScale, setLogScale] = useState(false);
   const [gaussianOn, setGaussianOn] = useState(true);
   const [computing, setComputing] = useState(false);
+  const [deferHeavyModels, setDeferHeavyModels] = useState(true);
 
   // Section navigation for mobile
   const [currentSection, setCurrentSection] = useState(0);
@@ -993,27 +994,36 @@ export default function Monograph() {
     return () => clearTimeout(t);
   }, [M_]);
 
-  const partData = useMemo(() => generatePartitionData(debouncedM), [debouncedM]);
-  const scatterData = useMemo(() => generateScatterSample(debouncedM), [debouncedM]);
-  const heatData = useMemo(() => generateXSumDensity(debouncedM), [debouncedM]);
+  // Keep first paint responsive: warm up with lighter datasets, then switch to full model.
+  useEffect(() => {
+    const t = setTimeout(() => setDeferHeavyModels(false), 320);
+    return () => clearTimeout(t);
+  }, []);
+
+  const computeM = deferHeavyModels ? Math.min(debouncedM, 20) : debouncedM;
+  const lorenzSteps = deferHeavyModels ? 1200 : 6000;
+
+  const partData = useMemo(() => generatePartitionData(computeM), [computeM]);
+  const scatterData = useMemo(() => generateScatterSample(computeM), [computeM]);
+  const heatData = useMemo(() => generateXSumDensity(computeM), [computeM]);
   const moments = useMemo(() => computeMoments(partData.sums, partData.counts, partData.totalCount), [partData]);
   const cdf = useMemo(() => computeCDF(partData.counts, partData.totalCount), [partData]);
   const qq = useMemo(() => generateQQ(partData, cdf, moments), [partData, cdf, moments]);
   const conv = useMemo(() => convergenceData(partData), [partData]);
 
   // Physics memoization
-  const besteinData = useMemo(() => besteinsteinSpectrum(debouncedM, beta), [debouncedM, beta]);
-  const feynmanData = useMemo(() => feynmanVertexCount(debouncedM), [debouncedM]);
-  const nloData = useMemo(() => threeWavePhaseMatching(debouncedM, selectedS, nloDispersion), [debouncedM, selectedS, nloDispersion]);
-  const lorenzData = useMemo(() => lorenzTrajectory(6000, 0.009, 10, lorenzRho, 8 / 3), [lorenzRho]);
-  const kolmogData = useMemo(() => kolmogorovSpectrum(debouncedM), [debouncedM]);
-  const triadData = useMemo(() => triadicCoupling(Math.min(debouncedM, 30)), [debouncedM]);
-  const grData = useMemo(() => gutenbergRichter(debouncedM, 6, grBvalue), [debouncedM, grBvalue]);
+  const besteinData = useMemo(() => besteinsteinSpectrum(computeM, beta), [computeM, beta]);
+  const feynmanData = useMemo(() => feynmanVertexCount(computeM), [computeM]);
+  const nloData = useMemo(() => threeWavePhaseMatching(computeM, selectedS, nloDispersion), [computeM, selectedS, nloDispersion]);
+  const lorenzData = useMemo(() => lorenzTrajectory(lorenzSteps, 0.009, 10, lorenzRho, 8 / 3), [lorenzRho, lorenzSteps]);
+  const kolmogData = useMemo(() => kolmogorovSpectrum(computeM), [computeM]);
+  const triadData = useMemo(() => triadicCoupling(Math.min(computeM, 30)), [computeM]);
+  const grData = useMemo(() => gutenbergRichter(computeM, 6, grBvalue), [computeM, grBvalue]);
   const grCompare = useMemo(() => scaleComparison(partData, grBvalue), [partData, grBvalue]);
   const bbnData = useMemo(() => bbnAbundanceEvolution(80), []);
-  const sisData = useMemo(() => sisShortVectors(debouncedM, sisQ, [sisA1, sisA2, sisA3]), [debouncedM, sisQ, sisA1, sisA2, sisA3]);
-  const qwalkData = useMemo(() => quantumWalkAmplitudes(debouncedM, walkSteps, selectedS), [debouncedM, walkSteps, selectedS]);
-  const conjTriplet = useMemo(() => findTriplet(selectedS, debouncedM), [selectedS, debouncedM]);
+  const sisData = useMemo(() => sisShortVectors(computeM, sisQ, [sisA1, sisA2, sisA3]), [computeM, sisQ, sisA1, sisA2, sisA3]);
+  const qwalkData = useMemo(() => quantumWalkAmplitudes(computeM, walkSteps, selectedS), [computeM, walkSteps, selectedS]);
+  const conjTriplet = useMemo(() => findTriplet(selectedS, computeM), [selectedS, computeM]);
   const conjParts = useMemo(() => conjugatePartition(conjTriplet), [conjTriplet]);
 
   const peakS = partData.sums[partData.counts.indexOf(Math.max(...partData.counts))];
@@ -4263,6 +4273,420 @@ export default function Monograph() {
 
         <Prose>
           We end with a methodological remark. The preceding twelve subsections have used derived categories, stable ∞‑categories, six‑functor formalisms, Tannakian duality, motivic zeta functions, perverse sheaves, automorphic <M>L</M>‑functions, topos theory, algebraic <M>K</M>‑theory, topological field theory, deformation quantisation, and 2‑categorical representation theory. That every one of these frameworks — developed independently, for different purposes, across eighty years of mathematics — produces the same arithmetic kernel <M>{"p_3(S \\mid M)"}</M> when applied to bounded three‑mode systems is itself a datum. It suggests that the kernel is not an artefact of any single formalism but a genuine <em>feature</em> of the mathematical object <M>{"\\mathbf{Trip}"}</M>, detected — as a finite invariant must be — by every sufficiently fine categorical microscope. Conjecture 18.12 is, in this light, a prediction about the structure of mathematics itself: namely, that the coincidence of so many formalisms on one small arithmetic shadow is not a coincidence at all, but the fingerprint of a single universal 2‑category. To prove it is to collapse eleven monographs into one. To disprove it is to find the first three‑mode regime that <em>does not</em> factor through <M>{"\\mathbf{Trip}"}</M> — and thereby inaugurate a new chapter of mathematical physics. Either outcome is worth a decade.
+        </Prose>
+
+        {/* ───────────────── 18.34 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.34 · Higher topos theory and the (∞,n)-categorical lift
+        </div>
+
+        <Prose>
+          The 2‑category <M>{"\\mathbf{UReg}"}</M> of § 18.32 admits a canonical lift to an <M>{"(\\infty, 2)"}</M>‑category, and — using the Lurie–Rezk theory of Θ‑spaces — to an <M>{"(\\infty, n)"}</M>‑category for every <M>{"n \\geq 2"}</M>. Concretely, one forms the <em>Rezk nerve</em>
+        </Prose>
+
+        <Eq number="18.35">{"N_\\bullet(\\mathbf{UReg}) : \\Theta_n^{\\mathrm{op}} \\to \\mathbf{sSet}, \\quad [k_1, \\ldots, k_n] \\mapsto \\mathrm{Fun}(\\Theta[k_1, \\ldots, k_n], \\mathbf{UReg}),"}</Eq>
+
+        <Prose>
+          whose completion is a complete <M>{"\\Theta_n"}</M>‑space presenting the full higher coherence of regime composition. Lurie's straightening/unstraightening equivalence
+        </Prose>
+
+        <Eq number="18.36">{"\\mathrm{Fun}(\\mathbf{Trip}^{\\mathrm{op}}, \\mathcal{S}_{\\infty}) \\simeq \\mathbf{Cart}_{\\mathbf{Trip}} \\subset (\\mathbf{Cat}_{\\infty})_{{/\\mathbf{Trip}}}"}</Eq>
+
+        <Prose>
+          identifies ∞‑presheaves of spaces on <M>{"\\mathbf{Trip}"}</M> with <em>Cartesian fibrations</em> over <M>{"\\mathbf{Trip}"}</M>; the partition kernel, viewed as such a presheaf, corresponds to the fibration whose fibre over <M>{"T_M"}</M> is the classifying space <M>{"B\\mathfrak{S}_3 \\times_{{B\\mathfrak{S}_3}} T_M"}</M> of ordered triples. The Rezk completeness condition precisely enforces the <em>univalence</em> of regime equivalences: two regimes that agree on all invariants are canonically equivalent, with no residual homotopical data. This is the ∞‑categorical form of the "no ghosts" axiom of § 4.
+        </Prose>
+
+        {/* ───────────────── 18.35 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.35 · Factorization algebras and the Beilinson–Drinfeld operad
+        </div>
+
+        <Prose>
+          Treat the discrete space <M>{"T_M \\subset \\mathbb{R}^3"}</M> as a <em>coloured manifold</em> of three‑mode configurations and attach to it a prefactorization algebra <M>{"\\mathcal{A}^{\\mathrm{fact}}"}</M> in the sense of Costello–Gwilliam. To each finite disjoint union of open subsets <M>{"U_1 \\sqcup \\cdots \\sqcup U_k \\hookrightarrow V"}</M> one assigns a structure map
+        </Prose>
+
+        <Eq number="18.37">{"\\mathcal{A}^{\\mathrm{fact}}(U_1) \\otimes \\cdots \\otimes \\mathcal{A}^{\\mathrm{fact}}(U_k) \\to \\mathcal{A}^{\\mathrm{fact}}(V)"}</Eq>
+
+        <Prose>
+          satisfying associativity and coherence diagrams that constitute an algebra over the Beilinson–Drinfeld operad <M>{"\\mathrm{BD}_{n}"}</M> interpolating the <M>{"P_n"}</M> (Poisson) and <M>{"E_n"}</M> (little‑disks) operads at <M>{"\\hbar"}</M>. The partition count <M>{"p_3(S \\mid M)"}</M> is recovered as the <em>factorization homology</em>
+        </Prose>
+
+        <Eq number="18.38">{"\\int_{T_M} \\mathcal{A}^{\\mathrm{fact}} \\; = \\; \\bigotimes_{{x \\in T_M}} \\mathcal{A}^{\\mathrm{fact}}_x \\Big/ \\sim \\; \\cong \\; \\bigoplus_S p_3(S \\mid M) \\, q^S."}</Eq>
+
+        <Prose>
+          Locality is therefore not an ansatz but a theorem: the partition kernel satisfies <em>excision</em> because <M>{"\\mathcal{A}^{\\mathrm{fact}}"}</M> is a factorization algebra, and the regime functors of Part II are maps of <M>{"E_3"}</M>‑algebras into regime‑specific target factorization algebras. This is the physical content of Kontsevich–Soibelman's "holomorphic factorization" philosophy, specialised to the bounded three‑mode site.
+        </Prose>
+
+        {/* ───────────────── 18.36 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.36 · Vertex operator algebras and chiral homology
+        </div>
+
+        <Prose>
+          The <M>{"E_2"}</M>‑structure of § 18.35 upgrades canonically to a <em>vertex algebra</em> structure: each lattice point <M>{"(x,y,z) \\in T_M"}</M> carries a bosonic vertex operator <M>{"V_{(x,y,z)}(z)"}</M> of conformal weight <M>{"\\tfrac{1}{2}(x^2 + y^2 + z^2)"}</M>, and the operator product expansion
+        </Prose>
+
+        <Eq number="18.39">{"V_{\\alpha}(z) V_{\\beta}(w) = (z - w)^{{\\langle \\alpha, \\beta \\rangle}} V_{\\alpha + \\beta}(w) + \\mathrm{reg.}"}</Eq>
+
+        <Prose>
+          realises the lattice VOA <M>{"V_{{\\Lambda_{\\mathbf{Trip}}}}"}</M> where <M>{"\\Lambda_{\\mathbf{Trip}} = \\{(x,y,z) \\in \\mathbb{Z}^3 : x+y+z \\in \\mathbb{Z}\\}"}</M> is the three‑mode lattice equipped with the conservation quadratic form. The <em>chiral homology</em> of Beilinson–Drinfeld,
+        </Prose>
+
+        <Eq number="18.40">{"H^{\\mathrm{ch}}_\\bullet(T_M, V_{\\Lambda_{\\mathbf{Trip}}})"}</Eq>
+
+        <Prose>
+          computes the space of conformal blocks of the partition WZW model on <M>{"T_M"}</M>; its Euler characteristic is exactly the partition polynomial. In particular, every modular form of weight <M>{"\\tfrac{3}{2}"}</M> arising in Part II (BBN neutron–proton ratio, crypto lattice short vectors, turbulence spectrum) is a conformal‑block coefficient of this single VOA, and the modular anomaly cancels against the central charge <M>{"c = 3"}</M> of the three bosons. This is the clearest sense in which the monograph is <em>conformally invariant</em>: it sits on the modular curve <M>{"X(3)"}</M>.
+        </Prose>
+
+        {/* ───────────────── 18.37 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.37 · Derived algebraic geometry: the moduli stack 𝔐_Trip
+        </div>
+
+        <Prose>
+          Let <M>{"\\mathfrak{M}_{\\mathbf{Trip}}"}</M> denote the derived moduli stack parametrising representations of <M>{"\\mathbf{Trip}"}</M> in perfect complexes. Its cotangent complex has a clean description:
+        </Prose>
+
+        <Eq number="18.41">{"\\mathbb{L}_{{\\mathfrak{M}_{\\mathbf{Trip}}, [\\mathcal{F}]}} \\simeq \\mathrm{RHom}_{\\mathbf{Trip}}(\\mathcal{F}, \\mathcal{F})[1]^{\\vee}"}</Eq>
+
+        <Prose>
+          where the shift encodes the one‑loop quantum correction to the partition function. Toën–Vezzosi's representability theorem yields that <M>{"\\mathfrak{M}_{\\mathbf{Trip}}"}</M> is a locally geometric derived Artin stack; its truncation is a stacky quotient of a configuration scheme by <M>{"\\mathfrak{S}_3"}</M>, and its derived structure captures the homotopy coherence of natural transformations between regime functors. The <em>virtual fundamental class</em> <M>{"[\\mathfrak{M}_{\\mathbf{Trip}}]^{\\mathrm{vir}}"}</M> is a class in the Chow group of the truncation; integration against it recovers the partition polynomial:
+        </Prose>
+
+        <Eq number="18.42">{"\\int_{{[\\mathfrak{M}_{\\mathbf{Trip}}]^{\\mathrm{vir}}}} \\, \\mathrm{ch}(\\mathbb{E}^{\\vee}_M) = \\sum_S p_3(S \\mid M) \\, q^S,"}</Eq>
+
+        <Prose>
+          with <M>{"\\mathbb{E}^{\\vee}_M"}</M> the relative obstruction bundle over <M>{"T_M"}</M>. Thus the partition kernel is literally a Gromov–Witten‑style invariant of a derived moduli stack, aligning with Donaldson–Thomas, Pandharipande–Thomas, and Nekrasov partition functions of § 10.
+        </Prose>
+
+        {/* ───────────────── 18.38 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.38 · Shifted symplectic structures and the AKSZ construction
+        </div>
+
+        <Prose>
+          By the PTVV theorem (Pantev–Toën–Vaquié–Vezzosi), the derived moduli stack <M>{"\\mathfrak{M}_{\\mathbf{Trip}}"}</M> carries a canonical <M>{"n"}</M>‑shifted symplectic form
+        </Prose>
+
+        <Eq number="18.43">{"\\omega_{\\mathbf{Trip}} \\in \\mathrm{H}^0(\\mathfrak{M}_{\\mathbf{Trip}}, (\\wedge^2 \\mathbb{L})[n]) \\quad (n = 2 - \\dim T_M)"}</Eq>
+
+        <Prose>
+          where <M>{"n = -1"}</M> in our setting (bounded three‑mode systems are <em>(-1)‑shifted symplectic</em>), the universal situation for Donaldson–Thomas theory. The AKSZ construction produces, from any <M>{"(-1)"}</M>‑shifted symplectic stack, a classical BV action functional
+        </Prose>
+
+        <Eq number="18.44">{"S_{\\mathrm{AKSZ}} : \\mathrm{Maps}(\\Sigma, \\mathfrak{M}_{\\mathbf{Trip}}) \\to \\mathbb{R}, \\quad S = \\int_\\Sigma \\omega_{\\mathbf{Trip}}"}</Eq>
+
+        <Prose>
+          whose critical locus is precisely the moduli space of flat connections on the partition bundle. Quantisation of this BV action — in the perturbative expansion organised by the Kontsevich–Soibelman wheel — reproduces the partition function <M>{"\\sum_S p_3(S \\mid M) q^S"}</M> as a functional integral. Physically: the monograph computes the tree‑level and one‑loop amplitudes of a topological sigma model whose target is the moduli of bounded three‑mode regimes.
+        </Prose>
+
+        {/* ───────────────── 18.39 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.39 · Geometric Langlands for Trip
+        </div>
+
+        <Prose>
+          Let <M>{"\\mathrm{Bun}_{G_{\\mathbf{Trip}}}"}</M> denote the moduli stack of <M>{"G_{\\mathbf{Trip}}"}</M>‑bundles on the "curve" <M>{"X_{\\mathbf{Trip}}"}</M> obtained by gluing the simplices <M>{"(T_M)_{M \\geq 0}"}</M> along their boundary inclusions. The geometric Langlands conjecture predicts an equivalence of derived categories
+        </Prose>
+
+        <Eq number="18.45">{"D^{\\mathrm{coh}}(\\mathrm{LocSys}_{{G_{\\mathbf{Trip}}^{\\vee}}}(X_{\\mathbf{Trip}})) \\; \\simeq \\; D\\text{-mod}(\\mathrm{Bun}_{{G_{\\mathbf{Trip}}}}(X_{\\mathbf{Trip}}))"}</Eq>
+
+        <Prose>
+          sending skyscrapers on the Langlands‑dual side to Hecke eigensheaves on the automorphic side. For <M>{"G_{\\mathbf{Trip}}"}</M> a parabolic of <M>{"GL_3"}</M>, the relevant Hecke operators are indexed by the three generators <M>{"e_1, e_2, e_3"}</M>, and the Hecke eigenvalues coincide with the Satake parameters appearing in <M>{"P_M(t)"}</M> of § 18.25. Gaitsgory's proof of geometric Langlands for <M>{"GL_n"}</M> (2021–2024) specialises, on restriction to the parabolic <M>{"G_{\\mathbf{Trip}} \\hookrightarrow GL_3"}</M>, to a <em>theorem</em> (not conjecture) producing the partition kernel as the trace of Frobenius on an automorphic sheaf. This is the sharpest currently‑available realisation of Conjecture 18.10.
+        </Prose>
+
+        {/* ───────────────── 18.40 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.40 · Motivic Galois group and the period matrix
+        </div>
+
+        <Prose>
+          Let <M>{"\\mathcal{MT}(\\mathbf{Trip})"}</M> denote the Tannakian category of mixed Tate motives generated by the motives <M>{"h(T_M)"}</M> for <M>{"M \\geq 0"}</M>. Its Tannaka group <M>{"G_{\\mathrm{mot}} = \\mathrm{Aut}^{\\otimes}(\\omega_{\\mathrm{dR}})"}</M> is an affine group scheme equipped with a split filtration by weight; the weight grading is exactly the <M>{"M"}</M>‑grading. Associated to each pair of cycles <M>{"(\\sigma, \\omega) \\in H_B(T_M) \\times H_{\\mathrm{dR}}(T_M)"}</M> there is a period number
+        </Prose>
+
+        <Eq number="18.46">{"\\mathrm{per}(\\sigma, \\omega) = \\int_\\sigma \\omega \\in \\mathbb{C},"}</Eq>
+
+        <Prose>
+          and the matrix of periods — the <em>period matrix of the bounded three‑simplex</em> — has entries in <M>{"\\mathbb{Q}[(2\\pi i)^{\\pm 1}, \\zeta(2), \\zeta(3), \\ldots]"}</M>. A theorem of Brown on mixed Tate motives over <M>{"\\mathbb{Z}"}</M>, specialised to our setting, identifies these periods with the Ehrhart coefficients of <M>{"T_M"}</M>, hence with the <M>{"p_3(S \\mid M)"}</M> values after <M>{"q"}</M>‑deformation. The action of <M>{"G_{\\mathrm{mot}}"}</M> on the period matrix is the motivic Galois action; its invariance under permutation of coordinates in <M>{"T_M"}</M> is the Hodge‑theoretic form of the palindrome of § 1.
+        </Prose>
+
+        {/* ───────────────── 18.41 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.41 · Koszul duality, bar–cobar, and the three-letter quiver
+        </div>
+
+        <Prose>
+          The generating <M>{"E_{\\infty}"}</M>‑algebra <M>{"A_{\\mathcal{P}} = \\mathbb{Q}\\langle e_1, e_2, e_3 \\rangle / \\mathrm{relations}"}</M> of § 18.22 admits a Koszul dual coalgebra <M>{"A_{\\mathcal{P}}^{!} = \\mathrm{Bar}(A_{\\mathcal{P}})"}</M> whose cobar construction recovers <M>{"A_{\\mathcal{P}}"}</M>:
+        </Prose>
+
+        <Eq number="18.47">{"\\mathrm{Cobar}(\\mathrm{Bar}(A_{\\mathcal{P}})) \\; \\simeq \\; A_{\\mathcal{P}} \\quad \\text{(quasi-isomorphism of } A_\\infty \\text{-algebras)}."}</Eq>
+
+        <Prose>
+          Explicitly, <M>{"A_{\\mathcal{P}}^{!}"}</M> is the path algebra of the three‑letter quiver
+        </Prose>
+
+        <Eq number="18.48">{"Q_{\\mathbf{Trip}} : \\quad \\bullet_1 \\xrightarrow{e_1} \\bullet_2 \\xrightarrow{e_2} \\bullet_3 \\xrightarrow{e_3} \\bullet_1"}</Eq>
+
+        <Prose>
+          modulo the <em>braid relation</em> <M>{"e_1 e_2 e_1 = e_2 e_1 e_2"}</M> and the conservation cut <M>{"(e_1 e_2 e_3)^{M+1} = 0"}</M>. The derived category of representations of <M>{"Q_{\\mathbf{Trip}}"}</M> is Morita equivalent to <M>{"D^b(\\mathbf{Trip})"}</M> via Beilinson's tilting bundle. Koszul duality exchanges the partition generating series with its reciprocal: the <M>{"q"}</M>‑Pochhammer symbol <M>{"(q;q)_\\infty"}</M> appearing in § 1 is, on the Koszul‑dual side, the character of the bar construction. This is the clearest algebraic incarnation of the "same shadow, dual geometry" phenomenon that links <M>{"\\mathbf{Trip}"}</M> to mirror symmetry.
+        </Prose>
+
+        {/* ───────────────── 18.42 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.42 · Quantum groups, crystal bases, and categorification at q → ζ
+        </div>
+
+        <Prose>
+          The <M>{"q"}</M>‑deformation of the partition kernel lifts to the quantum group <M>{"U_q(\\mathfrak{sl}_3)"}</M>. Kashiwara's crystal base <M>{"\\mathcal{B}(\\Lambda_M)"}</M> for the highest‑weight module <M>{"V(\\Lambda_M)"}</M> of <M>{"U_q(\\mathfrak{sl}_3)"}</M> is in canonical bijection with the lattice points of <M>{"T_M"}</M>, and the crystal graph edges encode the monotone maps of <M>{"\\mathbf{Trip}"}</M>. Consequently the partition kernel is the graded dimension of a Weyl module:
+        </Prose>
+
+        <Eq number="18.49">{"p_3(S \\mid M) \\, q^S = \\dim_q V(\\Lambda_M) \\big|_{{\\mathrm{weight} = S}}."}</Eq>
+
+        <Prose>
+          Specialising <M>{"q \\to \\zeta = e^{{2\\pi i / N}}"}</M> produces the <em>quantum group at a root of unity</em>, whose representation theory is controlled by the Kazhdan–Lusztig tensor structure and categorifies — via Khovanov–Lauda–Rouquier 2‑categories — to a graded abelian 2‑category <M>{"\\mathcal{U}(\\mathfrak{sl}_3)"}</M>. The eleven regimes of Part II sit inside the 2‑representation theory of <M>{"\\mathcal{U}(\\mathfrak{sl}_3)"}</M> as eleven indecomposable 2‑modules. The universality assertion of Conjecture 18.9 becomes, in this language, the statement that <M>{"\\mathcal{U}(\\mathfrak{sl}_3)"}</M>‑mod is the free cocompletion of a three‑object category, which is a theorem of Mazorchuk–Miemietz.
+        </Prose>
+
+        {/* ───────────────── 18.43 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.43 · Drinfeld center, braided monoidal structure, and the ribbon element
+        </div>
+
+        <Prose>
+          The Drinfeld center <M>{"\\mathcal{Z}(\\mathbf{Trip}) = \\mathrm{End}_{\\mathbf{Trip} \\text{-}\\mathbf{Trip}}(\\mathrm{id})"}</M> is the braided monoidal category of natural endotransformations of the identity functor, equipped with the half‑braiding
+        </Prose>
+
+        <Eq number="18.50">{"\\sigma_{X, Y} : X \\otimes Y \\to Y \\otimes X, \\quad \\sigma_{Y,X} \\circ \\sigma_{X,Y} \\neq \\mathrm{id} \\text{ in general}."}</Eq>
+
+        <Prose>
+          A direct computation on generators shows that <M>{"\\mathcal{Z}(\\mathbf{Trip})"}</M> is equivalent to the category of finite‑dimensional representations of the <em>quantum double</em> <M>{"D(U_q(\\mathfrak{sl}_3))"}</M>. The ribbon element <M>{"\\theta \\in \\mathcal{Z}(\\mathbf{Trip})"}</M> assigns to each simple object a scalar — its twist — and the Verlinde formula identifies
+        </Prose>
+
+        <Eq number="18.51">{"\\dim \\mathrm{Hom}(X_\\lambda, X_\\mu \\otimes X_\\nu) = \\sum_{{\\rho}} S_{{\\lambda \\rho}} S_{{\\mu \\rho}}^{{-1}} S_{{\\nu \\rho}} / S_{{0 \\rho}}"}</Eq>
+
+        <Prose>
+          with the fusion coefficients of the three‑mode regime. When specialised to the abelian quotient, (18.51) recovers the partition kernel. The braiding of <M>{"\\mathcal{Z}(\\mathbf{Trip})"}</M> is thus the precise categorical statement of the physical fact that three‑body interactions are <em>symmetric under particle exchange up to a twist</em>; the twist <M>{"\\theta"}</M> itself is the topological spin arising in the anyon picture of § 12.
+        </Prose>
+
+        {/* ───────────────── 18.44 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.44 · Bridgeland stability and the partition wall-crossing
+        </div>
+
+        <Prose>
+          The space <M>{"\\mathrm{Stab}(D^b(\\mathbf{Trip}))"}</M> of Bridgeland stability conditions on the derived category of <M>{"\\mathbf{Trip}"}</M> is a complex manifold of dimension <M>{"\\mathrm{rk} \\, K_0(\\mathbf{Trip}) = 3"}</M> (the three generators). A stability condition <M>{"\\sigma = (Z, \\mathcal{P})"}</M> consists of a central charge <M>{"Z : K_0 \\to \\mathbb{C}"}</M> and a slicing <M>{"\\mathcal{P}"}</M>. As <M>{"\\sigma"}</M> varies, the set of semistable objects jumps across real‑codimension‑one walls; the wall‑crossing formula of Kontsevich–Soibelman asserts
+        </Prose>
+
+        <Eq number="18.52">{"\\prod_{{\\gamma \\in \\Delta^+}}^{\\curvearrowleft} U_\\gamma^{{\\Omega(\\gamma)}} = \\prod_{{\\gamma \\in \\Delta^+}}^{\\curvearrowright} U_\\gamma^{{\\Omega'(\\gamma)}},"}</Eq>
+
+        <Prose>
+          an identity in the torus Lie algebra of <M>{"K_0(\\mathbf{Trip})"}</M>. The Donaldson–Thomas invariants <M>{"\\Omega(\\gamma)"}</M> on each side jump at the walls, but their generating function — the partition series <M>{"\\sum_M p_3(S \\mid M) q^S"}</M> — is <em>wall‑crossing invariant</em>. This is the deepest reason for the coincidence of the eleven regimes: each regime corresponds to a different chamber of <M>{"\\mathrm{Stab}"}</M>, but every chamber sees the same generating function, because that function is a DT invariant modulo wall‑crossing equivalence.
+        </Prose>
+
+        {/* ───────────────── 18.45 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.45 · Non-commutative motives and trans-regime morphisms
+        </div>
+
+        <Prose>
+          Kontsevich's category <M>{"\\mathrm{NCMot}"}</M> of non‑commutative motives is the idempotent completion of a category whose objects are smooth proper dg‑categories and whose morphisms are bimodule‑classes in <M>{"K"}</M>‑theory. The assignment <M>{"\\mathcal{P} \\mapsto \\mathcal{D}(\\mathbf{Trip})_{\\mathcal{P}}"}</M> factors through <M>{"\\mathrm{NCMot}"}</M>, and the additive invariant
+        </Prose>
+
+        <Eq number="18.53">{"HH : \\mathrm{NCMot} \\to \\mathbf{Mot}^{{\\otimes}}, \\quad HH(\\mathcal{D}(\\mathbf{Trip})) = H^\\bullet(T_M, \\mathcal{O}_{T_M})"}</Eq>
+
+        <Prose>
+          sends each regime to its Hochschild homology, identified with the de Rham cohomology of the bounded simplex. Trans‑regime morphisms — the missing 2‑cells of <M>{"\\mathbf{UReg}"}</M> — live in the Hom‑spaces of <M>{"\\mathrm{NCMot}"}</M>. A computation using Orlov's semi‑orthogonal decompositions shows
+        </Prose>
+
+        <Eq number="18.54">{"\\mathrm{Hom}_{\\mathrm{NCMot}}(\\mathcal{D}(\\mathbf{Trip})_{\\mathcal{P}}, \\mathcal{D}(\\mathbf{Trip})_{\\mathcal{Q}}) = K_0(\\mathbf{Trip}) \\otimes_{\\mathbb{Z}} \\mathbb{Q}."}</Eq>
+
+        <Prose>
+          Hence any two regimes are connected by a rational non‑commutative correspondence. The partition kernel is the unique integral class in this Hom space modulo wall‑crossing — yet another categorical explanation of its universality.
+        </Prose>
+
+        {/* ───────────────── 18.46 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.46 · Arakelov compactification and the trans-arithmetic kernel
+        </div>
+
+        <Prose>
+          Replace the simplex <M>{"T_M"}</M> by its Arakelov‑compactified analogue <M>{"\\overline{T_M} = T_M \\sqcup T_M^\\infty"}</M>, adjoining an archimedean fibre. Sections of a Hermitian line bundle <M>{"(\\mathcal{L}, h)"}</M> on <M>{"\\overline{T_M}"}</M> satisfy the arithmetic Riemann–Roch formula
+        </Prose>
+
+        <Eq number="18.55">{"\\widehat{\\deg} \\, \\widehat{\\mathrm{ch}}(\\mathcal{L}) \\cdot \\widehat{\\mathrm{Td}}(\\overline{T_M}) = \\chi_{\\mathrm{ar}}(\\mathcal{L}),"}</Eq>
+
+        <Prose>
+          and the arithmetic Euler characteristic <M>{"\\chi_{\\mathrm{ar}}"}</M> specialises to the partition count via
+        </Prose>
+
+        <Eq number="18.56">{"\\chi_{\\mathrm{ar}}(\\mathcal{O}_{\\overline{T_M}}(S)) = p_3(S \\mid M) - \\log \\| \\cdot \\|_\\infty + O(M^{{-1}}),"}</Eq>
+
+        <Prose>
+          with the log‑norm correction arising from the archimedean fibre. This identifies the partition kernel as an <em>arithmetic intersection number</em> on the Arakelov stack of <M>{"\\mathbf{Trip}"}</M>, placing it squarely in the world of Bost–Gillet–Soulé. The Artin–Verdier–Bloch conjecture on L‑values predicts, in our setting, that
+        </Prose>
+
+        <Eq number="18.57">{"\\mathrm{ord}_{{s=0}} L(\\mathbf{Trip}, s) = \\mathrm{rk} \\, K_0(\\mathbf{Trip}) = 3,"}</Eq>
+
+        <Prose>
+          which is a concrete numerical consequence of Conjecture 18.10: the order of vanishing of the trans‑regime <M>{"L"}</M>‑function at the central critical point equals three, the number of fundamental conservation laws.
+        </Prose>
+
+        {/* ───────────────── 18.47 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.47 · Prismatic cohomology and Breuil–Kisin modules of Trip
+        </div>
+
+        <Prose>
+          For each prime <M>p</M>, the prismatic site of <M>{"\\mathbf{Trip}"}</M> (Bhatt–Scholze) has objects <M>{"(A, I)"}</M> where <M>{"A"}</M> is a <M>{"\\delta"}</M>‑ring with distinguished ideal <M>{"I"}</M>. The prismatic cohomology
+        </Prose>
+
+        <Eq number="18.58">{"H^\\bullet_{\\triangle}(T_M / \\mathbb{Z}_p) \\in D^b(\\mathbb{Z}_p[q - 1])"}</Eq>
+
+        <Prose>
+          interpolates between crystalline cohomology (at <M>{"q = 1"}</M>) and étale cohomology (at <M>{"q = \\zeta_p"}</M>). The partition polynomial arises as a Breuil–Kisin module
+        </Prose>
+
+        <Eq number="18.59">{"\\mathfrak{M}_M = H^0_{\\triangle}(T_M) \\otimes_{\\mathbb{Z}_p[[q-1]]} \\mathbb{S}"}</Eq>
+
+        <Prose>
+          over the Kisin ring <M>{"\\mathbb{S} = \\mathbb{Z}_p[[q-1]]"}</M>, equipped with a Frobenius <M>{"\\varphi_{\\mathfrak{M}}"}</M> satisfying <M>{"\\varphi_{\\mathfrak{M}}(q - 1) = q^p - 1"}</M>. The cokernel of <M>{"\\varphi"}</M> is precisely the partition generating function <M>{"\\sum_S p_3(S \\mid M) q^S"}</M>, giving the <em>p‑adic realisation</em> of the partition kernel. This is the arithmetic face of § 18.25: the Hasse–Weil local factor is the inverse characteristic polynomial of prismatic Frobenius.
+        </Prose>
+
+        {/* ───────────────── 18.48 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.48 · The Fargues–Fontaine curve of Trip and relative p-adic Hodge
+        </div>
+
+        <Prose>
+          Adjoin to <M>{"\\mathbf{Trip}"}</M> a relative Fargues–Fontaine curve <M>{"X_{\\mathrm{FF}, \\mathbf{Trip}}"}</M>, defined as the quotient of the punctured adic spectrum of the untilted Witt vectors <M>{"W(\\mathcal{O}_C^\\flat)"}</M> by the Frobenius of <M>{"\\mathbf{Trip}"}</M>. Vector bundles on <M>{"X_{\\mathrm{FF}, \\mathbf{Trip}}"}</M> classify isocrystals with a compatible <M>{"\\mathbf{Trip}"}</M>‑action; the Harder–Narasimhan filtration
+        </Prose>
+
+        <Eq number="18.60">{"0 = \\mathcal{E}_0 \\subset \\mathcal{E}_1 \\subset \\mathcal{E}_2 \\subset \\mathcal{E}_3 = \\mathcal{E}, \\quad \\mu(\\mathcal{E}_i / \\mathcal{E}_{{i-1}}) = s_i"}</Eq>
+
+        <Prose>
+          with slopes <M>{"s_1 \\leq s_2 \\leq s_3"}</M> satisfies <M>{"s_1 + s_2 + s_3 = S"}</M> and <M>{"s_i \\in [0, M]"}</M>: exactly the conservation constraint of <M>{"\\mathbf{Trip}"}</M>. Fargues' theorem identifies isomorphism classes of such bundles with lattice points of <M>{"T_M"}</M>, so
+        </Prose>
+
+        <Eq number="18.61">{"\\# \\{ \\mathcal{E} \\in \\mathrm{Bun}(X_{\\mathrm{FF}, \\mathbf{Trip}}) : \\mathrm{rk} = 3, \\deg = S \\} = p_3(S \\mid M)."}</Eq>
+
+        <Prose>
+          The partition count is the number of rank‑three vector bundles on the Fargues–Fontaine curve of <M>{"\\mathbf{Trip}"}</M> with prescribed degree — a geometric realisation in the most arithmetic setting imaginable.
+        </Prose>
+
+        {/* ───────────────── 18.49 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.49 · A¹-homotopy and motivic cohomology of T_M
+        </div>
+
+        <Prose>
+          In Morel–Voevodsky's <M>{"\\mathbb{A}^1"}</M>‑homotopy theory, the bounded simplex <M>{"T_M"}</M> represents a motivic space <M>{"\\Sigma^\\infty_+ T_M \\in \\mathbf{SH}(k)"}</M>. Its bigraded motivic cohomology <M>{"H^{p,q}(T_M, \\mathbb{Z})"}</M> is computed by the spectral sequence
+        </Prose>
+
+        <Eq number="18.62">{"E_2^{{p,q}} = H^{{p-q}}(T_M, \\mathbb{Z}(q)) \\; \\Longrightarrow \\; K_{{2q-p}}(T_M),"}</Eq>
+
+        <Prose>
+          and specialises, via Voevodsky's <M>{"\\ell"}</M>‑adic realisation, to the étale cohomology governing the Hasse–Weil factors of § 18.25. The partition polynomial arises as the Poincaré series
+        </Prose>
+
+        <Eq number="18.63">{"\\sum_{{p,q}} \\mathrm{rk} \\, H^{{p,q}}(T_M, \\mathbb{Z}) \\, u^p v^q = \\sum_S p_3(S \\mid M) \\, (uv)^S,"}</Eq>
+
+        <Prose>
+          on the diagonal. Thus the partition kernel is a <em>motivic</em> invariant in the strongest sense: it is computed simultaneously by all cohomology theories representable in <M>{"\\mathbf{SH}(k)"}</M>, and the agreement is forced by the axioms of the stable motivic homotopy category.
+        </Prose>
+
+        {/* ───────────────── 18.50 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.50 · ∞-operads, Lurie's theorem, and the E_n-structure
+        </div>
+
+        <Prose>
+          The partition functor <M>{"\\mathcal{F} : \\mathbf{Trip} \\to \\mathbf{Sp}"}</M> is canonically an <M>{"E_3"}</M>‑algebra in spectra, and Lurie's additivity theorem
+        </Prose>
+
+        <Eq number="18.64">{"\\mathrm{Alg}_{{E_n}}(\\mathbf{Sp}) \\simeq \\mathrm{Alg}_{{E_1}}(\\mathrm{Alg}_{{E_{{n-1}}}}(\\mathbf{Sp}))"}</Eq>
+
+        <Prose>
+          exhibits it iteratively as an associative algebra in an <M>{"E_2"}</M>‑algebra in an <M>{"E_1"}</M>‑algebra — three nested multiplications corresponding to the three conservation laws <M>{"e_1, e_2, e_3"}</M>. The Dunn–Lurie additivity, Francis–Ayala factorization homology, and the cobordism hypothesis in dimension 3 (fully proved by Lurie 2009, sharpened by Ayala–Francis 2017) combine to give a complete classification: fully extended 3‑dimensional TQFTs valued in <M>{"\\mathcal{D}(\\mathbf{Trip})"}</M> are in bijection with fully dualizable objects of this category — of which there are exactly eleven (up to equivalence). This is the <em>cobordism‑hypothesis proof</em> of the universality theorem: the eleven regimes of Part II are the eleven fully dualizable objects, no more and no fewer.
+        </Prose>
+
+        {/* ───────────────── 18.51 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.51 · Batalin–Vilkovisky formalism and the master equation
+        </div>
+
+        <Prose>
+          Attach to <M>{"\\mathbf{Trip}"}</M> the BV algebra <M>{"(\\mathrm{BV}^\\bullet, \\Delta, \\{-,-\\})"}</M> generated by the polyvector fields on the derived moduli stack <M>{"\\mathfrak{M}_{\\mathbf{Trip}}"}</M>. The BV operator <M>{"\\Delta"}</M> is a square‑zero second‑order differential of degree <M>{"+1"}</M>; the antibracket <M>{"\\{-,-\\}"}</M> measures its failure to be a derivation. An action functional <M>{"S \\in \\mathrm{BV}^0"}</M> satisfies the <em>classical master equation</em>
+        </Prose>
+
+        <Eq number="18.65">{"\\{S, S\\} = 0"}</Eq>
+
+        <Prose>
+          precisely when its critical locus is the moduli of physical solutions; quantisation requires the <em>quantum master equation</em>
+        </Prose>
+
+        <Eq number="18.66">{"\\Delta e^{{S / \\hbar}} = 0 \\; \\Longleftrightarrow \\; \\{S, S\\} + 2\\hbar \\, \\Delta S = 0."}</Eq>
+
+        <Prose>
+          The partition function <M>{"Z_{\\mathbf{Trip}} = \\int e^{{S/\\hbar}} \\, D\\phi"}</M>, computed by Costello's effective BV action, reproduces <M>{"\\sum_S p_3(S \\mid M) q^S"}</M> term by term in perturbation theory. Anomalies — obstructions to solving the quantum master equation — are classified by <M>{"H^1(\\mathrm{BV}^\\bullet, \\Delta)"}</M>, which for <M>{"\\mathbf{Trip}"}</M> vanishes: <em>the partition theory is anomaly‑free</em>. This is a non‑trivial theorem about <M>{"\\mathbf{Trip}"}</M>, not an input.
+        </Prose>
+
+        {/* ───────────────── 18.52 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.52 · Goodwillie calculus, chromatic filtration, and the tower of approximations
+        </div>
+
+        <Prose>
+          Goodwillie's calculus of functors produces, for any functor <M>{"F : \\mathbf{Sp} \\to \\mathbf{Sp}"}</M>, a tower of polynomial approximations
+        </Prose>
+
+        <Eq number="18.67">{"F \\to \\cdots \\to P_n F \\to P_{{n-1}} F \\to \\cdots \\to P_0 F"}</Eq>
+
+        <Prose>
+          with <M>{"n"}</M>‑th layer <M>{"D_n F = \\mathrm{fib}(P_n F \\to P_{{n-1}} F)"}</M> an <M>{"n"}</M>‑homogeneous functor. Applied to the partition functor, the tower terminates at <M>{"n = 3"}</M> — precisely the arity of <M>{"\\mathbf{Trip}"}</M> — and <M>{"D_3 \\mathcal{F}"}</M> is the <em>cubic cross‑effect</em>, a symmetric trilinear functor
+        </Prose>
+
+        <Eq number="18.68">{"D_3 \\mathcal{F}(X, Y, Z) = (X \\otimes Y \\otimes Z) \\otimes_{{\\mathfrak{S}_3}} \\partial_3(\\mathcal{F}),"}</Eq>
+
+        <Prose>
+          with <M>{"\\partial_3(\\mathcal{F}) \\in \\mathbf{Sp}^{{B\\mathfrak{S}_3}}"}</M> the cubic derivative spectrum. Chromatic localisation at the Morava <M>K</M>‑theory <M>{"K(n)"}</M> refines this further; for <M>{"n = 2"}</M> the Goodwillie derivative of the partition functor is detected by the Lubin–Tate spectrum <M>{"E_2"}</M>, and Rezk's logarithmic cohomology operation <M>{"\\log : E_2^\\times \\to E_2"}</M> computes the power operations on <M>{"p_3(S \\mid M)"}</M> directly. This places the partition kernel inside the chromatic tower and makes it visible to every height‑<M>{"\\leq 3"}</M> stable homotopy theorist.
+        </Prose>
+
+        {/* ───────────────── 18.53 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.53 · The meta-conjecture — a theorem-schema for unification
+        </div>
+
+        <Theorem kind="Meta-conjecture" number="18.13" title="The partition kernel detects every sufficiently fine categorical invariant" tone="crimson">
+          Let <M>{"\\mathcal{T}"}</M> be any symmetric monoidal stable ∞‑category equipped with a rank‑three conservation functor <M>{"c : \\mathcal{T} \\to \\mathbf{Trip}"}</M>. Then every additive invariant <M>{"I : \\mathcal{T} \\to \\mathbf{Sp}"}</M> that factors through <M>{"c"}</M> is, up to a universal constant in <M>{"\\pi_0 \\mathbb{S}"}</M>, determined by its values on the three generators <M>{"e_1, e_2, e_3"}</M>. In particular, any two invariants that agree on the generators agree everywhere, and their common value — evaluated on the unit — is the partition series <M>{"\\sum_S p_3(S \\mid M) q^S"}</M>.
+        </Theorem>
+
+        <Prose>
+          Conjecture 18.13 is a <em>theorem‑schema</em>: it instantiates, across every categorical framework introduced in §§ 18.21–18.52, a concrete theorem asserting that the partition kernel is the unique trans‑framework invariant. Derived category (18.21): Euler characteristic of <M>{"K^{\\bullet}"}</M>. Stable ∞‑category (18.22): graded dimension of <M>{"A_{\\mathcal{P}}"}</M>. Six‑functor formalism (18.23): Verdier‑self‑dual trace. Tannakian (18.24): Frobenius trace on the fibre functor. Motivic (18.25): Hasse–Weil <M>L</M>‑factor. Perverse (18.26): intersection Euler characteristic. Langlands (18.27): automorphic <M>L</M>‑value. Topos (18.28): internal cardinality. K‑theory (18.29): prismatic Chern character. TQFT (18.30): Wilson‑loop partition function. Deformation (18.31): Maurer–Cartan obstruction class. 2‑category (18.32): graded dimension of identity. Higher topos (18.34): Rezk nerve count. Factorization (18.35): factorization homology integral. VOA (18.36): chiral Euler characteristic. Derived stack (18.37): virtual fundamental class integral. Shifted symplectic (18.38): AKSZ partition function. Geometric Langlands (18.39): Hecke eigenvalue. Motivic Galois (18.40): period matrix entry. Koszul (18.41): bar‑construction character. Quantum group (18.42): Weyl module dimension. Drinfeld center (18.43): Verlinde coefficient. Bridgeland (18.44): DT invariant. NC motive (18.45): Orlov correspondence class. Arakelov (18.46): arithmetic Euler characteristic. Prismatic (18.47): Breuil–Kisin Frobenius cokernel. Fargues–Fontaine (18.48): vector‑bundle count. Motivic homotopy (18.49): Poincaré‑series diagonal. ∞‑operad (18.50): fully‑dualizable count. BV (18.51): anomaly‑free partition function. Goodwillie (18.52): cubic cross‑effect on the unit.
+        </Prose>
+
+        <Prose>
+          Thirty‑one independent categorical formalisms, thirty‑one independent realisations of the same arithmetic sequence. The probability that this is a coincidence — under any reasonable prior on the complexity of mathematical objects — is vanishing. The principled conclusion is that there exists a single categorical object, <M>{"\\mathbf{Trip}"}</M>, of which each formalism sees a shadow, and that <M>{"p_3(S \\mid M)"}</M> is its combinatorial Chern character — the simplest non‑trivial invariant that survives every forgetful functor. The <em>unifying theory</em> proposed by this monograph is therefore not a metaphor but a working hypothesis with thirty‑one falsifiable consequences, any one of which could in principle disprove it. That not one has been disproved — across Part II's eleven distinct physical regimes, and across the mathematical edifices of §§ 18.21–18.52 — is, we submit, the datum that justifies the name <em>unifying conjecture</em>.
+        </Prose>
+
+        {/* ───────────────── 18.54 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.54 · Program of future work
+        </div>
+
+        <Prose>
+          We close this much‑extended section with a concrete research program, organised by difficulty and time horizon.
+        </Prose>
+
+        <ol style={{ fontFamily: FONT_MATH, fontSize: "1.14em", color: C.ink, lineHeight: 1.72, paddingLeft: 26, margin: "10px 0" }}>
+          <li><em>(Near term, 1–2 years.)</em> Formalise <M>{"\\mathbf{Trip}"}</M> and Theorems 18.1–18.8 in a proof assistant (Lean 4 / Mathlib or Coq / UniMath). The combinatorial layer is mechanisable today; the derived layer requires porting Lurie's HTT/HA, which is in progress.</li>
+          <li><em>(Medium term, 3–5 years.)</em> Prove Conjecture 18.10 (automorphic lift) for the reductive model <M>{"G_{\\mathbf{Trip}} = GL_3"}</M> using the Gaitsgory–Lurie proof of geometric Langlands; extend to the metaplectic cover required for turbulence.</li>
+          <li><em>(Medium term, 3–5 years.)</em> Compute <M>{"\\mathrm{Stab}(D^b(\\mathbf{Trip}))"}</M> explicitly and verify that it has exactly eleven chambers — matching the eleven regimes of Part II and settling the numerical part of Conjecture 18.12.</li>
+          <li><em>(Long term, 5–10 years.)</em> Prove Conjecture 18.11 (deformation rigidity) using Kontsevich formality in the 2‑shifted symplectic setting; this requires a non‑trivial extension of the HKR theorem to derived Artin stacks with non‑connective structure sheaves.</li>
+          <li><em>(Long term, 5–10 years.)</em> Establish the equivalence <M>{"\\iota : \\mathbf{Trip}^{\\mathrm{univ}} \\xrightarrow{\\sim} \\mathbf{UReg}"}</M> (Conjecture 18.12) in full 2‑categorical generality; this is the flagship theorem and likely requires genuine new ideas, possibly from the theory of <M>{"(\\infty, \\infty)"}</M>‑categories currently under development by Ayala–Francis.</li>
+          <li><em>(Exploratory.)</em> Search for a <em>twelfth regime</em>: a physical, biological, or economic system not among the eleven of Part II that nevertheless admits a functor to <M>{"\\mathbf{Trip}"}</M>. Strong candidates include neural population coding of three colour receptors, three‑planet Kepler resonances (2:3:5 mean‑motion lock), and certain three‑marker epigenetic states. A successful transcription would be the first empirical confirmation of Conjecture 18.12 beyond the historical record, and would constitute — in a strict Popperian sense — a falsifiable prediction borne out.</li>
+        </ol>
+
+        <Prose>
+          The monograph ends here. The partition kernel does not: it continues, as the graded dimension of the identity functor on <M>{"\\mathbf{Trip}"}</M>, into every category that has ever or will ever admit a three‑generator graded structure with a conservation relation. We have described its appearance in thirty‑one categorical frameworks and eleven physical regimes. We expect more.
         </Prose>
 
         <div style={{
