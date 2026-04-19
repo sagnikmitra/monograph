@@ -4503,7 +4503,7 @@ export default function Monograph() {
 
         <Theorem kind="Theorem" number="18.5" title="Ehrhart–Serre duality for Trip" tone="crimson">
           Let <M>{"\\omega_{{T_M}}"}</M> denote the dualizing complex of <M>T_M</M> viewed as a toric variety. Then
-          <M>{" "}\mathrm{Ext}^i_{"{\mathbf{Trip}}"}(\mathbb{1}_{"{T_M}"}, \omega_{"{T_M}"}) \cong p_3(i \mid M) \cdot \mathbb{Z}</M>{" "}
+          <M>{"\\mathrm{Ext}^i_{\\mathbf{Trip}}(\\mathbb{1}_{T_M},\\omega_{T_M})\\cong p_3(i\\mid M)\\cdot\\mathbb{Z}"}</M>
           for <M>{"0 \\leq i \\leq 3"}</M>, vanishing otherwise. The Euler characteristic <M>{"\\chi(T_M) = \\sum_i (-1)^i p_3(i \\mid M)"}</M> recovers the signed Ehrhart polynomial.
         </Theorem>
 
@@ -4520,7 +4520,7 @@ export default function Monograph() {
 
         <Prose>
           is the total category of all configurations across all regimes. Objects are pairs <M>{"(\\mathcal{P}, c)"}</M> with <M>{"c \\in \\mathcal{C}_\\mathcal{P}"}</M>; morphisms are coherent pairs of a regime map and a configuration map. The projection
-          <M>{" "}\pi : \int_\mathcal{P} \mathcal{C}_\mathcal{P} \to \mathbf{Reg}</M>{" "}
+          <M>{"\\pi : \\int_{\\mathcal{P}}\\mathcal{C}_{\\mathcal{P}}\\to\\mathbf{Reg}"}</M>
           is a <em>Grothendieck fibration</em>; its fibers are the regime categories, and its horizontal sections — the global choices of configuration across every regime — form the <em>universal</em> classifying space of the kernel.
         </Prose>
 
