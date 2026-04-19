@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import Monograph from "./Monograph";
 import UnifiedTheory from "./UnifiedTheory";
+import { Analytics } from "@vercel/analytics/react";
 import "./style.css";
 
 const path = window.location.pathname.replace(/\/+$/, "") || "/";
@@ -11,5 +12,6 @@ const Page = unifiedPaths.has(path) ? UnifiedTheory : Monograph;
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Page />
+    <Analytics />
   </React.StrictMode>
 );
