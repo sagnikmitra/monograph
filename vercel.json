@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/unified", "destination": "/" },
+    { "source": "/unified-theory", "destination": "/" },
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}

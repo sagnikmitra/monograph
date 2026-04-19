@@ -5,7 +5,8 @@ import UnifiedTheory from "./UnifiedTheory";
 import "./style.css";
 
 const path = window.location.pathname.replace(/\/+$/, "") || "/";
-const Page = path === "/unified-theory" ? UnifiedTheory : Monograph;
+const unifiedPaths = new Set(["/unified", "/unified-theory"]);
+const Page = unifiedPaths.has(path) ? UnifiedTheory : Monograph;
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
