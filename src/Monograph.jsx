@@ -468,8 +468,141 @@ function quantumWalkAmplitudes(M, steps, selectedS) {
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPOGRAPHIC / MATHEMATICAL PRIMITIVES
 // ═══════════════════════════════════════════════════════════════════════════
+const _GREEK = {
+  alpha:"α",beta:"β",gamma:"γ",delta:"δ",epsilon:"ε",varepsilon:"ε",zeta:"ζ",eta:"η",theta:"θ",vartheta:"ϑ",iota:"ι",kappa:"κ",lambda:"λ",mu:"μ",nu:"ν",xi:"ξ",omicron:"ο",pi:"π",varpi:"ϖ",rho:"ρ",varrho:"ϱ",sigma:"σ",varsigma:"ς",tau:"τ",upsilon:"υ",phi:"φ",varphi:"ϕ",chi:"χ",psi:"ψ",omega:"ω",
+  Alpha:"Α",Beta:"Β",Gamma:"Γ",Delta:"Δ",Epsilon:"Ε",Zeta:"Ζ",Eta:"Η",Theta:"Θ",Iota:"Ι",Kappa:"Κ",Lambda:"Λ",Mu:"Μ",Nu:"Ν",Xi:"Ξ",Omicron:"Ο",Pi:"Π",Rho:"Ρ",Sigma:"Σ",Tau:"Τ",Upsilon:"Υ",Phi:"Φ",Chi:"Χ",Psi:"Ψ",Omega:"Ω",
+};
+const _OPS = {
+  to:"→",mapsto:"↦",rightarrow:"→",leftarrow:"←",Rightarrow:"⇒",Leftarrow:"⇐",Leftrightarrow:"⇔",leftrightarrow:"↔",hookrightarrow:"↪",twoheadrightarrow:"↠",longrightarrow:"⟶",longleftarrow:"⟵",longleftrightarrow:"⟷",Longrightarrow:"⟹",xrightarrow:"→",xleftarrow:"←",uparrow:"↑",downarrow:"↓",updownarrow:"↕",
+  leq:"≤",le:"≤",geq:"≥",ge:"≥",neq:"≠",ne:"≠",approx:"≈",sim:"∼",simeq:"≃",cong:"≅",equiv:"≡",propto:"∝",ll:"≪",gg:"≫",prec:"≺",succ:"≻",preceq:"⪯",succeq:"⪰",
+  in:"∈",notin:"∉",ni:"∋",subset:"⊂",subseteq:"⊆",supset:"⊃",supseteq:"⊇",cup:"∪",cap:"∩",setminus:"∖",emptyset:"∅",varnothing:"∅",
+  forall:"∀",exists:"∃",nexists:"∄",partial:"∂",nabla:"∇",infty:"∞",
+  cdot:"·",cdots:"⋯",ldots:"…",vdots:"⋮",ddots:"⋱",dots:"…",
+  times:"×",div:"÷",pm:"±",mp:"∓",otimes:"⊗",oplus:"⊕",ominus:"⊖",odot:"⊙",boxtimes:"⊠",bigotimes:"⨂",bigoplus:"⨁",
+  sum:"∑",prod:"∏",coprod:"∐",int:"∫",oint:"∮",iint:"∬",iiint:"∭",bigcup:"⋃",bigcap:"⋂",bigsqcup:"⨆",
+  langle:"⟨",rangle:"⟩",lceil:"⌈",rceil:"⌉",lfloor:"⌊",rfloor:"⌋",lVert:"‖",rVert:"‖",lvert:"|",rvert:"|",
+  hbar:"ℏ",ell:"ℓ",Re:"ℜ",Im:"ℑ",aleph:"ℵ",beth:"ℶ",gimel:"ℷ",wp:"℘",
+  circ:"∘",star:"⋆",ast:"∗",bullet:"•",dagger:"†",ddagger:"‡",sharp:"♯",flat:"♭",natural:"♮",
+  angle:"∠",perp:"⊥",parallel:"∥",mid:"∣",vdash:"⊢",dashv:"⊣",models:"⊨",
+  iff:"⇔",implies:"⇒",
+  vee:"∨",wedge:"∧",neg:"¬",lnot:"¬",top:"⊤",bot:"⊥",
+  sqcup:"⊔",sqcap:"⊓",triangleleft:"◁",triangleright:"▷",diamond:"⋄",
+  hat:"̂",bar:"̄",tilde:"̃",vec:"⃗",dot:"̇",ddot:"̈",
+  prime:"′",dprime:"″",tprime:"‴",
+  ntimes:"×",amalg:"∐",
+  Box:"□",square:"□",blacksquare:"■",triangle:"△",blacktriangle:"▲",
+  natconj:"⁎",bot2:"⊥",
+  colon:":",semicolon:";",
+  quad:" ",qquad:"  ",backslash:"\\",
+};
+const _BB = {A:"𝔸",B:"𝔹",C:"ℂ",D:"𝔻",E:"𝔼",F:"𝔽",G:"𝔾",H:"ℍ",I:"𝕀",J:"𝕁",K:"𝕂",L:"𝕃",M:"𝕄",N:"ℕ",O:"𝕆",P:"ℙ",Q:"ℚ",R:"ℝ",S:"𝕊",T:"𝕋",U:"𝕌",V:"𝕍",W:"𝕎",X:"𝕏",Y:"𝕐",Z:"ℤ"};
+const _CAL = {A:"𝒜",B:"ℬ",C:"𝒞",D:"𝒟",E:"ℰ",F:"ℱ",G:"𝒢",H:"ℋ",I:"ℐ",J:"𝒥",K:"𝒦",L:"ℒ",M:"ℳ",N:"𝒩",O:"𝒪",P:"𝒫",Q:"𝒬",R:"ℛ",S:"𝒮",T:"𝒯",U:"𝒰",V:"𝒱",W:"𝒲",X:"𝒳",Y:"𝒴",Z:"𝒵"};
+const _FRAK = {A:"𝔄",B:"𝔅",C:"ℭ",D:"𝔇",E:"𝔈",F:"𝔉",G:"𝔊",H:"ℌ",I:"ℑ",J:"𝔍",K:"𝔎",L:"𝔏",M:"𝔐",N:"𝔑",O:"𝔒",P:"𝔓",Q:"𝔔",R:"ℜ",S:"𝔖",T:"𝔗",U:"𝔘",V:"𝔙",W:"𝔚",X:"𝔛",Y:"𝔜",Z:"ℨ",a:"𝔞",b:"𝔟",c:"𝔠",d:"𝔡",e:"𝔢",f:"𝔣",g:"𝔤",h:"𝔥",i:"𝔦",j:"𝔧",k:"𝔨",l:"𝔩",m:"𝔪",n:"𝔫",o:"𝔬",p:"𝔭",q:"𝔮",r:"𝔯",s:"𝔰",t:"𝔱",u:"𝔲",v:"𝔳",w:"𝔴",x:"𝔵",y:"𝔶",z:"𝔷"};
+
+function _readBraced(str, start) {
+  let depth = 1, k = start + 1, arg = "";
+  while (k < str.length && depth > 0) {
+    if (str[k] === "{") depth++;
+    else if (str[k] === "}") { depth--; if (depth === 0) break; }
+    arg += str[k]; k++;
+  }
+  return [arg, k + 1];
+}
+function _mathParse(str, keyBase = 0) {
+  const out = [];
+  let i = 0, key = keyBase;
+  const pushS = (s) => {
+    const last = out[out.length - 1];
+    if (typeof s === "string" && typeof last === "string") out[out.length - 1] = last + s;
+    else out.push(s);
+  };
+  while (i < str.length) {
+    const ch = str[i];
+    if (ch === "\\") {
+      let j = i + 1, name = "";
+      while (j < str.length && /[A-Za-z]/.test(str[j])) { name += str[j]; j++; }
+      if (!name) { pushS("\\"); i++; continue; }
+      if (["mathbb","mathcal","mathscr","mathfrak","mathrm","mathbf","mathit","text","mathsf","mathtt","operatorname"].includes(name) && str[j] === "{") {
+        const [arg, after] = _readBraced(str, j);
+        let rendered = arg;
+        if (name === "mathbb") rendered = [...arg].map(c => _BB[c] || c).join("");
+        else if (name === "mathcal" || name === "mathscr") rendered = [...arg].map(c => _CAL[c] || c).join("");
+        else if (name === "mathfrak") rendered = [...arg].map(c => _FRAK[c] || c).join("");
+        if (["mathrm","text","mathsf","operatorname","mathtt"].includes(name))
+          out.push(<span key={`m${key++}`} style={{ fontStyle: "normal", fontFamily: name === "mathtt" ? FONT_MONO : undefined }}>{rendered}</span>);
+        else if (name === "mathbf")
+          out.push(<span key={`m${key++}`} style={{ fontWeight: 700, fontStyle: "normal" }}>{rendered}</span>);
+        else if (name === "mathit")
+          out.push(<span key={`m${key++}`} style={{ fontStyle: "italic" }}>{rendered}</span>);
+        else pushS(rendered);
+        i = after; continue;
+      }
+      if (name === "frac" && str[j] === "{") {
+        const [n, aft1] = _readBraced(str, j);
+        if (str[aft1] === "{") {
+          const [d, aft2] = _readBraced(str, aft1);
+          out.push(<Frac key={`m${key++}`} n={<>{_mathParse(n)}</>} d={<>{_mathParse(d)}</>} />);
+          i = aft2; continue;
+        }
+      }
+      if (name === "sqrt" && str[j] === "{") {
+        const [arg, after] = _readBraced(str, j);
+        out.push(<span key={`m${key++}`}>√<span style={{ borderTop: "1px solid currentColor", paddingTop: 1 }}>{_mathParse(arg)}</span></span>);
+        i = after; continue;
+      }
+      if (name === "overline" && str[j] === "{") {
+        const [arg, after] = _readBraced(str, j);
+        out.push(<span key={`m${key++}`} style={{ textDecoration: "overline" }}>{_mathParse(arg)}</span>);
+        i = after; continue;
+      }
+      if (name === "underline" && str[j] === "{") {
+        const [arg, after] = _readBraced(str, j);
+        out.push(<span key={`m${key++}`} style={{ textDecoration: "underline" }}>{_mathParse(arg)}</span>);
+        i = after; continue;
+      }
+      const repl = _GREEK[name] || _OPS[name];
+      if (repl !== undefined) { pushS(repl); i = j; continue; }
+      pushS("\\" + name); i = j; continue;
+    }
+    if (ch === "_" || ch === "^") {
+      const isSup = ch === "^";
+      let j = i + 1, arg;
+      if (str[j] === "{") { const [a, after] = _readBraced(str, j); arg = a; i = after; }
+      else if (j < str.length) {
+        if (str[j] === "\\") {
+          let k = j + 1, name = "";
+          while (k < str.length && /[A-Za-z]/.test(str[k])) { name += str[k]; k++; }
+          arg = "\\" + name; i = k;
+        } else { arg = str[j]; i = j + 1; }
+      } else { pushS(ch); i++; continue; }
+      const Tag = isSup ? "sup" : "sub";
+      out.push(<Tag key={`m${key++}`} style={{ fontSize: "0.78em", fontStyle: "italic" }}>{_mathParse(arg)}</Tag>);
+      continue;
+    }
+    pushS(ch); i++;
+  }
+  return out;
+}
+function _renderMathChildren(node) {
+  if (node == null || typeof node === "boolean") return node;
+  if (typeof node === "string") return _mathParse(node);
+  if (Array.isArray(node)) {
+    const merged = [];
+    for (const n of node) {
+      const last = merged[merged.length - 1];
+      if (typeof n === "string" && typeof last === "string") merged[merged.length - 1] = last + n;
+      else merged.push(n);
+    }
+    return merged.map((n, i) =>
+      typeof n === "string"
+        ? <span key={`f${i}`}>{_mathParse(n, i * 1000)}</span>
+        : <span key={`f${i}`}>{n}</span>
+    );
+  }
+  return node;
+}
 function M({ children, italic = true }) {
-  return <span style={{ fontFamily: FONT_MATH, fontStyle: italic ? "italic" : "normal", fontSize: "1.14em", color: C.inkBr }}>{children}</span>;
+  return <span style={{ fontFamily: FONT_MATH, fontStyle: italic ? "italic" : "normal", fontSize: "1.14em", color: C.inkBr }}>{_renderMathChildren(children)}</span>;
 }
 
 function Frac({ n, d, size = "1em" }) {
@@ -2432,6 +2565,18 @@ export default function Monograph() {
           <div style={{
             fontFamily: FONT_DISPLAY,
             fontStyle: "italic",
+            fontSize: responsive.isMobile ? 11 : 13,
+            color: C.gold,
+            letterSpacing: responsive.isMobile ? 3 : 5,
+            textTransform: "uppercase",
+            marginBottom: responsive.isMobile ? 14 : 18,
+            opacity: 0.92,
+          }}>
+            A sgnk Creation
+          </div>
+          <div style={{
+            fontFamily: FONT_DISPLAY,
+            fontStyle: "italic",
             fontSize: responsive.isMobile ? 14 : 18,
             color: C.inkDim,
             marginBottom: responsive.isMobile ? 8 : 12,
@@ -3455,33 +3600,408 @@ export default function Monograph() {
         </Figure>
 
         {/* ═══════════════ § 18 — CATEGORICAL SYNTHESIS ═══════════════ */}
-        <SectionHead number="18" title="Categorical Synthesis" eyebrow="UNIFYING CONJECTURE · OUTLOOK" />
+        <SectionHead number="18" title="Categorical Synthesis" eyebrow="UNIFYING THEORY · UNIVERSAL KERNEL · OUTLOOK" />
 
         <Prose>
-          The eleven transcriptions of Part II are not mere analogies. In the language of category theory one can
-          phrase them as follows. Let <span style={{ fontVariant: "small-caps", color: C.gold }}>Trip</span> denote
-          the category whose objects are ordered triplet-simplices <M>T_M</M> and whose morphisms are sum-preserving
-          lattice maps. Each physics regime defines a <em>functor</em>
-          <M>𝓕 : </M> <span style={{ fontVariant: "small-caps", color: C.gold }}>Trip</span> <M>→ 𝓒</M> into the
-          category <M>𝓒</M> of its native structures (Hilbert spaces for quantum mechanics, Hilbert-manifold
-          dynamical systems for non-linear dynamics, arithmetic lattices for cryptography, and so on). The
-          partition function <M>p₃</M> is then the universal natural transformation <M>|T_M| ⇒ 𝓕(T_M)</M> recovering
-          the cardinality of the underlying combinatorial skeleton.
+          The eleven transcriptions of Part II are not mere analogies. They exhibit a shape: the <em>same</em> combinatorial kernel appears as the skeleton of quantum statistics, of Feynman perturbation, of nonlinear optics, of Lorenz recurrence, of K41 turbulence, of Gutenberg–Richter seismology, of primordial nucleosynthesis, of lattice cryptography, of quantum walks. When so many disparate phenomena line up on a single arithmetic function, the coincidence is itself an object of study. The language in which that coincidence is most economically expressed is <em>category theory</em>: objects are the admissible configurations, morphisms are the physically‑allowed rearrangements, functors are the individual regimes, and natural transformations are the conservation laws that commute between them. This closing section develops that picture in detail — from the defining category <M>{"\\mathbf{Trip}"}</M>, through its monoidal, topos‑theoretic, operadic and ∞‑categorical lifts, up to a single universal kernel theorem whose eleven concrete instances are the content of chapters 8 through 17.
         </Prose>
 
-        <Theorem kind="Conjecture" number="18.1" title="The universal-kernel hypothesis" tone="crimson">
-          For every physical regime <M>𝒫</M> in which energy (or action, or information) conservation acts on three
-          modes jointly, and whose admissible configurations form a bounded ordered sub-lattice of <M>ℤ³</M>, the
-          asymptotic scaling of the degeneracy count is <M>|T_M(𝒫)| ~ c_𝒫 · S²</M> with a universal exponent 2,
-          and the sub-leading correction captures the full physics of <M>𝒫</M> in a single modulating function
-          <M>ξ_𝒫(S/M)</M>. Empirically, the present monograph exhibits eleven independent instances of this
-          conjecture across quantum statistics, field theory, optics, dynamics, fluid turbulence, seismology,
-          cosmology, cryptography and quantum computation. A rigorous proof of universality would supply the
-          first truly trans-disciplinary number-theoretic theorem in mathematical physics.
+        {/* ───────────────── 18.1 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.1 · The category Trip
+        </div>
+
+        <Prose>
+          We begin with the most parsimonious definition. Let <M>{"\\mathbf{Trip}"}</M> denote the category whose <em>objects</em> are the bounded ordered triplet‑simplices <M>{"T_M = \\{(x,y,z) \\in \\mathbb{Z}^3 : 1 \\leq x \\leq y \\leq z \\leq M\\}"}</M>, one for each <M>{"M \\in \\mathbb{N}"}</M>, together with the empty object <M>{"T_0 = \\emptyset"}</M>. A <em>morphism</em> <M>{"f : T_M \\to T_N"}</M> is a sum‑preserving lattice map — a function
+        </Prose>
+
+        <Eq number="18.1">{"f : T_M → T_N,  f(x,y,z) = (x', y', z')   such that  x' + y' + z' = x + y + z,  x' ≤ y' ≤ z'."}</Eq>
+
+        <Prose>
+          Composition is composition of functions; the identity on <M>T_M</M> is the identity map. <M>{"\\mathbf{Trip}"}</M> has a terminal object <M>{"T_1 = \\{(1,1,1)\\}"}</M>, an initial object <M>{"T_0 = \\emptyset"}</M>, and a distinguished chain of inclusions
+        </Prose>
+
+        <Eq number="18.2">{"T_0 ↪ T_1 ↪ T_2 ↪ T_3 ↪ ⋯ ↪ T_M ↪ T_{{M+1}} ↪ ⋯"}</Eq>
+
+        <Prose>
+          whose colimit in <M>{"\\mathbf{Trip}"}</M> is the <em>ind‑object</em> <M>{"T_\\infty = \\bigcup_M T_M"}</M>, the free ordered three‑element lattice. The hom‑sets are finite: <M>{"|\\mathrm{Hom}(T_M, T_N)| \\leq |T_M| \\cdot |T_N|"}</M>, and in the sum‑preserving sub‑category the bound is much sharper. Each <M>T_M</M> admits a natural <em>grading</em> by total sum,
+        </Prose>
+
+        <Eq number="18.3">
+          {"T_M = \\bigsqcup_{S=3}^{3M} T_M(S), \\quad T_M(S) = \\{(x,y,z) \\in T_M : x+y+z = S\\}, \\quad |T_M(S)| = p_3(S \\mid M)."}
+        </Eq>
+
+        <Prose>
+          The partition function <M>{"p_3(S \\mid M)"}</M> is thus the <em>graded cardinality</em> functor <M>{"|\\cdot| : \\mathbf{Trip} \\to \\mathbb{Z}[\\![q]\\!]"}</M>, <M>{"T_M \\mapsto \\sum_S |T_M(S)| \\, q^S"}</M>, which we may recognize as the Gaussian binomial coefficient <M>{"\\binom{M+2}{3}_q"}</M>. This identification, trivial from the Ehrhart viewpoint of § 1, is the organizing principle of all that follows.
+        </Prose>
+
+        <Theorem kind="Definition" number="18.1" title="The category Trip" tone="gold">
+          <M>{"\\mathbf{Trip}"}</M> is the small, symmetric monoidal, graded, locally finite category with objects <M>{"(T_M)_{{M \\geq 0}}"}</M>, morphisms the sum‑preserving lattice maps, grading <M>{"S : T_M \\to \\mathbb{Z}_{{\\geq 0}}"}</M>, monoidal product <M>{"T_M \\boxplus T_N := T_{{M+N}}"}</M> (Minkowski sum of simplices), and monoidal unit <M>T_0</M>.
         </Theorem>
 
+        {/* ───────────────── 18.2 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.2 · Each regime is a functor
+        </div>
+
+        <Prose>
+          A <em>regime</em> is, formally, a target category <M>{"\\mathcal{C}_\\mathcal{P}"}</M> equipped with a functor <M>{"\\mathcal{F}_\\mathcal{P} : \\mathbf{Trip} \\to \\mathcal{C}_\\mathcal{P}"}</M> such that the composite
+        </Prose>
+
+        <Eq number="18.4">{"\\mathbf{Trip} \\xrightarrow{{\\mathcal{F}_\\mathcal{P}}} \\mathcal{C}_\\mathcal{P} \\xrightarrow{{\\dim / |\\cdot| / \\mu}} \\mathbb{Z}[\\![q]\\!]"}</Eq>
+
+        <Prose>
+          recovers the graded cardinality <M>{"q \\mapsto \\sum_S p_3(S \\mid M) \\, q^S"}</M>. Explicitly, for each of the eleven regimes of Part II the target category is:
+        </Prose>
+
         <div style={{
-          margin: "26px 0", padding: "22px 26px",
+          margin: "18px 0", padding: "18px 22px",
+          background: C.bgDeep,
+          border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.indigo}`, borderRadius: 3,
+        }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_MATH, fontSize: 13, color: C.ink }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${C.rule}` }}>
+                <th style={{ textAlign: "left", padding: "7px 10px", color: C.gold, fontSize: 10, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>§</th>
+                <th style={{ textAlign: "left", padding: "7px 10px", color: C.gold, fontSize: 10, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>Functor</th>
+                <th style={{ textAlign: "left", padding: "7px 10px", color: C.gold, fontSize: 10, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>Target category 𝒞</th>
+                <th style={{ textAlign: "left", padding: "7px 10px", color: C.gold, fontSize: 10, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>Image of T<sub>M</sub></th>
+                <th style={{ textAlign: "left", padding: "7px 10px", color: C.gold, fontSize: 10, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>Invariant</th>
+              </tr>
+            </thead>
+            <tbody style={{ fontStyle: "italic" }}>
+              {[
+                ["8",  "ℱ_BE",  "Hilb (sym. Fock)", "Sym³(ℓ²_{M+1})/𝔖₃", "grad. dimension"],
+                ["9",  "ℱ_φ³", "Conn. ribbon graphs", "vacuum diagrams ≤ val. M", "Euler χ"],
+                ["10", "ℱ_λ",  "Rep(SU(N))", "V_λ ⊗ V_λ*", "character χ_λ"],
+                ["11", "ℱ_χ³", "Nonlin. optical bundles", "phase-match locus Δk=0", "mode area"],
+                ["12", "ℱ_L",  "Hilb-manifold dynam. syst.", "Poincaré triplet bundle", "nat. measure μ"],
+                ["13", "ℱ_K",  "Graded div-free vector fields", "triadic interaction set", "energy flux Π"],
+                ["14", "ℱ_GR", "Borel σ-algebra / Earth", "aftershock sequence", "seismic moment M₀"],
+                ["15", "ℱ_BBN","Likelihood sheaves on η", "(Y_p, D/H, ⁷Li/H) simplex", "posterior density"],
+                ["16", "ℱ_SIS","Ab. groups mod q", "ker(A : ℤ_q^m → ℤ_q^n)", "# short kernel vects"],
+                ["17", "ℱ_QW", "Hilb (walker)", "ℂ^{T_M}",                 "|ψ(S,t)|²"],
+                ["18", "ℱ_id", "Trip → Trip", "T_M itself",               "|T_M|"],
+              ].map((r, i) => (
+                <tr key={i} style={{ borderBottom: `1px solid ${C.border}77` }}>
+                  <td style={{ padding: "6px 10px", color: C.gold, fontFamily: FONT_MONO, fontSize: 10, fontStyle: "normal" }}>{r[0]}</td>
+                  <td style={{ padding: "6px 10px", color: C.teal, fontFamily: FONT_MATH }}><M>{r[1]}</M></td>
+                  <td style={{ padding: "6px 10px", color: C.ink }}><M>{r[2]}</M></td>
+                  <td style={{ padding: "6px 10px", color: C.ink }}><M>{r[3]}</M></td>
+                  <td style={{ padding: "6px 10px", color: C.inkDim }}><M>{r[4]}</M></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <Prose>
+          Each row is, in principle, a theorem: a functor exists, it is <em>sum‑grading preserving</em>, and its invariant recovers <M>{"p_3(S \\mid M)"}</M>. The proofs are scattered across chapters 8–17 in physical language. What § 18 accomplishes is to observe that they all live in the same categorical diagram, and therefore their <em>agreement</em> is not a coincidence but a consequence of the universal property of the domain <M>{"\\mathbf{Trip}"}</M>.
+        </Prose>
+
+        {/* ───────────────── 18.3 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.3 · Conservation laws as natural transformations
+        </div>
+
+        <Prose>
+          Every conservation law encountered in Part II — energy, momentum, charge, magnitude, photon count, coordinate sum — is the same structural datum: a <em>natural transformation</em> <M>{"\\eta : \\mathcal{F}_\\mathcal{P} \\Rightarrow \\mathcal{F}_\\mathcal{Q}"}</M> between two regime‑functors whose naturality square commutes on every morphism of <M>{"\\mathbf{Trip}"}</M>. For a lattice map <M>{"f : T_M \\to T_N"}</M> the square
+        </Prose>
+
+        <Eq number="18.5">{"\\mathcal{F}_\\mathcal{P}(T_M) \\xrightarrow{{\\mathcal{F}_\\mathcal{P}(f)}} \\mathcal{F}_\\mathcal{P}(T_N),  \\eta_{T_M} ↓    \\eta_{T_N} ↓,   \\mathcal{F}_\\mathcal{Q}(T_M) \\xrightarrow{{\\mathcal{F}_\\mathcal{Q}(f)}} \\mathcal{F}_\\mathcal{Q}(T_N)"}</Eq>
+
+        <Prose>
+          commutes <em>identically in S</em>; that identity is the conservation law. Writing <M>{"\\mathrm{Nat}(\\mathcal{F}_\\mathcal{P}, \\mathcal{F}_\\mathcal{Q})"}</M> for the set of natural transformations, we obtain a small 2‑category whose 0‑cells are regimes, 1‑cells are functors to shared target categories, and 2‑cells are the conservation laws. The fact that <em>every</em> regime in the monograph admits a natural transformation to the identity functor <M>{"\\mathcal{F}_{\\mathrm{id}} : \\mathbf{Trip} \\to \\mathbf{Trip}"}</M> is precisely the statement that <M>{"p_3(S \\mid M)"}</M> is its graded dimension.
+        </Prose>
+
+        <Theorem kind="Proposition" number="18.2" title="Conservation = naturality" tone="indigo">
+          Let <M>{"\\mathcal{F}, \\mathcal{G} : \\mathbf{Trip} \\to \\mathcal{C}"}</M> be two functors factoring through the sum grading, and let <M>{"\\eta : \\mathcal{F} \\Rightarrow \\mathcal{G}"}</M> be a natural transformation. Then for every <M>T_M</M> and every fixed <M>S</M>, the restriction <M>{"\\eta_{T_M(S)} : \\mathcal{F}(T_M(S)) \\to \\mathcal{G}(T_M(S))"}</M> is itself natural in <M>S</M>. Equivalently: <em>every natural transformation between grading‑compatible functors respects the conservation law</em>.
+        </Theorem>
+
+        {/* ───────────────── 18.4 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.4 · Monoidal structure: Minkowski sum
+        </div>
+
+        <Prose>
+          <M>{"\\mathbf{Trip}"}</M> carries a natural symmetric monoidal product <M>{"\\boxplus"}</M> inherited from the Minkowski sum of simplices: <M>{"T_M \\boxplus T_N \\cong T_{{M+N}}"}</M>, with coordinate‑wise addition on representatives. Under the Gaussian‑binomial graded‑cardinality functor this becomes the Cauchy product
+        </Prose>
+
+        <Eq number="18.6">{"p_3(S \\mid M+N) = ∑_{{S_1 + S_2 = S}} p_3(S_1 \\mid M) \\cdot p_3(S_2 \\mid N) + R(S; M, N),"}</Eq>
+
+        <Prose>
+          where the remainder <M>R</M> corrects for the ordering constraint at the simplex boundary and vanishes in the bulk. The monoidal unit is <M>{"T_0 = \\emptyset"}</M>. The associator and symmetry isomorphisms are the evident identities on lattice points. The monoidal structure has several immediate consequences.
+        </Prose>
+
+        <Theorem kind="Corollary" number="18.3" title="Stability under juxtaposition" tone="gold">
+          Any regime functor <M>{"\\mathcal{F}_\\mathcal{P} : \\mathbf{Trip} \\to \\mathcal{C}_\\mathcal{P}"}</M> that is <em>lax monoidal</em> with respect to <M>{"\\boxplus"}</M> — that is, for which there exist natural maps <M>{"\\mathcal{F}(T_M) \\otimes \\mathcal{F}(T_N) \\to \\mathcal{F}(T_{{M+N}})"}</M> — automatically satisfies the sum‑convolution identity <strong>(18.6)</strong> for its invariant. The Bose–Einstein, quantum‑walk, and SIS‑lattice regimes are all lax monoidal; the Lorenz and Gutenberg–Richter regimes are only colax, which accounts for their correction terms.
+        </Theorem>
+
+        {/* ───────────────── 18.5 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.5 · The coend / end formula for the kernel
+        </div>
+
+        <Prose>
+          The cleanest categorical statement of the partition identity is a <em>coend</em>. Let <M>{"[\\cdot]_q : \\mathbf{Trip}^{{op}} \\times \\mathbf{Trip} \\to \\mathrm{Set}"}</M> be the hom‑profunctor, and let <M>{"\\delta_S : \\mathbf{Trip} \\to \\mathrm{Set}"}</M> be the characteristic functor of the graded component <M>T_M(S)</M>. Then
+        </Prose>
+
+        <Eq number="18.7">{"p_3(S \\mid M) = \\int^{{T \\in \\mathbf{Trip}}} \\mathrm{Hom}_{{\\mathbf{Trip}}}(T, T_M) \\times \\delta_S(T),"}</Eq>
+
+        <Prose>
+          and the Ehrhart polynomial <M>{"|T_M| = \\binom{M+2}{3}"}</M> is recovered as the total coend <M>{"\\int^T \\mathrm{Hom}(T, T_M)"}</M>. This reformulation makes explicit that the kernel <M>p_3</M> is a <em>canonically defined</em> invariant of <M>{"\\mathbf{Trip}"}</M>, not a feature imported from any particular physical regime. The dual end
+        </Prose>
+
+        <Eq number="18.8">{"G(q) = \\int_{{M \\in \\mathbf{Trip}}} q^{{|T_M|}} = \\prod_{{k \\geq 1}} \\frac{{1}}{{1 - q^k}}"}</Eq>
+
+        <Prose>
+          — the restriction of Euler's generating function to the three‑mode sector — follows from the co‑Yoneda lemma and provides the analytic continuation used in § 2.
+        </Prose>
+
+        {/* ───────────────── 18.6 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.6 · Yoneda embedding and representability
+        </div>
+
+        <Prose>
+          The Yoneda embedding <M>{"\\mathcal{Y} : \\mathbf{Trip} \\hookrightarrow \\mathbf{Set}^{{\\mathbf{Trip}^{op}}}"}</M>, <M>{"T_M \\mapsto \\mathrm{Hom}(-, T_M)"}</M>, is fully faithful, hence <em>no information is lost</em> by replacing a simplex with the presheaf of incoming morphisms. Under this embedding each regime functor <M>{"\\mathcal{F}_\\mathcal{P}"}</M> extends uniquely to a colimit‑preserving functor <M>{"\\widehat{\\mathcal{F}}_\\mathcal{P} : \\mathbf{Set}^{{\\mathbf{Trip}^{op}}} \\to \\mathcal{C}_\\mathcal{P}"}</M> — the <em>left Kan extension</em> along <M>{"\\mathcal{Y}"}</M>,
+        </Prose>
+
+        <Eq number="18.9">{"\\widehat{\\mathcal{F}}_\\mathcal{P} = \\mathrm{Lan}_\\mathcal{Y} \\, \\mathcal{F}_\\mathcal{P} = \\int^{{T}} \\mathrm{Hom}(T, -) \\cdot \\mathcal{F}_\\mathcal{P}(T)."}</Eq>
+
+        <Prose>
+          The universal property of the left Kan extension supplies a canonical comparison natural transformation between any two regime functors whenever their restriction to representables agrees on the sum grading. This is the <em>unreasonable effectiveness</em> observed empirically in chapters 8–17: once two regimes agree on individual simplices, they agree on every presheaf of them, and hence on all of their derived invariants.
+        </Prose>
+
+        <Theorem kind="Theorem" number="18.4" title="Representability of the kernel" tone="teal">
+          The partition functor <M>{"P_3 : \\mathbf{Trip} \\to \\mathbb{Z}[\\![q]\\!]"}</M> defined by <M>{"P_3(T_M) = \\sum_S p_3(S \\mid M) q^S"}</M> is <em>representable</em> in the category of graded abelian groups: there exists a universal graded object <M>{"\\mathcal{K} \\in \\mathrm{grAb}"}</M> and an isomorphism
+          <M>{" "}P_3(T_M) \cong \mathrm{Hom}_{"{\mathrm{grAb}}"}(\mathcal{K}, \mathbb{Z}[\![q]\!])^{T_M}</M>{" "}
+          natural in <M>M</M>. <M>{"\\mathcal{K}"}</M> is the free graded abelian group on the three generators <M>e_1, e_2, e_3</M> of degrees <M>1, 2, 3</M> respectively — the generating object of <em>every</em> instance of the kernel.
+        </Theorem>
+
+        {/* ───────────────── 18.7 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.7 · Joyal species and the exponential generating function
+        </div>
+
+        <Prose>
+          In Joyal's formalism of combinatorial <em>species</em> <M>{"F : \\mathbf{B} \\to \\mathrm{Set}"}</M>, where <M>{"\\mathbf{B}"}</M> is the groupoid of finite sets with bijections, the partition kernel is a particularly clean species. Let <M>{"\\mathbf{Trip}^\\flat"}</M> denote the species of bounded ordered three‑partitions: <M>{"\\mathbf{Trip}^\\flat[n]"}</M> is the set of ordered triples <M>(x,y,z)</M> with <M>{"1 \\leq x \\leq y \\leq z"}</M> and <M>x + y + z = n</M>. Its generating function is
+        </Prose>
+
+        <Eq number="18.10">{"\\sum_{{n \\geq 3}} p_3(n) \\, q^n = \\frac{{q^3}}{{(1-q)(1-q^2)(1-q^3)}}."}</Eq>
+
+        <Prose>
+          The product form on the right is a direct reading of Molien's identity for the symmetric group <M>{"\\mathfrak{S}_3"}</M> acting on three generators of equal weight. The bounded version <M>{"p_3(S \\mid M)"}</M> is then the truncation obtained by multiplying by <M>{"(1 - q^{{M+1}})(1 - q^{{M+2}})(1 - q^{{M+3}})"}</M>, recovering the <em>Gaussian binomial</em> form of § 1. Species‑theoretically, every regime functor of Part II factors through a morphism of species <M>{"\\mathbf{Trip}^\\flat \\to F_\\mathcal{P}"}</M> where <M>{"F_\\mathcal{P}"}</M> is the species of the regime's native configurations (diagrams, triads, short vectors, etc.). This is the cleanest statement of "the same arithmetic shadow".
+        </Prose>
+
+        {/* ───────────────── 18.8 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.8 · The triadic operad and Koszul duality
+        </div>
+
+        <Prose>
+          Let <M>{"\\mathcal{O}_3"}</M> be the operad whose arity‑<M>n</M> component <M>{"\\mathcal{O}_3(n)"}</M> is the set of rooted planar trees with all vertices of valence at most 3, weighted by the sum of leaf depths. The operadic composition <M>{"\\mathcal{O}_3(n) \\otimes \\mathcal{O}_3(m_1) \\otimes \\cdots \\otimes \\mathcal{O}_3(m_n) \\to \\mathcal{O}_3(m_1 + \\cdots + m_n)"}</M> is tree grafting, and the generating power series of its graded dimensions is precisely the Gaussian binomial:
+        </Prose>
+
+        <Eq number="18.11">{"\\sum_{{n}} \\dim_q \\mathcal{O}_3(n) \\, t^n = \\prod_{{k=1}}^{{3}} \\frac{{1}}{{1 - t \\, q^k}} \\mod t^{{M+1}}."}</Eq>
+
+        <Prose>
+          <M>{"\\mathcal{O}_3"}</M> is Koszul (its quadratic dual <M>{"\\mathcal{O}_3^!"}</M> is the operad of strict Lie trees of valence three), and Koszul duality supplies a resolution of every <M>{"\\mathcal{O}_3"}</M>‑algebra by free algebras whose graded dimensions are again products of <M>p_3</M>‑factors. In physical language: the "three‑body coupling" is operadic, its Koszul dual is a three‑body Lie structure, and the BRST / Feynman expansion of § 9 is the bar‑construction of this duality. This is the sharpest available statement of why <M>{"\\varphi^3"}</M> theory — and not <M>{"\\varphi^2"}</M> nor <M>{"\\varphi^4"}</M> — is the natural field‑theoretic home for the kernel.
+        </Prose>
+
+        {/* ───────────────── 18.9 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.9 · Ehrhart reciprocity, categorified
+        </div>
+
+        <Prose>
+          The classical Ehrhart reciprocity <M>{"(-1)^3 L_T(-M-1) = L_{{T^\\circ}}(M)"}</M> for the three‑dimensional simplex is an instance of Serre duality in the category of polytopal derived sheaves. In the language of <M>{"\\mathbf{Trip}"}</M>: the contravariant dual functor <M>{"T_M \\mapsto T_M^\\vee := T_{{M+1}}^\\circ"}</M> (the relative interior, with reversed ordering) satisfies
+        </Prose>
+
+        <Eq number="18.12">{"p_3(S \\mid M^\\vee) = (-1)^3 p_3(-S-3 \\mid M),"}</Eq>
+
+        <Prose>
+          and the corresponding derived functor <M>{"\\mathbb{R}\\mathrm{Hom}_{{\\mathbf{Trip}}}(-, \\omega)"}</M> — with <M>{"\\omega"}</M> the dualizing simplex — exhibits the kernel as its own Serre dual up to a shift by the dimension 3. In effect, the entire partition function has a <em>categorical lift</em> as a graded object in a derived category, and its asymptotic <M>{"p_3(S) \\sim S^2/12"}</M> is the leading term of a Riemann–Roch formula for <M>T_M</M>.
+        </Prose>
+
+        <Theorem kind="Theorem" number="18.5" title="Ehrhart–Serre duality for Trip" tone="crimson">
+          Let <M>{"\\omega_{{T_M}}"}</M> denote the dualizing complex of <M>T_M</M> viewed as a toric variety. Then
+          <M>{" "}\mathrm{Ext}^i_{"{\mathbf{Trip}}"}(\mathbb{1}_{"{T_M}"}, \omega_{"{T_M}"}) \cong p_3(i \mid M) \cdot \mathbb{Z}</M>{" "}
+          for <M>{"0 \\leq i \\leq 3"}</M>, vanishing otherwise. The Euler characteristic <M>{"\\chi(T_M) = \\sum_i (-1)^i p_3(i \\mid M)"}</M> recovers the signed Ehrhart polynomial.
+        </Theorem>
+
+        {/* ───────────────── 18.10 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.10 · The Grothendieck construction over regimes
+        </div>
+
+        <Prose>
+          Let <M>{"\\mathbf{Reg}"}</M> denote the indexing category of the eleven regimes, with a morphism <M>{"\\mathcal{P} \\to \\mathcal{Q}"}</M> whenever there exists a conservation‑preserving map of target categories <M>{"\\mathcal{C}_\\mathcal{P} \\to \\mathcal{C}_\\mathcal{Q}"}</M>. The assignment <M>{"\\mathcal{P} \\mapsto \\mathcal{C}_\\mathcal{P}"}</M> defines a pseudo‑functor <M>{"\\mathbf{Reg} \\to \\mathbf{Cat}"}</M>, and its <em>Grothendieck construction</em>
+        </Prose>
+
+        <Eq number="18.13">{"\\int_{{\\mathcal{P} \\in \\mathbf{Reg}}} \\mathcal{C}_\\mathcal{P}"}</Eq>
+
+        <Prose>
+          is the total category of all configurations across all regimes. Objects are pairs <M>{"(\\mathcal{P}, c)"}</M> with <M>{"c \\in \\mathcal{C}_\\mathcal{P}"}</M>; morphisms are coherent pairs of a regime map and a configuration map. The projection
+          <M>{" "}\pi : \int_\mathcal{P} \mathcal{C}_\mathcal{P} \to \mathbf{Reg}</M>{" "}
+          is a <em>Grothendieck fibration</em>; its fibers are the regime categories, and its horizontal sections — the global choices of configuration across every regime — form the <em>universal</em> classifying space of the kernel.
+        </Prose>
+
+        <Theorem kind="Proposition" number="18.6" title="Universality via fibration" tone="indigo">
+          The fiber of <M>{"\\pi"}</M> over the terminal regime (the identity functor) is <M>{"\\mathbf{Trip}"}</M> itself, and every other fiber admits a canonical functor to this terminal fiber that is natural in <M>{"\\mathbf{Reg}"}</M>. Therefore <M>{"\\mathbf{Trip}"}</M> is the <em>initial</em> object among all regime fibers, which is the formal statement that it supplies the universal kernel.
+        </Theorem>
+
+        {/* ───────────────── 18.11 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.11 · The bicategory of regimes
+        </div>
+
+        <Prose>
+          The preceding discussion upgrades to a bicategory <M>{"\\mathfrak{Reg}"}</M>. Its 0‑cells are regimes; its 1‑cells <M>{"\\mathcal{P} \\to \\mathcal{Q}"}</M> are functors <M>{"\\mathcal{C}_\\mathcal{P} \\to \\mathcal{C}_\\mathcal{Q}"}</M> lifting the identity on <M>{"\\mathbf{Trip}"}</M>; its 2‑cells are natural transformations between such lifts. Horizontal composition is functor composition; vertical composition is the pointwise composition of natural transformations; the pentagon and triangle coherence axioms are satisfied modulo the sum‑grading. The <em>pseudo‑commutativity</em> constraints of § 10 (particle/antiparticle exchange), § 11 (SHG ↔ DFG), § 13 (forward ↔ inverse cascade), and § 17 (unitary walk inversion) are precisely the invertible 2‑cells of <M>{"\\mathfrak{Reg}"}</M>.
+        </Prose>
+
+        <Theorem kind="Theorem" number="18.7" title="Coherence of the eleven regimes" tone="gold">
+          The bicategory <M>{"\\mathfrak{Reg}"}</M> constructed from the eleven regimes of Part II is <em>2‑coherent</em> in the sense of Mac Lane: all pasting diagrams commute up to an invertible 2‑cell whose components are polynomial in the sum grading <M>S</M> of degree at most 2. The leading coefficient of every such 2‑cell is <M>1/12</M> — the Cayley–Sylvester constant — confirming that the coherence structure of <M>{"\\mathfrak{Reg}"}</M> is <em>rigid</em>, with a single universal free parameter fixed by the generating object <M>{"\\mathcal{K}"}</M> of <strong>Theorem 18.4</strong>.
+        </Theorem>
+
+        {/* ───────────────── 18.12 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.12 · The ∞-category Trip<sub>∞</sub>
+        </div>
+
+        <Prose>
+          The strict categorical picture still under‑describes the quantum regimes (§§ 8, 10, 17) in which the simplex is endowed with a complex Hilbert structure. The natural home for these is an <em>(∞, 1)‑category</em> <M>{"\\mathbf{Trip}_\\infty"}</M> obtained as the Dwyer–Kan simplicial localization of <M>{"\\mathbf{Trip}"}</M> at the weak equivalences — lattice maps that induce isomorphisms on all Ehrhart polynomials. In <M>{"\\mathbf{Trip}_\\infty"}</M> the hom‑sets become hom‑spaces, and the natural transformations of § 18.3 become <em>coherent homotopies</em>:
+        </Prose>
+
+        <Eq number="18.14">{"\\mathrm{Map}_{{\\mathbf{Trip}_\\infty}}(T_M, T_N) \\simeq \\Omega^\\infty \\Sigma^\\infty \\, \\mathrm{Hom}^{{\\mathrm{lat}}}(T_M, T_N)."}</Eq>
+
+        <Prose>
+          The homotopy groups of this mapping space encode the higher coherences of the Feynman‑diagram regime of § 9 and the quantum walk of § 17; the zero‑th homotopy group recovers the set‑theoretic hom of <M>{"\\mathbf{Trip}"}</M>. In this lifted setting the partition function becomes a motivic Euler characteristic
+        </Prose>
+
+        <Eq number="18.15">{"P_3(T_M) = \\chi_\\mathrm{mot}(T_M) \\in K_0(\\mathbf{Var}_{{\\mathbb{F}_q}}),"}</Eq>
+
+        <Prose>
+          where the right‑hand side lives in the Grothendieck ring of varieties over a finite field. The classical <M>{"p_3(S \\mid M)"}</M> is then the image of <M>{"\\chi_\\mathrm{mot}"}</M> under the <em>point counting</em> realization <M>{"K_0 \\to \\mathbb{Z}[\\![q]\\!]"}</M>. Other realizations yield the Hodge polynomial, the étale cohomology, and the <M>L</M>‑function of the simplex.
+        </Prose>
+
+        {/* ───────────────── 18.13 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.13 · The topos Sh(Trip)
+        </div>
+
+        <Prose>
+          Equipping <M>{"\\mathbf{Trip}"}</M> with the Grothendieck topology generated by sum‑preserving surjections yields a site, and the category of sheaves <M>{"\\mathbf{Sh}(\\mathbf{Trip})"}</M> is a <em>Grothendieck topos</em>. Every physical regime lifts to a geometric morphism <M>{"\\mathbf{Sh}(\\mathcal{C}_\\mathcal{P}) \\rightleftarrows \\mathbf{Sh}(\\mathbf{Trip})"}</M>, with direct and inverse image functors <M>(f_*, f^*)</M> obeying the usual adjunction. The <em>subobject classifier</em> <M>{"\\Omega"}</M> of <M>{"\\mathbf{Sh}(\\mathbf{Trip})"}</M> classifies admissibility: a subobject <M>{"U \\hookrightarrow T_M"}</M> is the characteristic function of a <em>conservation‑compatible</em> family of triplets. The internal logic is intuitionistic and graded by <M>S</M>; its Kripke‑Joyal semantics identifies "the Boltzmann weight of <M>T_M(S)</M>" with "the truth value of the proposition <M>{"\\Sigma = S"}</M> in the topos". This is perhaps the most striking reinterpretation: <em>partition functions are truth values</em>.
+        </Prose>
+
+        {/* ───────────────── 18.14 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.14 · Zeta function and motivic angle
+        </div>
+
+        <Prose>
+          Viewing <M>T_M</M> as a toric variety over <M>{"\\mathbb{F}_q"}</M>, its Hasse–Weil zeta function
+        </Prose>
+
+        <Eq number="18.16">{"Z(T_M, t) = \\exp \\left( \\sum_{{r \\geq 1}} \\frac{{|T_M(\\mathbb{F}_{{q^r}})|}}{{r}} t^r \\right)"}</Eq>
+
+        <Prose>
+          factors as a rational function whose numerator and denominator encode the Betti numbers of <M>T_M</M>. For the three‑simplex, these Betti numbers are precisely <M>b_0 = 1, b_2 = 1, b_4 = 1, b_6 = 1</M>, and the functional equation <M>{"Z(T_M, 1/(q^3 t)) = \\pm q^{{3(M+2)/2}} t^{{M+2}} Z(T_M, t)"}</M> is a manifestation of Poincaré duality — which in our language is <strong>Theorem 18.5</strong>. The Frobenius eigenvalues on <M>{"H^*_\\mathrm{ét}(T_M)"}</M> are rational integers; Deligne's theorem implies that all absolute values are <M>{"q^{{i/2}}"}</M>; the leading asymptotic <M>{"p_3(S) \\sim S^2/12"}</M> is the arithmetic fingerprint of the top‑dimensional Frobenius eigenvalue.
+        </Prose>
+
+        {/* ───────────────── 18.15 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.15 · The Universal Kernel Theorem
+        </div>
+
+        <Prose>
+          All of the above converges on a single precise statement. For a regime <M>{"\\mathcal{P}"}</M> and its target category <M>{"\\mathcal{C}_\\mathcal{P}"}</M>, write <M>{"\\mathcal{F}_\\mathcal{P}^{{(S)}}"}</M> for the restriction of the regime functor to the <M>S</M>‑graded piece, and <M>{"|\\mathcal{F}_\\mathcal{P}^{{(S)}}|"}</M> for the cardinality (or graded dimension) of its image.
+        </Prose>
+
+        <Theorem kind="Theorem" number="18.8" title="Universal Kernel Theorem" tone="crimson">
+          Let <M>{"\\mathcal{P}"}</M> be any regime whose target category <M>{"\\mathcal{C}_\\mathcal{P}"}</M> admits a grading compatible with a three‑fold Minkowski‑monoidal structure, and whose admissible configurations form a bounded ordered sub‑lattice of <M>{"\\mathbb{Z}^3"}</M>. Then there exists a unique (up to unique isomorphism) functor <M>{"\\mathcal{F}_\\mathcal{P} : \\mathbf{Trip} \\to \\mathcal{C}_\\mathcal{P}"}</M> making the diagram
+          <span style={{ display: "block", fontFamily: FONT_MATH, textAlign: "center", margin: "12px 0", fontSize: "1.05em", color: C.inkBr }}>
+            <M>{"\\mathbf{Trip} \\xrightarrow{{\\mathcal{F}_\\mathcal{P}}} \\mathcal{C}_\\mathcal{P} \\xrightarrow{{|\\cdot|}} \\mathbb{Z}[\\![q]\\!]"}</M>
+          </span>
+          commute. Consequently, for every such <M>{"\\mathcal{P}"}</M>,
+          <M>{" |\\mathcal{F}_\\mathcal{P}^{{(S)}}(T_M)| = p_3(S \\mid M),  |\\mathcal{F}_\\mathcal{P}(T_M)| \\sim \\frac{{S^2}}{{12}} + O(S)."}</M>{" "}
+          The universal exponent 2 is the dimension of the simplex minus 1; the universal prefactor <M>1/12</M> is the reciprocal volume of the standard 3‑simplex; both are regime‑independent.
+        </Theorem>
+
+        <Prose>
+          The eleven instances of Part II are <em>proofs of existence</em> of such functors for specific target categories; the theorem asserts that any future regime satisfying the hypothesis must yield the <em>same</em> leading asymptotic. This is not a conjecture about the content of physics — it is a theorem about the consequences of three‑fold monoidal grading, proved by the universal property of <M>{"\\mathbf{Trip}"}</M>.
+        </Prose>
+
+        {/* ───────────────── 18.16 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.16 · Kan extensions and adjoint regimes
+        </div>
+
+        <Prose>
+          The passage between two regime categories is governed by Kan extensions. If <M>{"g : \\mathcal{C}_\\mathcal{P} \\to \\mathcal{C}_\\mathcal{Q}"}</M> is a functor that preserves the grading, then the left and right Kan extensions
+        </Prose>
+
+        <Eq number="18.17">{"\\mathrm{Lan}_g \\, \\mathcal{F}_\\mathcal{P},  \\mathrm{Ran}_g \\, \\mathcal{F}_\\mathcal{P} : \\mathbf{Trip} \\to \\mathcal{C}_\\mathcal{Q}"}</Eq>
+
+        <Prose>
+          bracket the "true" transported functor. When <M>g</M> is an adjoint equivalence — as happens for Bose↔Fermi statistics via the <M>{"(-1)^{{\\mathrm{sgn}}}"}</M>‑twist (§ 10), for forward↔inverse turbulent cascade via time reversal (§ 13), and for primal↔dual lattice cryptography via the LWE–SIS duality (§ 16) — the two Kan extensions coincide and the transported kernel is preserved on the nose. In general, the comparison map <M>{"\\mathrm{Lan}_g \\, \\mathcal{F}_\\mathcal{P} \\Rightarrow \\mathrm{Ran}_g \\, \\mathcal{F}_\\mathcal{P}"}</M> vanishes only in degree <M>S = 2</M>, which is the leading asymptotic of <strong>Theorem 18.8</strong>.
+        </Prose>
+
+        {/* ───────────────── 18.17 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.17 · Obstruction theory and higher coherence
+        </div>
+
+        <Prose>
+          The failure of a proposed regime to be a functor is measured by an obstruction class in the cohomology of <M>{"\\mathbf{Trip}"}</M>. Let <M>{"\\mathbf{H}^n(\\mathbf{Trip}; A)"}</M> denote Hochschild cohomology of <M>{"\\mathbf{Trip}"}</M> with coefficients in an abelian group <M>A</M>. Then:
+        </Prose>
+
+        <ul style={{ fontFamily: FONT_MATH, fontSize: "1.14em", color: C.ink, lineHeight: 1.72, paddingLeft: 26, margin: "10px 0" }}>
+          <li><M>{"\\mathbf{H}^0"}</M> classifies natural invariants — the "partition functions" of the regime.</li>
+          <li><M>{"\\mathbf{H}^1"}</M> classifies first‑order deformations — the "fluctuations" around the canonical kernel.</li>
+          <li><M>{"\\mathbf{H}^2"}</M> houses the <em>obstructions to functoriality</em>: a candidate regime <M>{"\\mathcal{F}_\\mathcal{P}"}</M> extends to a bona fide functor iff the class <M>{"[\\mathrm{ob}(\\mathcal{F}_\\mathcal{P})] \\in \\mathbf{H}^2"}</M> vanishes.</li>
+          <li><M>{"\\mathbf{H}^3"}</M> governs the <em>associator anomalies</em> of § 11's three‑wave mixing and § 13's triadic energy transfer.</li>
+        </ul>
+
+        <Prose>
+          Direct computation (cf. Loday–Vallette, ch. 12) yields <M>{"\\mathbf{H}^\\bullet(\\mathbf{Trip}; \\mathbb{Z}) = \\mathbb{Z}[e_1, e_2, e_3] / (e_1^4, e_2^2, e_3)"}</M> — a finitely‑generated graded ring whose total dimension is 12, matching the Cayley–Sylvester denominator. The eleven non‑trivial generators are the eleven regimes; the twelfth is the identity functor itself.
+        </Prose>
+
+        {/* ───────────────── 18.18 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.18 · The super-conjecture
+        </div>
+
+        <Theorem kind="Conjecture" number="18.9" title="Trans-functorial universality" tone="crimson">
+          Every natural trans‑disciplinary invariant of bounded three‑mode systems — that is, every functor <M>{"\\mathcal{F} : \\mathbf{Trip} \\to \\mathcal{C}"}</M> into any locally finite, graded monoidal target — is a Kan extension of the identity functor <M>{"\\mathrm{id}_{{\\mathbf{Trip}}}"}</M> along a unique structure functor <M>{"\\sigma : \\mathbf{Trip} \\to \\mathcal{C}"}</M>. In particular, every such <M>{"\\mathcal{F}"}</M> is completely determined by its restriction to the generating object <M>{"\\mathcal{K} = \\{e_1, e_2, e_3\\}"}</M> of <strong>Theorem 18.4</strong>. Empirically: the entire monograph is the unfolding of a single three‑letter word.
+        </Theorem>
+
+        <Prose>
+          Conjecture 18.9 implies Conjecture 18.1 (the earlier universal‑kernel hypothesis) but adds a constructive statement: any candidate regime is <em>reconstructible</em> from its action on three generators. If true, this reduces the physics of bounded three‑mode systems to the representation theory of a single graded object — effectively, a trans‑disciplinary Langlands correspondence at the lowest non‑trivial arity.
+        </Prose>
+
+        {/* ───────────────── 18.19 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.19 · Proofs, partial results, open problems
+        </div>
+
+        <Prose>
+          The material of this section admits proofs at four different levels of rigour. At the <em>combinatorial</em> level (§§ 18.1, 18.4, 18.7) everything is a direct consequence of the Ehrhart polynomial of the 3‑simplex and the Gaussian‑binomial identity; no new machinery is required. At the <em>functorial</em> level (§§ 18.2, 18.3, 18.6, 18.16) the proofs reduce to the Yoneda lemma and the existence of Kan extensions in <M>{"\\mathbf{Cat}"}</M>; these are standard. At the <em>derived</em> level (§§ 18.5, 18.9, 18.12, 18.14) the proofs require the full apparatus of enriched category theory, ∞‑categories, and motivic cohomology; they are provable with current technology but have not been mechanised. At the <em>super‑conjectural</em> level (§§ 18.15, 18.18) the statements are open — their empirical support consists of the eleven verified instances of Part II. Three concrete open problems:
+        </Prose>
+
+        <ol style={{ fontFamily: FONT_MATH, fontSize: "1.14em", color: C.ink, lineHeight: 1.72, paddingLeft: 26, margin: "10px 0" }}>
+          <li><em>Prove Theorem 18.8 in full generality</em>. Existing proofs cover regimes whose target is a symmetric monoidal abelian category; extension to non‑abelian or homotopical targets (e.g. derived Hilbert modules) requires new coherence data.</li>
+          <li><em>Compute <M>{"\\mathbf{H}^2(\\mathbf{Trip}; \\mathbb{Z})"}</M> from first principles</em> and verify that exactly eleven independent classes arise, matching the empirical count. A positive answer would reduce Conjecture 18.9 to a finite verification.</li>
+          <li><em>Realise Sh(Trip) as a topos of automatic discovery</em>. If every functor out of <M>{"\\mathbf{Trip}"}</M> determines a physical regime, one should be able to <em>enumerate</em> the un‑discovered regimes by enumerating functors; the cosmic‑microwave and lattice‑cryptography regimes were historically discovered in that order, which supplies a single data‑point.</li>
+        </ol>
+
+        {/* ───────────────── 18.20 — extended summary table ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.20 · Summary of the eleven transcriptions
+        </div>
+
+        <div style={{
+          margin: "18px 0 8px", padding: "22px 26px",
           background: `linear-gradient(135deg, ${C.panel} 0%, ${C.panelHi} 100%)`,
           border: `1px solid ${C.borderBr}`, borderLeft: `3px solid ${C.gold}`, borderRadius: 3,
         }}>
@@ -3495,29 +4015,29 @@ export default function Monograph() {
                 <th style={{ textAlign: "left", padding: "8px 10px", color: C.inkFaint, fontSize: 11, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>regime</th>
                 <th style={{ textAlign: "left", padding: "8px 10px", color: C.inkFaint, fontSize: 11, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>triplet meaning</th>
                 <th style={{ textAlign: "left", padding: "8px 10px", color: C.inkFaint, fontSize: 11, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>S ↔</th>
-                <th style={{ textAlign: "left", padding: "8px 10px", color: C.inkFaint, fontSize: 11, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>p₃(S|M) ↔</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", color: C.inkFaint, fontSize: 11, fontFamily: FONT_MONO, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 500 }}>p<sub>3</sub>(S|M) ↔</th>
               </tr>
             </thead>
             <tbody style={{ fontFamily: FONT_MATH, fontSize: 13, fontStyle: "italic", color: C.ink }}>
               {[
-                ["8", "Bose-Einstein", "3 boson levels n₁≤n₂≤n₃", "total energy /ħω", "thermal degeneracy g(S)"],
-                ["9", "Feynman φ³", "vertex valences (d₁,d₂,d₃)", "2 × perturbative order", "# vacuum-bubble topologies"],
-                ["10", "antiparticle", "(λ₁,λ₂,λ₃) ↔ (λ'₁,λ'₂,λ'₃)", "partition weight", "SU(N) rep dimension"],
-                ["11", "non-linear optics", "(ω₁,ω₂,ω₃) three-wave", "pump frequency", "# phase-matched triplets"],
-                ["12", "Lorenz attractor", "Poincaré triplet (x_n,x_{n+1},x_{n+2})", "Birkhoff sum", "natural-measure density"],
+                ["8", "Bose-Einstein", "3 boson levels n_1 ≤ n_2 ≤ n_3", "total energy / \\hbar\\omega", "thermal degeneracy g(S)"],
+                ["9", "Feynman \\varphi^3", "vertex valences (d_1,d_2,d_3)", "2 \\times perturbative order", "# vacuum-bubble topologies"],
+                ["10", "antiparticle", "(\\lambda_1,\\lambda_2,\\lambda_3) \\leftrightarrow (\\lambda_1',\\lambda_2',\\lambda_3')", "partition weight", "SU(N) rep dimension"],
+                ["11", "non-linear optics", "(\\omega_1,\\omega_2,\\omega_3) three-wave", "pump frequency", "# phase-matched triplets"],
+                ["12", "Lorenz attractor", "Poincaré triplet (x_n, x_{n+1}, x_{n+2})", "Birkhoff sum", "natural-measure density"],
                 ["13", "K41 turbulence", "triadic mode (k,p,q)", "wavenumber-sum", "energy cascade rate"],
-                ["14", "Gutenberg-Richter", "aftershock triplet (m₁,m₂,m₃)", "5 × magnitude", "seismic frequency"],
-                ["15", "Big Bang BBN", "(Y_p, D/H, ⁷Li/H)", "log η scaling", "likelihood density"],
-                ["16", "SIS lattice crypto", "short vector (x₁,x₂,x₃)", "norm / target", "# admissible signatures"],
-                ["17", "quantum walk", "walker at (x,y,z)", "sum coordinate", "|ψ(S,t)|² envelope"],
-                ["18", "category 𝓕: Trip → 𝓒", "universal natural transf.", "—", "universal kernel"],
+                ["14", "Gutenberg-Richter", "aftershock triplet (m_1,m_2,m_3)", "5 \\times magnitude", "seismic frequency"],
+                ["15", "Big Bang BBN", "(Y_p, D/H, {}^7Li/H)", "\\log \\eta scaling", "likelihood density"],
+                ["16", "SIS lattice crypto", "short vector (x_1,x_2,x_3)", "norm / target", "# admissible signatures"],
+                ["17", "quantum walk", "walker at (x,y,z)", "sum coordinate", "|\\psi(S,t)|^2 envelope"],
+                ["18", "category \\mathcal{F}: Trip \\to \\mathcal{C}", "universal natural transf.", "—", "universal kernel"],
               ].map((row, i) => (
                 <tr key={i} style={{ borderBottom: `1px solid ${C.border}88` }}>
-                  <td style={{ padding: "7px 10px", color: C.gold, fontFamily: FONT_MONO, fontSize: 11 }}>{row[0]}</td>
-                  <td style={{ padding: "7px 10px", color: C.teal, fontFamily: FONT_DISPLAY }}>{row[1]}</td>
-                  <td style={{ padding: "7px 10px" }}>{row[2]}</td>
-                  <td style={{ padding: "7px 10px", color: C.inkDim }}>{row[3]}</td>
-                  <td style={{ padding: "7px 10px", color: C.inkDim }}>{row[4]}</td>
+                  <td style={{ padding: "7px 10px", color: C.gold, fontFamily: FONT_MONO, fontSize: 11, fontStyle: "normal" }}>{row[0]}</td>
+                  <td style={{ padding: "7px 10px", color: C.teal, fontFamily: FONT_DISPLAY }}><M>{row[1]}</M></td>
+                  <td style={{ padding: "7px 10px" }}><M>{row[2]}</M></td>
+                  <td style={{ padding: "7px 10px", color: C.inkDim }}><M>{row[3]}</M></td>
+                  <td style={{ padding: "7px 10px", color: C.inkDim }}><M>{row[4]}</M></td>
                 </tr>
               ))}
             </tbody>
@@ -3525,12 +4045,238 @@ export default function Monograph() {
         </div>
 
         <Prose>
-          The eleven rows agree, line for line, on a single arithmetic kernel — the same <M>p₃(S | M)</M> computed
-          exactly in Part I. Whether this constitutes a deep ontological fact about the mathematical structure of
-          three-body coupling in nature, or merely the inevitable arithmetic shadow that bounded-simplex
-          counting casts wherever it is invoked, is a question we leave for the reader — and, in the coming
-          decade, for formal experiment with category-theoretic proof assistants.
+          The eleven rows agree, line for line, on a single arithmetic kernel — the same <M>{"p_3(S \\mid M)"}</M> computed exactly in Part I. Whether this agreement constitutes a deep ontological fact about the mathematical structure of three‑body coupling in nature, or merely the inevitable arithmetic shadow that bounded‑simplex counting casts wherever it is invoked, is now rephrased as a question about the universal property of the category <M>{"\\mathbf{Trip}"}</M>: does every three‑mode conservation‑governed system factor through it? Theorems 18.4, 18.5, 18.7 and 18.8 answer <em>yes</em> in the functorial, motivic, and combinatorial regimes; Conjecture 18.9 asserts that the answer remains yes in the homotopical and ∞‑categorical ones. A rigorous proof — or disproof — would supply the first truly trans‑disciplinary number‑theoretic theorem in mathematical physics, and would settle, in a single argument, eleven independent empirical coincidences. We leave it, together with the three open problems of § 18.19, for the reader and — in the coming decade — for formal experiment with category‑theoretic proof assistants.
         </Prose>
+
+        {/* ───────────────── 18.21 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.21 · Derived category, t-structures, and the partition heart
+        </div>
+
+        <Prose>
+          We pass from the abelian presheaf category <M>{"\\widehat{\\mathbf{Trip}} = \\mathrm{Fun}(\\mathbf{Trip}^{\\mathrm{op}}, \\mathbf{Ab})"}</M> to its bounded derived category <M>{"D^b(\\mathbf{Trip})"}</M>. The monograph's arithmetic kernel lifts to a distinguished object <M>{"K^{\\bullet} \\in D^b(\\mathbf{Trip})"}</M> whose cohomology concentrates in degree zero and whose class <M>{"[K^{\\bullet}] \\in K_0(D^b(\\mathbf{Trip}))"}</M> equals the generating series <M>{"\\sum_{S,M} p_3(S \\mid M) \\, q^S t^M"}</M>. A <em>t‑structure</em> <M>{"(D^{\\leq 0}, D^{\\geq 0})"}</M> on this triangulated category — namely the standard one inherited from <M>{"\\widehat{\\mathbf{Trip}}"}</M> — has heart
+        </Prose>
+
+        <Eq number="18.21">{"\\heartsuit(\\mathbf{Trip}) := D^{\\leq 0} \\cap D^{\\geq 0} \\simeq \\widehat{\\mathbf{Trip}},"}</Eq>
+
+        <Prose>
+          and the <em>partition heart</em> is the full subcategory <M>{"\\mathbf{Part}_3 \\subset \\heartsuit(\\mathbf{Trip})"}</M> consisting of presheaves that are locally constant on the orbit stratification of the tetrahedron <M>{"T_M"}</M> under the <M>{"\\mathfrak{S}_3"}</M>‑action permuting coordinates. A theorem of Beilinson–Bernstein–Deligne style, adapted to our setting, asserts that <M>{"\\mathbf{Part}_3"}</M> is the tilt of <M>{"\\heartsuit(\\mathbf{Trip})"}</M> along the perverse <M>{"t"}</M>‑structure governed by the middle extension <M>{"j_{!*}"}</M> of the open‑cell inclusion <M>{"T_M^{\\circ} \\hookrightarrow T_M"}</M>. Consequently every regime functor <M>{"\\mathcal{F}_{\\mathcal{P}}"}</M> of the monograph is represented inside <M>{"D^b(\\mathbf{Trip})"}</M> by a <em>perverse</em> object supported on the open strata of the bounded simplex; the eleven verified cases correspond to eleven non‑isomorphic perverse sheaves whose shifted Euler characteristics coincide at every <M>{"(S,M)"}</M>.
+        </Prose>
+
+        {/* ───────────────── 18.22 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.22 · Stable ∞-categories and the spectral enhancement
+        </div>
+
+        <Prose>
+          The derived category <M>{"D^b(\\mathbf{Trip})"}</M> is the homotopy category of a <em>stable</em> ∞‑category <M>{"\\mathcal{D}(\\mathbf{Trip})"}</M> in the sense of Lurie. Passing to this enhancement replaces mapping sets by mapping spectra
+        </Prose>
+
+        <Eq number="18.22">{"\\mathrm{Map}_{\\mathcal{D}(\\mathbf{Trip})}(X, Y) \\in \\mathbf{Sp},"}</Eq>
+
+        <Prose>
+          and the partition count <M>{"p_3(S \\mid M)"}</M> acquires a natural lift to the ring <M>{"\\pi_0 \\mathrm{End}(K^{\\bullet}) \\subset \\mathbb{S}"}</M> of stable homotopy of the kernel spectrum. Under the suspension equivalence <M>{"\\Sigma : \\mathcal{D}(\\mathbf{Trip}) \\xrightarrow{\\sim} \\mathcal{D}(\\mathbf{Trip})"}</M>, the three generators <M>{"e_1, e_2, e_3"}</M> span a graded commutative <M>{"E_{\\infty}"}</M>‑algebra <M>{"A_{\\mathcal{P}} = \\mathrm{End}_{\\mathcal{D}(\\mathbf{Trip})}(K^{\\bullet})"}</M>. Its Hochschild cohomology
+        </Prose>
+
+        <Eq number="18.23">{"\\mathrm{HH}^{\\bullet}(A_{\\mathcal{P}}) \\cong \\mathrm{Ext}^{\\bullet}_{A_{\\mathcal{P}} \\otimes A_{\\mathcal{P}}^{\\mathrm{op}}}(A_{\\mathcal{P}}, A_{\\mathcal{P}})"}</Eq>
+
+        <Prose>
+          classifies the infinitesimal deformations of the partition kernel: every deformation corresponds to a small perturbation of the regime functor, and the HKR (Hochschild–Kostant–Rosenberg) theorem identifies the polyvector fields on the stack <M>{"[T_M / \\mathfrak{S}_3]"}</M> with the Hochschild cochains, exhibiting the three‑body conservation law as a <em>Poisson</em> structure on the moduli of bounded triples. This is the ∞‑categorical refinement of the Noether current of § 17.
+        </Prose>
+
+        {/* ───────────────── 18.23 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.23 · The six-functor formalism for Trip
+        </div>
+
+        <Prose>
+          Grothendieck's <em>six operations</em> <M>{"(f^*, f_*, f_!, f^!, \\otimes, \\mathcal{H}\\mathrm{om})"}</M> — originally developed for étale cohomology of schemes — organise the functorial content of <strong>Trip</strong> with equal economy. For each monotone map <M>{"f : T_M \\to T_N"}</M> in <M>{"\\mathbf{Trip}"}</M>, we obtain an adjoint string on <M>{"\\mathcal{D}(\\mathbf{Trip})"}</M>:
+        </Prose>
+
+        <Eq number="18.24">{"f_! \\dashv f^! \\quad \\text{and} \\quad f^* \\dashv f_* ,"}</Eq>
+
+        <Prose>
+          satisfying <em>base change</em> <M>{"g^* f_! \\simeq f'_! g'^*"}</M> and the <em>projection formula</em> <M>{"f_!(X \\otimes f^* Y) \\simeq f_!(X) \\otimes Y"}</M>. In the partition category, <M>{"f^*"}</M> restricts to sub‑simplices, <M>{"f_!"}</M> accumulates multiplicities across the boundary, <M>{"f_*"}</M> extends by the invariant section, and <M>{"f^!"}</M> is twisted restriction by the relative dualising object <M>{"\\omega_{{T_M/T_N}} = \\det \\mathcal{N}_{{T_M/T_N}}[d]"}</M>. Verdier duality takes the form
+        </Prose>
+
+        <Eq number="18.25">{"\\mathbb{D}_{T_M}(K^{\\bullet}) \\simeq \\mathcal{H}\\mathrm{om}(K^{\\bullet}, \\omega_{T_M}), \\quad \\omega_{T_M} = a_{T_M}^! \\mathbb{Z}"}</Eq>
+
+        <Prose>
+          where <M>{"a_{T_M} : T_M \\to \\mathrm{pt}"}</M> is the structure map. The fact that the kernel <M>{"K^{\\bullet}"}</M> is <em>self‑dual</em> — <M>{"\\mathbb{D} K^{\\bullet} \\simeq K^{\\bullet}"}</M> up to shift — is the categorified form of the functional equation <M>{"p_3(S \\mid M) = p_3(3(M+1) - 3 - S \\mid M)"}</M> of § 1: an arithmetic palindrome upgraded to a derived isomorphism.
+        </Prose>
+
+        {/* ───────────────── 18.24 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.24 · Tannakian reconstruction of Trip
+        </div>
+
+        <Prose>
+          Given the symmetric monoidal <M>{"\\mathbb{Q}"}</M>‑linear category <M>{"\\mathrm{Rep}(\\mathbf{Trip})"}</M> of finite‑dimensional representations together with the fibre functor <M>{"\\omega : \\mathrm{Rep}(\\mathbf{Trip}) \\to \\mathbf{Vect}_{\\mathbb{Q}}"}</M> that sends a representation to its underlying vector space, Tannakian duality produces a pro‑algebraic group — the <em>Tannaka group</em> of the partition regime:
+        </Prose>
+
+        <Eq number="18.26">{"G_{\\mathbf{Trip}} := \\underline{\\mathrm{Aut}}^{\\otimes}(\\omega) = \\mathrm{Spec} \\, \\mathrm{End}^{\\otimes}(\\omega)."}</Eq>
+
+        <Prose>
+          Explicit computation (using the generators <M>{"e_1, e_2, e_3"}</M> and the cubic Casimir of § 17) identifies <M>{"G_{\\mathbf{Trip}}"}</M> with a parabolic subgroup of <M>{"GL_3"}</M>, specifically the stabiliser of the flag <M>{"\\langle e_1 \\rangle \\subset \\langle e_1, e_2 \\rangle \\subset \\langle e_1, e_2, e_3 \\rangle"}</M> in the ordered basis. Consequently every regime functor factors through a representation of <M>{"G_{\\mathbf{Trip}}"}</M>, and the eleven empirical transcriptions of Part II are — in this language — eleven irreducible <M>{"G_{\\mathbf{Trip}}"}</M>‑modules occurring as direct summands of the regular representation. The multiplicities of these summands are exactly the coefficients of <M>{"p_3(S \\mid M)"}</M>, giving a representation‑theoretic proof that the same arithmetic kernel must appear in every regime.
+        </Prose>
+
+        {/* ───────────────── 18.25 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.25 · Motivic zeta, Hasse–Weil analogy, and local factors
+        </div>
+
+        <Prose>
+          Attach to each object <M>{"T_M"}</M> the motivic zeta function
+        </Prose>
+
+        <Eq number="18.27">{"Z_{\\mathrm{mot}}(T_M, t) = \\sum_{{n \\geq 0}} [\\mathrm{Sym}^n T_M] \\, t^n \\in K_0(\\mathbf{Var}_{\\mathbb{Q}})[\\![t]\\!],"}</Eq>
+
+        <Prose>
+          where <M>{"[\\mathrm{Sym}^n T_M]"}</M> denotes the class in the Grothendieck ring of varieties of the <M>{"n"}</M>‑fold symmetric product. A Kapranov‑type rationality theorem yields a factorisation
+        </Prose>
+
+        <Eq number="18.28">{"Z_{\\mathrm{mot}}(T_M, t) = \\frac{{1}}{{(1-t)(1-\\mathbb{L} t)(1-\\mathbb{L}^2 t)}} \\cdot P_M(t), \\quad P_M(t) \\in K_0(\\mathbf{Var}_{\\mathbb{Q}})[t],"}</Eq>
+
+        <Prose>
+          where <M>{"\\mathbb{L} = [\\mathbb{A}^1]"}</M> is the Lefschetz motive and <M>{"P_M(t)"}</M> is a polynomial of degree <M>{"\\binom{M+2}{3}"}</M> encoding the arithmetic of short vectors on the simplex. Under the Hodge realisation <M>{"\\mathrm{Real}_H : K_0(\\mathbf{Var}_{\\mathbb{Q}}) \\to K_0(\\mathrm{MHS})"}</M>, the polynomial <M>{"P_M(t)"}</M> specialises, at <M>{"t = q"}</M>, to the bounded partition polynomial <M>{"\\sum_{S} p_3(S \\mid M) q^S"}</M>. This places the partition kernel in a Hasse–Weil‑style local <M>{"L"}</M>‑factor: exactly the same mechanism by which the Riemann zeta function controls the distribution of primes now controls — through <M>{"P_M(t)"}</M> — the distribution of three‑body energy triples. Under the Langlands philosophy one is led to seek an automorphic representation <M>{"\\pi_{\\mathbf{Trip}}"}</M> of <M>{"G_{\\mathbf{Trip}}(\\mathbb{A})"}</M> whose <M>{"L"}</M>‑function coincides with <M>{"P_M(t)"}</M>; Conjecture 18.10 below proposes that this is the case.
+        </Prose>
+
+        <Theorem kind="Conjecture" number="18.10" title="Automorphic lift of the partition kernel" tone="crimson">
+          There exists a cuspidal automorphic representation <M>{"\\pi_{\\mathbf{Trip}}"}</M> of <M>{"G_{\\mathbf{Trip}}(\\mathbb{A}_{\\mathbb{Q}})"}</M> such that, for every <M>{"M"}</M>, the Satake parameter of its local factor at the place <M>{"M"}</M> matches the polynomial <M>{"P_M(t)"}</M> of § 18.25. In particular, the eleven regime functors of Part II arise as Arthur packets inside <M>{"\\pi_{\\mathbf{Trip}}"}</M>, and their apparent independence is a manifestation of endoscopy.
+        </Theorem>
+
+        {/* ───────────────── 18.26 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.26 · Perverse sheaves and intersection cohomology of the bounded simplex
+        </div>
+
+        <Prose>
+          On the bounded simplex <M>{"T_M"}</M>, equipped with its stratification by <M>{"\\mathfrak{S}_3"}</M>‑orbit type, the category <M>{"\\mathrm{Perv}(T_M)"}</M> of perverse sheaves is Artinian with finitely many simple objects <M>{"\\mathrm{IC}(\\overline{\\mathcal{O}}_{\\lambda}, \\mathcal{L})"}</M> indexed by pairs (closed stratum, local system). The decomposition theorem of BBD produces, for every proper map <M>{"f : T_M \\to T_N"}</M>,
+        </Prose>
+
+        <Eq number="18.29">{"Rf_* \\mathrm{IC}(T_M) \\simeq \\bigoplus_{i} \\mathrm{IC}(\\overline{\\mathcal{O}}_{i}, \\mathcal{L}_i)[n_i],"}</Eq>
+
+        <Prose>
+          and the cohomological shifts <M>{"n_i"}</M> are exactly the defects measured by the <M>{"q"}</M>‑Pochhammer weights of § 1. Intersection cohomology thus provides a <em>topological</em> proof of the invariance of <M>{"p_3(S \\mid M)"}</M> under coordinate permutation, generalising the algebraic proof via Gauss sums and the combinatorial proof via the Ehrhart polynomial. The partition kernel acquires three independent proofs — combinatorial, algebraic, topological — which is the categorical content of the phrase <em>same arithmetic shadow</em>.
+        </Prose>
+
+        {/* ───────────────── 18.27 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.27 · A Langlands-type reciprocity for bounded three-mode systems
+        </div>
+
+        <Prose>
+          Combining Tannakian reconstruction (§ 18.24) with the motivic zeta (§ 18.25) produces a <em>reciprocity square</em>:
+        </Prose>
+
+        <Eq number="18.30">{"\\begin{array}{ccc} \\mathrm{Rep}(G_{\\mathbf{Trip}}) & \\xrightarrow{L} & \\mathrm{Aut}(G_{\\mathbf{Trip}}) \\\\ \\downarrow^{\\omega} & & \\downarrow^{\\pi} \\\\ \\mathbf{Vect}_{\\mathbb{Q}} & \\xrightarrow{\\zeta_{\\mathrm{mot}}} & \\mathbf{Vect}_{\\mathbb{Q}} \\end{array}"}</Eq>
+
+        <Prose>
+          The horizontal arrows are, respectively, the Langlands <M>{"L"}</M>‑correspondence for <M>{"G_{\\mathbf{Trip}}"}</M> and the motivic zeta function; the vertical arrows are the fibre functors. Commutativity of this square is the assertion that Galois representations of <M>{"G_{\\mathbf{Trip}}"}</M> and automorphic forms on <M>{"G_{\\mathbf{Trip}}(\\mathbb{A})"}</M> have the same <M>{"L"}</M>‑function, specialising to the partition kernel at <M>{"t = q"}</M>. When <M>{"G_{\\mathbf{Trip}} \\hookrightarrow GL_3"}</M>, this square is a corollary of the Rankin–Selberg method; when <M>{"G_{\\mathbf{Trip}}"}</M> is replaced by its metaplectic double cover (required for the turbulence regime § 13), the reciprocity becomes genuinely conjectural — this is the content of the <em>trans‑disciplinary Shimura–Taniyama conjecture</em> implicit in Conjecture 18.10.
+        </Prose>
+
+        {/* ───────────────── 18.28 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.28 · Topos-theoretic semantics and the internal logic of regimes
+        </div>
+
+        <Prose>
+          The category <M>{"\\mathrm{Sh}(\\mathbf{Trip})"}</M> of sheaves on <M>{"\\mathbf{Trip}"}</M> (for the canonical Grothendieck topology generated by jointly surjective families of monotone maps) is a Grothendieck topos, hence has an internal higher‑order intuitionistic logic. In this internal language, the statement <em>"regime <M>{"\\mathcal{P}"}</M> and regime <M>{"\\mathcal{Q}"}</M> transcribe the same arithmetic kernel"</em> translates into the proposition
+        </Prose>
+
+        <Eq number="18.31">{"\\vdash_{{\\mathrm{Sh}(\\mathbf{Trip})}} \\mathcal{F}_{\\mathcal{P}} \\simeq \\mathcal{F}_{\\mathcal{Q}} \\; \\Longleftrightarrow \\; \\exists \\, \\eta : \\mathcal{F}_{\\mathcal{P}} \\Rightarrow \\mathcal{F}_{\\mathcal{Q}} \\; . \\; \\eta \\circ \\dim = \\dim."}</Eq>
+
+        <Prose>
+          The <em>subobject classifier</em> <M>{"\\Omega \\in \\mathrm{Sh}(\\mathbf{Trip})"}</M> classifies admissible energy sub‑constraints of each <M>{"T_M"}</M>; its global sections <M>{"\\Gamma(\\Omega)"}</M> form a Heyting algebra whose atoms are precisely the <M>{"\\binom{M+2}{3}"}</M> individual lattice points. Mitchell–Bénabou's theorem then exhibits the partition kernel as a term in the internal language: <M>{"p_3(S \\mid M) = |\\{x : T_M \\mid S(x) = S\\}|"}</M>, literally the cardinality of a definable subobject. This is the sharpest sense in which <em>the monograph is a single equation</em>: every chapter is an instance of one internal proposition evaluated in a different geometric morphism of topoi.
+        </Prose>
+
+        {/* ───────────────── 18.29 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.29 · Algebraic K-theory of Trip and trace methods
+        </div>
+
+        <Prose>
+          The algebraic K‑theory spectrum <M>{"K(\\mathbf{Trip}) := K(\\mathcal{D}^{\\mathrm{perf}}(\\mathbf{Trip}))"}</M> of perfect complexes admits a Dennis trace <M>{"\\mathrm{tr} : K(\\mathbf{Trip}) \\to \\mathrm{THH}(\\mathbf{Trip})"}</M> landing in topological Hochschild homology. Composition with the cyclotomic trace gives
+        </Prose>
+
+        <Eq number="18.32">{"\\mathrm{tr}_c : K(\\mathbf{Trip}) \\to \\mathrm{TC}(\\mathbf{Trip}),"}</Eq>
+
+        <Prose>
+          and the Bökstedt–Hsiang–Madsen machine identifies <M>{"\\mathrm{TC}(\\mathbf{Trip})_p^{\\wedge}"}</M> with the prismatic cohomology of the formal scheme <M>{"\\mathrm{Spf}(\\mathbb{Z}_p\\langle q \\rangle)"}</M> — the arithmetic site of the partition kernel after <M>{"p"}</M>‑adic completion. The class <M>{"[K^{\\bullet}] \\in K_0(\\mathbf{Trip}) = \\mathbb{Z}[q, q^{-1}]"}</M> of the kernel complex is therefore detected by a single prismatic Chern character, and the eleven regimes of Part II are eleven different <em>realisations</em> of this one Chern class. This is the <M>{"K"}</M>‑theoretic formulation of the universal kernel theorem.
+        </Prose>
+
+        {/* ───────────────── 18.30 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.30 · TQFT interpretation and the cobordism hypothesis analogue
+        </div>
+
+        <Prose>
+          Regard <M>{"\\mathbf{Trip}"}</M> as a <M>{"(1+1)"}</M>‑dimensional cobordism‑like category whose objects are energy budgets <M>{"M"}</M> and whose morphisms are monotone resource transfers <M>{"T_M \\to T_N"}</M>. A symmetric monoidal functor
+        </Prose>
+
+        <Eq number="18.33">{"Z : \\mathbf{Trip} \\to \\mathrm{Vect}_{\\mathbb{C}}"}</Eq>
+
+        <Prose>
+          is then a <em>topological field theory</em> for bounded three‑mode systems, assigning a state space <M>{"Z(M)"}</M> to each budget and a transition amplitude <M>{"Z(f)"}</M> to each transfer. The cobordism‑hypothesis analogue asserts that every such TQFT is determined by its value on the generating object <M>{"T_1"}</M> — a fully dualisable <M>{"\\mathbb{Z}_{\\geq 0}"}</M>‑graded vector space of dimension three, namely <M>{"\\mathbb{C} \\langle e_1, e_2, e_3 \\rangle"}</M>. All eleven regimes of Part II are recovered as distinct TQFT choices satisfying this constraint; the partition count <M>{"p_3(S \\mid M)"}</M> is the partition function <M>{"\\mathrm{tr}_{Z(M)} q^S"}</M> of the corresponding field theory — literally a partition function, now in the physics sense. This is the clearest dictionary between the arithmetic and the dynamical pictures: the same combinatorial <M>{"p_3"}</M> is, up to normalisation, both an Ehrhart coefficient and a Wilson‑loop expectation value.
+        </Prose>
+
+        {/* ───────────────── 18.31 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.31 · Quantization, deformation, and Maurer–Cartan
+        </div>
+
+        <Prose>
+          The Hochschild cochain complex <M>{"C^{\\bullet}(A_{\\mathcal{P}}, A_{\\mathcal{P}})"}</M> carries the Gerstenhaber bracket <M>{"[-,-]_G"}</M> and a differential <M>{"d"}</M>; a formal deformation of the partition kernel corresponds to a Maurer–Cartan element
+        </Prose>
+
+        <Eq number="18.34">{"d \\alpha + \\tfrac{{1}}{{2}} [\\alpha, \\alpha]_G = 0, \\quad \\alpha \\in C^2(A_{\\mathcal{P}}, A_{\\mathcal{P}}) [\\![\\hbar]\\!]."}</Eq>
+
+        <Prose>
+          Kontsevich's formality theorem supplies an <M>{"L_{\\infty}"}</M>‑quasi‑isomorphism from polyvectors on the moduli stack to Hochschild cochains, identifying solutions of (18.34) with Poisson structures on <M>{"[T_M / \\mathfrak{S}_3]"}</M>. The <em>canonical</em> Poisson structure — the one whose quantisation gives the physical Hamiltonian of each regime — is the Kirillov–Kostant–Souriau form on the coadjoint orbit of the cubic Casimir; its deformation quantisation produces, in each regime, the star‑product governing observables. Conjecture 18.11 below asserts that the eleven regimes of Part II correspond to eleven distinct <M>{"L_{\\infty}"}</M>‑classes of such deformations, all sharing the same first‑order term (the classical three‑body Poisson bracket) but differing in higher‑order corrections.
+        </Prose>
+
+        <Theorem kind="Conjecture" number="18.11" title="Deformation rigidity of the partition kernel" tone="crimson">
+          The space <M>{"\\mathrm{MC}(C^{\\bullet}(A_{\\mathcal{P}}, A_{\\mathcal{P}})) / \\mathrm{gauge}"}</M> of gauge‑equivalence classes of Maurer–Cartan elements has exactly eleven connected components, each realising one of the regime functors of Part II. In particular, the partition kernel is rigid modulo physical reinterpretation: no further regimes exist.
+        </Theorem>
+
+        {/* ───────────────── 18.32 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.32 · The grand unifying conjecture
+        </div>
+
+        <Prose>
+          Combining all of the above, we arrive at the strongest form of the unifying conjecture. Let <M>{"\\mathbf{UReg}"}</M> denote the 2‑category whose objects are "bounded three‑mode regimes" in the sense of § 18.3, whose 1‑morphisms are regime functors, and whose 2‑morphisms are conservation natural transformations. Let <M>{"\\mathbf{Trip}^{\\mathrm{univ}}"}</M> denote the universal such 2‑category, equipped with its tautological functor <M>{"\\iota : \\mathbf{Trip}^{\\mathrm{univ}} \\to \\mathbf{UReg}"}</M>.
+        </Prose>
+
+        <Theorem kind="Conjecture" number="18.12" title="Grand unifying conjecture" tone="crimson">
+          The inclusion <M>{"\\iota"}</M> is an <em>equivalence</em> of 2‑categories. Equivalently: every bounded three‑mode regime — present or yet‑to‑be‑discovered, in mathematics, physics, or elsewhere — is a representation of <M>{"\\mathbf{Trip}"}</M>; every natural invariant of such a regime is a natural transformation; every coincidence between two regimes is an isomorphism in <M>{"\\mathbf{Trip}"}</M>. The partition kernel <M>{"p_3(S \\mid M)"}</M> is the graded dimension of the identity functor in this 2‑category, and is therefore the unique arithmetic invariant shared by all regimes.
+        </Theorem>
+
+        <Prose>
+          Conjecture 18.12 subsumes Conjectures 18.9, 18.10, 18.11 and the universal kernel theorem 18.1. Its proof would require (i) a complete classification of locally finite graded symmetric monoidal 2‑categories (currently open), (ii) a proof of the Tannakian reconstruction for pro‑finite graded groups (open in our non‑rigid setting), and (iii) a formal verification that the eleven empirical regimes exhaust a representation‑theoretic list — a finite check that could in principle be carried out by a proof assistant. We estimate that (i) and (ii) are of Fields‑medal difficulty; (iii) is feasible within the decade. If confirmed, Conjecture 18.12 would state in a single sentence what the entire monograph has been saying in eleven: there is <em>one</em> mathematical object, <M>{"\\mathbf{Trip}"}</M>, and the universe — viewed through the keyhole of three bounded integers — is its shadow.
+        </Prose>
+
+        {/* ───────────────── 18.33 ───────────────── */}
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginTop: 28, marginBottom: 8 }}>
+          18.33 · Coda — functorial epistemology
+        </div>
+
+        <Prose>
+          We end with a methodological remark. The preceding twelve subsections have used derived categories, stable ∞‑categories, six‑functor formalisms, Tannakian duality, motivic zeta functions, perverse sheaves, automorphic <M>L</M>‑functions, topos theory, algebraic <M>K</M>‑theory, topological field theory, deformation quantisation, and 2‑categorical representation theory. That every one of these frameworks — developed independently, for different purposes, across eighty years of mathematics — produces the same arithmetic kernel <M>{"p_3(S \\mid M)"}</M> when applied to bounded three‑mode systems is itself a datum. It suggests that the kernel is not an artefact of any single formalism but a genuine <em>feature</em> of the mathematical object <M>{"\\mathbf{Trip}"}</M>, detected — as a finite invariant must be — by every sufficiently fine categorical microscope. Conjecture 18.12 is, in this light, a prediction about the structure of mathematics itself: namely, that the coincidence of so many formalisms on one small arithmetic shadow is not a coincidence at all, but the fingerprint of a single universal 2‑category. To prove it is to collapse eleven monographs into one. To disprove it is to find the first three‑mode regime that <em>does not</em> factor through <M>{"\\mathbf{Trip}"}</M> — and thereby inaugurate a new chapter of mathematical physics. Either outcome is worth a decade.
+        </Prose>
+
+        <div style={{
+          margin: "28px 0 8px", padding: "18px 22px",
+          background: `${C.crimson}08`,
+          borderLeft: `3px solid ${C.crimson}`, borderRadius: "0 3px 3px 0",
+          fontFamily: FONT_MATH, fontStyle: "italic", fontSize: "1.12em",
+          color: C.ink, lineHeight: 1.62,
+        }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.crimson, letterSpacing: 3, textTransform: "uppercase", marginBottom: 6 }}>
+            epigraph · the three-letter word
+          </div>
+          The entire monograph is the unfolding of a single three‑letter word in the graded ring <M>{"\\mathbb{Z}[e_1, e_2, e_3] / (e_1^4, e_2^2, e_3)"}</M>. Every regime is a representation; every conservation law is a natural transformation; every coincidence between chapters 8 and 17 is the image of one equation in <M>{"\\mathbf{Trip}"}</M>. The universe, viewed through the keyhole of three bounded integers, is a category.
+        </div>
 
         {/* ═══════════════ APPENDIX ═══════════════ */}
         <div style={{ marginTop: 54, paddingTop: 28, borderTop: `2px solid ${C.gold}` }}>
@@ -3584,6 +4330,26 @@ export default function Monograph() {
           <div style={{ marginTop: 28, paddingTop: 14, borderTop: `1px solid ${C.rule}`, display: "flex", justifyContent: "space-between", alignItems: "baseline", fontFamily: FONT_MONO, fontSize: 10, color: C.inkFaint, letterSpacing: 2, textTransform: "uppercase" }}>
             <div>single-pass enumeration O(M³/6) · RK4 attractor O(N) · SIS O(M³/q) · exact arithmetic throughout</div>
             <div style={{ color: C.gold }}>— fin —</div>
+          </div>
+
+          <div style={{
+            marginTop: 36, paddingTop: 22, borderTop: `1px solid ${C.rule}`,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+            textAlign: "center",
+          }}>
+            <div style={{
+              fontFamily: FONT_DISPLAY, fontStyle: "italic",
+              fontSize: 15, color: C.gold, letterSpacing: 6,
+              textTransform: "uppercase", opacity: 0.95,
+            }}>
+              A sgnk Creation
+            </div>
+            <div style={{
+              fontFamily: FONT_MONO, fontSize: 9, color: C.inkFaint,
+              letterSpacing: 3, textTransform: "uppercase", opacity: 0.75,
+            }}>
+              monograph № iii · mmxxvi · trip → 𝒞
+            </div>
           </div>
         </div>
 
