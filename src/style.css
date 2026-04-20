@@ -4,12 +4,32 @@ html, body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: #070b17;
   color: #e8dfc7;
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Prevent KaTeX display equations from bleeding past their container */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 2px 0;
+}
+.katex-display > .katex {
+  white-space: nowrap;
+}
+.katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+.katex-display::-webkit-scrollbar-thumb {
+  background: #2a3454;
+  border-radius: 3px;
 }

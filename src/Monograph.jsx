@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { Link } from "react-router-dom";
 import Plotly from "plotly.js-dist-min";
 import { useResponsive, responsiveScale, responsiveSpacing, useTouchInteraction, useSwipeGesture } from "./responsive";
 
@@ -6,7 +7,7 @@ import { useResponsive, responsiveScale, responsiveSpacing, useTouchInteraction,
 // MONOGRAPH · AESTHETIC SYSTEM
 // Oxford blue + parchment · EB Garamond · scholarly journal
 // ═══════════════════════════════════════════════════════════════════════════
-const C = {
+export const C = {
   bg:        "#070b17",
   bgDeep:    "#040710",
   panel:     "#0d1324",
@@ -38,10 +39,10 @@ const C = {
   plotBg:    "#050810",
 };
 
-const FONT_MATH = "'EB Garamond', 'Cormorant Garamond', Georgia, serif";
-const FONT_DISPLAY = "'EB Garamond', Georgia, serif";
-const FONT_MONO = "'JetBrains Mono', 'SF Mono', Menlo, monospace";
-const FONT_SANS = "'Inter', -apple-system, sans-serif";
+export const FONT_MATH = "'EB Garamond', 'Cormorant Garamond', Georgia, serif";
+export const FONT_DISPLAY = "'EB Garamond', Georgia, serif";
+export const FONT_MONO = "'JetBrains Mono', 'SF Mono', Menlo, monospace";
+export const FONT_SANS = "'Inter', -apple-system, sans-serif";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MATHEMATICS
@@ -64,7 +65,7 @@ function generatePartitionData(M) {
   return { sumFreq, sums, counts, totalCount, minSum, maxSum };
 }
 
-function generateScatterSample(M, maxPoints = 18000) {
+export function generateScatterSample(M, maxPoints = 18000) {
   let total = 0;
   for (let x = 1; x <= M; x++) for (let y = x; y <= M; y++) total += M - y + 1;
   const rate = Math.min(1, maxPoints / total);
@@ -93,10 +94,10 @@ function generateXSumDensity(M) {
 }
 
 // Cayley–Sylvester closed form for p₃(n) unrestricted: round(n²/12)
-function cayleySylvester(n) { return Math.round(n * n / 12); }
+export function cayleySylvester(n) { return Math.round(n * n / 12); }
 
 // Corrected formula accounting for upper bound M via reflection
-function p3Corrected(S, M) {
+export function p3Corrected(S, M) {
   if (S < 3 || S > 3 * M) return 0;
   const mid = (3 + 3 * M) / 2;
   const eff = S <= mid ? S : 3 * M + 3 - S;
@@ -210,7 +211,7 @@ function convergenceData(partData) {
   return { xs, ys, ref };
 }
 
-function generateRegimeConstellation() {
+export function generateRegimeConstellation() {
   const names = [
     ["Kernel", "explicit"],
     ["Bose", "inferred"],
@@ -237,7 +238,7 @@ function generateRegimeConstellation() {
   });
 }
 
-function generateLayerArchitecture() {
+export function generateLayerArchitecture() {
   const layers = [
     { name: "Defs", z: 0.0, size: 3.4, color: "#5fa8a8" },
     { name: "Safe", z: 1.0, size: 2.8, color: "#7a8fd4" },
@@ -257,7 +258,7 @@ function generateLayerArchitecture() {
   return { layers, assumptions };
 }
 
-function generateTripShell(M) {
+export function generateTripShell(M) {
   const vx = [1, 1, 1, M];
   const vy = [1, 1, M, M];
   const vz = [1, M, M, M];
@@ -274,7 +275,7 @@ function generateTripShell(M) {
   return { vx, vy, vz, edgeX, edgeY, edgeZ };
 }
 
-function orbitCamera(theta, radius = 1.75, z = 0.9) {
+export function orbitCamera(theta, radius = 1.75, z = 0.9) {
   return {
     eye: { x: radius * Math.cos(theta), y: radius * Math.sin(theta), z },
     up: { x: 0, y: 0, z: 1 },
@@ -673,9 +674,91 @@ function _renderMathChildren(node) {
   }
   return node;
 }
-function M({ children, italic = true }) {
+// KaTeX-backed renderer with graceful fallback to the legacy mini-parser.
+import katex from "katex";
+import useInView from "./useInView";
+import { SectionLoader } from "./Loader";
+
+function _toTexSource(node, depth = 0, seen) {
+  // Hard recursion guard — prevents `RangeError: Maximum call stack size`
+  // when a React subtree contains cycles or deeply nested <M> elements.
+  if (depth > 32) return "";
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (Array.isArray(node)) {
+    let out = "";
+    for (const n of node) out += _toTexSource(n, depth + 1, seen);
+    return out;
+  }
+  if (typeof node === "object" && node.props && node.props.children != null) {
+    // Cycle guard — if we've already visited this node, bail out.
+    const visited = seen || new WeakSet();
+    if (visited.has(node)) return "";
+    try { visited.add(node); } catch { /* primitives etc. */ }
+    return _toTexSource(node.props.children, depth + 1, visited);
+  }
+  return "";
+}
+function _katexHtml(src, displayMode) {
+  // Guard against KaTeX's internal "Cannot read properties of null (reading 'split')"
+  // bug, which fires when source is empty / whitespace / contains unmatched braces.
+  const safeSrc = String(src ?? "").trim();
+  if (!safeSrc) return null;
+  try {
+    return katex.renderToString(safeSrc, {
+      displayMode,
+      throwOnError: false,
+      strict: "ignore",
+      trust: true,
+      output: "html",
+      macros: {
+        "\\R": "\\mathbb{R}", "\\Z": "\\mathbb{Z}", "\\N": "\\mathbb{N}",
+        "\\Q": "\\mathbb{Q}", "\\C": "\\mathbb{C}",
+      },
+    });
+  } catch {
+    return null;
+  }
+}
+export function M({ children, italic = true }) {
+  let src = "";
+  try { src = _toTexSource(children); } catch { src = ""; }
+  if (src) {
+    const html = _katexHtml(src, false);
+    if (html) return <span style={{ color: C.inkBr }} dangerouslySetInnerHTML={{ __html: html }} />;
+  }
   return <span style={{ fontFamily: FONT_MATH, fontStyle: italic ? "italic" : "normal", fontSize: "1.14em", color: C.inkBr }}>{_renderMathChildren(children)}</span>;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ChartHost — overlays a SectionLoader on a Plotly host <div> until the chart
+// has actually rendered (`ready` flips true after Plotly.react resolves). Pairs
+// with useInView() in each chart effect to keep WebGL contexts under the
+// browser cap (~16 in Chrome) by deferring init until the host is near the
+// viewport.
+// ─────────────────────────────────────────────────────────────────────────────
+export function ChartHost({ hostRef, ready, height, loaderLabel = "Rendering figure" }) {
+  return (
+    <div style={{ position: "relative", width: "100%", height }}>
+      <div ref={hostRef} style={{ position: "absolute", inset: 0 }} />
+      {!ready && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <SectionLoader minHeight={height} label={loaderLabel} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MathBlock({ children }) {
+  let src = "";
+  try { src = _toTexSource(children); } catch { src = ""; }
+  const html = src ? _katexHtml(src, true) : null;
+  if (html) return <div style={{ color: C.inkBr, overflowX: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div style={{ fontFamily: FONT_MATH, color: C.inkBr }}>{_renderMathChildren(children)}</div>;
+}
+
 
 function Frac({ n, d, size = "1em" }) {
   return (
@@ -686,12 +769,12 @@ function Frac({ n, d, size = "1em" }) {
   );
 }
 
-function Eq({ number, children, style }) {
+export function Eq({ number, children, style }) {
   const responsive = useResponsive();
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: responsive.isMobile ? "1fr" : "1fr auto",
+      gridTemplateColumns: responsive.isMobile ? "minmax(0, 1fr)" : "minmax(0, 1fr) auto",
       alignItems: responsive.isMobile ? "center" : "center",
       padding: responsive.isMobile ? "14px 16px" : "18px 24px",
       margin: responsive.isMobile ? "14px 0" : "18px 0",
@@ -701,12 +784,17 @@ function Eq({ number, children, style }) {
       fontSize: responsive.isMobile ? "1.2em" : "1.32em",
       color: C.ink,
       lineHeight: 1.4,
+      maxWidth: "100%",
+      overflow: "hidden",
       ...style,
     }}>
       <div style={{
         textAlign: "center",
-        marginBottom: responsive.isMobile && number ? 8 : 0
-      }}>{children}</div>
+        marginBottom: responsive.isMobile && number ? 8 : 0,
+        minWidth: 0,
+        overflowX: "auto",
+        overflowY: "hidden",
+      }}><MathBlock>{children}</MathBlock></div>
       {number && <div style={{
         color: C.inkFaint,
         fontSize: responsive.isMobile ? "0.75em" : "0.85em",
@@ -717,7 +805,7 @@ function Eq({ number, children, style }) {
   );
 }
 
-function Theorem({ kind = "Theorem", number, title, children, tone = "gold" }) {
+export function Theorem({ kind = "Theorem", number, title, children, tone = "gold" }) {
   const responsive = useResponsive();
   const toneC = tone === "gold" ? C.gold : tone === "crimson" ? C.crimson : tone === "teal" ? C.teal : C.indigo;
   return (
@@ -757,7 +845,9 @@ function Theorem({ kind = "Theorem", number, title, children, tone = "gold" }) {
         fontFamily: FONT_MATH,
         fontSize: responsive.isMobile ? "1.08em" : "1.15em",
         color: C.ink,
-        lineHeight: 1.6
+        lineHeight: 1.6,
+        overflowWrap: "anywhere",
+        overflowX: "auto",
       }}>
         {children}
       </div>
@@ -765,7 +855,7 @@ function Theorem({ kind = "Theorem", number, title, children, tone = "gold" }) {
   );
 }
 
-function SectionHead({ number, title, eyebrow, id }) {
+export function SectionHead({ number, title, eyebrow, id }) {
   const responsive = useResponsive();
   const projectionWidth = responsive.isMobile ? 0 : responsive.isTablet ? 132 : 176;
   return (
@@ -866,7 +956,7 @@ function SectionHead({ number, title, eyebrow, id }) {
   );
 }
 
-function Figure({ number, caption, children, noPad }) {
+export function Figure({ number, caption, children, noPad }) {
   const responsive = useResponsive();
   return (
     <figure style={{
@@ -905,7 +995,7 @@ function Figure({ number, caption, children, noPad }) {
   );
 }
 
-function Prose({ children, style }) {
+export function Prose({ children, style }) {
   const responsive = useResponsive();
   return <p style={{
     fontFamily: FONT_MATH,
@@ -948,7 +1038,7 @@ function Toggle({ on, onClick, children, tone = "gold" }) {
   );
 }
 
-function Metric({ label, value, unit, tone = "gold", mono = true }) {
+export function Metric({ label, value, unit, tone = "gold", mono = true }) {
   const responsive = useResponsive();
   const c = tone === "gold" ? C.gold : tone === "teal" ? C.teal : tone === "crimson" ? C.crimson : C.indigo;
   return (
@@ -1134,6 +1224,64 @@ export default function Monograph() {
   const unifyConstellationRef = useRef(null);
   const unifyArchitectureRef = useRef(null);
 
+  // ── viewport gating + per-chart ready flags (defer Plotly init until
+  //    near the viewport, overlay loader until first paint) ─────────────
+  const barInView = useInView(barRef);
+  const [barReady, setBarReady] = useState(false);
+  const scatterInView = useInView(scatterRef);
+  const [scatterReady, setScatterReady] = useState(false);
+  const heatInView = useInView(heatRef);
+  const [heatReady, setHeatReady] = useState(false);
+  const cdfInView = useInView(cdfRef);
+  const [cdfReady, setCdfReady] = useState(false);
+  const errInView = useInView(errRef);
+  const [errReady, setErrReady] = useState(false);
+  const convInView = useInView(convRef);
+  const [convReady, setConvReady] = useState(false);
+  const qqInView = useInView(qqRef);
+  const [qqReady, setQqReady] = useState(false);
+  const besteinInView = useInView(besteinRef);
+  const [besteinReady, setBesteinReady] = useState(false);
+  const besteinSurfInView = useInView(besteinSurfRef);
+  const [besteinSurfReady, setBesteinSurfReady] = useState(false);
+  const feynmanInView = useInView(feynmanRef);
+  const [feynmanReady, setFeynmanReady] = useState(false);
+  const feynmanDiagInView = useInView(feynmanDiagRef);
+  const [feynmanDiagReady, setFeynmanDiagReady] = useState(false);
+  const nloInView = useInView(nloRef);
+  const [nloReady, setNloReady] = useState(false);
+  const nloDispInView = useInView(nloDispRef);
+  const [nloDispReady, setNloDispReady] = useState(false);
+  const lorenzInView = useInView(lorenzRef);
+  const [lorenzReady, setLorenzReady] = useState(false);
+  const poincareInView = useInView(poincareRef);
+  const [poincareReady, setPoincareReady] = useState(false);
+  const kolmogInView = useInView(kolmogRef);
+  const [kolmogReady, setKolmogReady] = useState(false);
+  const triadInView = useInView(triadRef);
+  const [triadReady, setTriadReady] = useState(false);
+  const gutInView = useInView(gutRef);
+  const [gutReady, setGutReady] = useState(false);
+  const bbnInView = useInView(bbnRef);
+  const [bbnReady, setBbnReady] = useState(false);
+  const sisInView = useInView(sisRef);
+  const [sisReady, setSisReady] = useState(false);
+  const sisErrorInView = useInView(sisErrorRef);
+  const [sisErrorReady, setSisErrorReady] = useState(false);
+  const qwalkInView = useInView(qwalkRef);
+  const [qwalkReady, setQwalkReady] = useState(false);
+  const qwalkSurfInView = useInView(qwalkSurfRef);
+  const [qwalkSurfReady, setQwalkSurfReady] = useState(false);
+  const coverProjectionInView = useInView(coverProjectionRef);
+  const [coverProjectionReady, setCoverProjectionReady] = useState(false);
+  const unifyTripInView = useInView(unifyTripRef);
+  const [unifyTripReady, setUnifyTripReady] = useState(false);
+  const unifyConstellationInView = useInView(unifyConstellationRef);
+  const [unifyConstellationReady, setUnifyConstellationReady] = useState(false);
+  const unifyArchitectureInView = useInView(unifyArchitectureRef);
+  const [unifyArchitectureReady, setUnifyArchitectureReady] = useState(false);
+
+
   useEffect(() => {
     setComputing(true);
     const t = setTimeout(() => { setDebouncedM(M_); setComputing(false); }, 160);
@@ -1248,7 +1396,7 @@ export default function Monograph() {
 
   // ═══ PLOT: Bar distribution ═══
   useEffect(() => {
-    if (!barRef.current) return;
+    if (!barRef.current || !barInView) return;
     const { sums, counts } = partData;
     const mid = 1.5 * debouncedM;
     const maxCount = Math.max(...counts);
@@ -1350,17 +1498,17 @@ export default function Monograph() {
         bordercolor: C.gold,
         font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 }
       },
-    }, { displayModeBar: false, responsive: true });
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setBarReady(true); });
 
     if (barRef.current.removeAllListeners) barRef.current.removeAllListeners("plotly_click");
     barRef.current.on("plotly_click", (d) => {
       if (d.points?.[0]?.x !== undefined) setSelectedS(d.points[0].x);
     });
-  }, [partData, debouncedM, symmetry, logScale, gaussianOn, selectedS, theoMean, theoSD]);
+  }, [partData, debouncedM, symmetry, logScale, gaussianOn, selectedS, theoMean, theoSD, barInView]);
 
   // ═══ PLOT: 3D scatter ═══
   useEffect(() => {
-    if (!scatterRef.current) return;
+    if (!scatterRef.current || !scatterInView) return;
     const { xs, ys, zs, ss } = scatterData;
     const hx = [], hy = [], hz = [];
     for (let i = 0; i < ss.length; i++)
@@ -1429,12 +1577,12 @@ export default function Monograph() {
         camera: responsive.isMobile ? { eye: { x: 1.25, y: 1.25, z: 0.65 } } : { eye: { x: 1.55, y: 1.55, z: 0.85 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [scatterData, debouncedM, selectedS]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setScatterReady(true); });
+  }, [scatterData, debouncedM, selectedS, scatterInView]);
 
   // ═══ PLOT: Heatmap ═══
   useEffect(() => {
-    if (!heatRef.current) return;
+    if (!heatRef.current || !heatInView) return;
     Plotly.react(heatRef.current, [{
       x: heatData.x, y: heatData.y, z: heatData.z, type: "heatmap",
       colorscale: [[0, C.plotBg], [0.05, "#1a2640"], [0.3, C.teal], [0.6, C.gold], [0.85, C.crimson], [1, C.inkBr]],
@@ -1470,12 +1618,12 @@ export default function Monograph() {
       },
       showlegend: false,
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [heatData, debouncedM, selectedS]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setHeatReady(true); });
+  }, [heatData, debouncedM, selectedS, heatInView]);
 
   // ═══ PLOT: CDF with normal overlay ═══
   useEffect(() => {
-    if (!cdfRef.current) return;
+    if (!cdfRef.current || !cdfInView) return;
     const selIdx = partData.sums.indexOf(selectedS);
     const selCdf = selIdx >= 0 ? cdf[selIdx] : null;
     const normalCdfY = partData.sums.map(s => normalCDF((s - theoMean) / theoSD));
@@ -1531,12 +1679,12 @@ export default function Monograph() {
         { type: "line", x0: partData.minSum, x1: selectedS, y0: selCdf, y1: selCdf, line: { color: C.crimson, width: 1, dash: "dot" } },
       ] : [],
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [partData, cdf, selectedS, theoMean, theoSD]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setCdfReady(true); });
+  }, [partData, cdf, selectedS, theoMean, theoSD, cdfInView]);
 
   // ═══ PLOT: Error curve ═══
   useEffect(() => {
-    if (!errRef.current) return;
+    if (!errRef.current || !errInView) return;
     const naive = [], corrected = [];
     for (let i = 0; i < partData.sums.length; i++) {
       const s = partData.sums[i], a = partData.counts[i];
@@ -1575,12 +1723,12 @@ export default function Monograph() {
         yanchor: "bottom"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [partData, debouncedM]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setErrReady(true); });
+  }, [partData, debouncedM, errInView]);
 
   // ═══ PLOT: Log-log convergence ═══
   useEffect(() => {
-    if (!convRef.current) return;
+    if (!convRef.current || !convInView) return;
     Plotly.react(convRef.current, [
       {
         x: conv.xs, y: conv.ys, type: "scatter", mode: "markers",
@@ -1618,12 +1766,12 @@ export default function Monograph() {
         y: responsive.isMobile ? 0.95 : 0.98
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [conv]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setConvReady(true); });
+  }, [conv, convInView]);
 
   // ═══ PLOT: Q-Q ═══
   useEffect(() => {
-    if (!qqRef.current) return;
+    if (!qqRef.current || !qqInView) return;
     const lim = Math.max(...qq.xs.map(Math.abs), ...qq.ys.map(Math.abs), 3);
     Plotly.react(qqRef.current, [
       {
@@ -1666,15 +1814,15 @@ export default function Monograph() {
         y: responsive.isMobile ? 0.95 : 0.98
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [qq]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setQqReady(true); });
+  }, [qq, qqInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // PHYSICS PLOTS · § 8 — BOSE-EINSTEIN OCCUPATION SPECTRUM
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderBose) return;
-    if (!besteinRef.current) return;
+    if (!besteinRef.current || !besteinInView) return;
     Plotly.react(besteinRef.current, [
       {
         x: besteinData.sums, y: besteinData.degen, type: "bar",
@@ -1724,13 +1872,13 @@ export default function Monograph() {
         xanchor: "right"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderBose, besteinData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setBesteinReady(true); });
+  }, [canRenderBose, besteinData, besteinInView]);
 
   // § 8 — 3D PARTITION FUNCTION SURFACE Z(β, M)
   useEffect(() => {
     if (!canRenderBose) return;
-    if (!besteinSurfRef.current) return;
+    if (!besteinSurfRef.current || !besteinSurfInView) return;
     if (!boseSurfaceGrid) return;
     const { Ms, betas, zMat } = boseSurfaceGrid;
     Plotly.react(besteinSurfRef.current, [{
@@ -1781,15 +1929,15 @@ export default function Monograph() {
         camera: { eye: { x: responsive.isMobile ? 1.5 : 1.7, y: responsive.isMobile ? -1.3 : -1.55, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderBose, boseSurfaceGrid, debouncedM, beta, besteinData, responsive.isMobile]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setBesteinSurfReady(true); });
+  }, [canRenderBose, boseSurfaceGrid, debouncedM, beta, besteinData, responsive.isMobile, besteinSurfInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 9 — FEYNMAN VERTEX COUNT
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderFeynman) return;
-    if (!feynmanRef.current) return;
+    if (!feynmanRef.current || !feynmanInView) return;
     const nvals = feynmanData.map(d => d.n);
     const cvals = feynmanData.map(d => d.count);
     Plotly.react(feynmanRef.current, [
@@ -1818,13 +1966,13 @@ export default function Monograph() {
         type: "log"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderFeynman, feynmanData, selectedS]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setFeynmanReady(true); });
+  }, [canRenderFeynman, feynmanData, selectedS, feynmanInView]);
 
   // § 9 — 3D FEYNMAN VERTEX MOMENTUM STAR
   useEffect(() => {
     if (!canRenderFeynman) return;
-    if (!feynmanDiagRef.current) return;
+    if (!feynmanDiagRef.current || !feynmanDiagInView) return;
     // Three incoming/outgoing lines at vertex, colored by valence
     const tri = conjTriplet || { x: 1, y: 1, z: 1 };
     const v1 = [tri.x, 0, 0];
@@ -1887,8 +2035,8 @@ export default function Monograph() {
         bgcolor: "rgba(0,0,0,0)"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderFeynman, conjTriplet]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setFeynmanDiagReady(true); });
+  }, [canRenderFeynman, conjTriplet, feynmanDiagInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 10 — YOUNG CONJUGATION (antiparticle duality)
@@ -1900,7 +2048,7 @@ export default function Monograph() {
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderNlo) return;
-    if (!nloRef.current) return;
+    if (!nloRef.current || !nloInView) return;
     const maxDk = Math.max(...nloData.map(p => p.deltaK), 1);
     Plotly.react(nloRef.current, [{
       type: "scatter3d", mode: "markers",
@@ -1952,13 +2100,13 @@ export default function Monograph() {
         camera: { eye: { x: responsive.isMobile ? 1.3 : 1.5, y: responsive.isMobile ? 1.3 : 1.5, z: responsive.isMobile ? 0.8 : 1.0 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderNlo, nloData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setNloReady(true); });
+  }, [canRenderNlo, nloData, nloInView]);
 
   // § 11 — dispersion curve k(ω) and Δk histogram
   useEffect(() => {
     if (!canRenderNlo) return;
-    if (!nloDispRef.current) return;
+    if (!nloDispRef.current || !nloDispInView) return;
     const ws = Array.from({ length: debouncedM }, (_, i) => i + 1);
     const kvals = ws.map(w => w + nloDispersion * w * w);
     const histBins = 30;
@@ -2021,15 +2169,15 @@ export default function Monograph() {
         bgcolor: "rgba(0,0,0,0)"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderNlo, nloData, nloDispersion, debouncedM]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setNloDispReady(true); });
+  }, [canRenderNlo, nloData, nloDispersion, debouncedM, nloDispInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 12 — LORENZ ATTRACTOR
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderLorenz) return;
-    if (!lorenzRef.current) return;
+    if (!lorenzRef.current || !lorenzInView) return;
     const N = lorenzData.xs.length;
     // color by time
     const colors = Array.from({ length: N }, (_, i) => i / N);
@@ -2078,13 +2226,13 @@ export default function Monograph() {
         camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? 1.4 : 1.6, z: responsive.isMobile ? 0.5 : 0.7 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderLorenz, lorenzData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setLorenzReady(true); });
+  }, [canRenderLorenz, lorenzData, lorenzInView]);
 
   // § 12 — Poincaré section z = ρ−1 plane
   useEffect(() => {
     if (!canRenderLorenz) return;
-    if (!poincareRef.current) return;
+    if (!poincareRef.current || !poincareInView) return;
     const zPlane = lorenzRho - 1;
     const px = [], py = [];
     for (let i = 1; i < lorenzData.zs.length; i++) {
@@ -2117,15 +2265,15 @@ export default function Monograph() {
         linecolor: C.rule
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderLorenz, lorenzData, lorenzRho]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setPoincareReady(true); });
+  }, [canRenderLorenz, lorenzData, lorenzRho, poincareInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 13 — KOLMOGOROV SPECTRUM
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderKolmog) return;
-    if (!kolmogRef.current) return;
+    if (!kolmogRef.current || !kolmogInView) return;
     // Reference K41 and measured partition energy distribution
     const ps = partData.counts.map((c, i) => c > 0 ? c : null);
     Plotly.react(kolmogRef.current, [
@@ -2170,13 +2318,13 @@ export default function Monograph() {
         yanchor: "bottom"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderKolmog, kolmogData, partData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setKolmogReady(true); });
+  }, [canRenderKolmog, kolmogData, partData, kolmogInView]);
 
   // § 13 — Triadic coupling 3D
   useEffect(() => {
     if (!canRenderKolmog) return;
-    if (!triadRef.current) return;
+    if (!triadRef.current || !triadInView) return;
     const maxT = Math.max(...triadData.map(p => p.T), 1);
     Plotly.react(triadRef.current, [{
       type: "scatter3d", mode: "markers",
@@ -2226,15 +2374,15 @@ export default function Monograph() {
         camera: { eye: { x: responsive.isMobile ? 1.3 : 1.55, y: responsive.isMobile ? 1.3 : 1.55, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderKolmog, triadData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setTriadReady(true); });
+  }, [canRenderKolmog, triadData, triadInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 14 — GUTENBERG-RICHTER LAW
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderGutenberg) return;
-    if (!gutRef.current) return;
+    if (!gutRef.current || !gutInView) return;
     Plotly.react(gutRef.current, [
       {
         x: grData.mags, y: grData.N, type: "scatter", mode: "lines",
@@ -2275,15 +2423,15 @@ export default function Monograph() {
         xanchor: "right"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderGutenberg, grData, grCompare, grBvalue]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setGutReady(true); });
+  }, [canRenderGutenberg, grData, grCompare, grBvalue, gutInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 15 — BBN ABUNDANCES
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderBbn) return;
-    if (!bbnRef.current) return;
+    if (!bbnRef.current || !bbnInView) return;
     Plotly.react(bbnRef.current, [
       { x: bbnData.T, y: bbnData.Yp, type: "scatter", mode: "lines", line: { color: C.gold, width: responsive.isMobile ? 1.8 : 2.2 }, name: "Y_p (⁴He mass fraction)", hovertemplate: "T=%{x:.2f}<br>Y_p=%{y:.4f}<extra></extra>" },
       { x: bbnData.T, y: bbnData.DH, type: "scatter", mode: "lines", line: { color: C.teal, width: responsive.isMobile ? 1.6 : 2 }, name: "D/H", yaxis: "y2", hovertemplate: "T=%{x:.2f}<br>D/H=%{y:.2e}<extra></extra>" },
@@ -2322,15 +2470,15 @@ export default function Monograph() {
         y: responsive.isMobile ? 0.95 : 0.98
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderBbn, bbnData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setBbnReady(true); });
+  }, [canRenderBbn, bbnData, bbnInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 16 — SIS LATTICE SHORT VECTORS 3D
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderSis) return;
-    if (!sisRef.current) return;
+    if (!sisRef.current || !sisInView) return;
     const all = scatterData;
     // Full lattice T_M (background cloud)
     const trBg = {
@@ -2392,13 +2540,13 @@ export default function Monograph() {
         camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? 1.4 : 1.6, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderSis, sisData, scatterData, debouncedM]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setSisReady(true); });
+  }, [canRenderSis, sisData, scatterData, debouncedM, sisInView]);
 
   // § 16 — SIS residue distribution
   useEffect(() => {
     if (!canRenderSis) return;
-    if (!sisErrorRef.current) return;
+    if (!sisErrorRef.current || !sisErrorInView) return;
     // Compute residue A·x mod q over the full T_M
     const rCounts = new Array(sisQ).fill(0);
     for (let x = 1; x <= debouncedM; x++)
@@ -2429,15 +2577,15 @@ export default function Monograph() {
         linecolor: C.rule
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderSis, debouncedM, sisQ, sisA1, sisA2, sisA3]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setSisErrorReady(true); });
+  }, [canRenderSis, debouncedM, sisQ, sisA1, sisA2, sisA3, sisErrorInView]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // § 17 — QUANTUM WALK AMPLITUDE
   // ═══════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!canRenderQwalk) return;
-    if (!qwalkRef.current) return;
+    if (!qwalkRef.current || !qwalkInView) return;
     Plotly.react(qwalkRef.current, [
       {
         x: qwalkData.sums, y: qwalkData.amp, type: "scatter", mode: "lines",
@@ -2479,13 +2627,13 @@ export default function Monograph() {
         xanchor: "right"
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderQwalk, qwalkData, partData]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setQwalkReady(true); });
+  }, [canRenderQwalk, qwalkData, partData, qwalkInView]);
 
   // § 17 — 3D amplitude surface (S vs t vs |ψ|²)
   useEffect(() => {
     if (!canRenderQwalk) return;
-    if (!qwalkSurfRef.current) return;
+    if (!qwalkSurfRef.current || !qwalkSurfInView) return;
     const tMax = responsive.isMobile ? 16 : 30;
     const tvals = []; for (let t = 1; t <= tMax; t++) tvals.push(t);
     const Svals = qwalkData.sums;
@@ -2534,11 +2682,11 @@ export default function Monograph() {
         camera: { eye: { x: responsive.isMobile ? 1.4 : 1.6, y: responsive.isMobile ? -1.3 : -1.5, z: responsive.isMobile ? 0.7 : 0.9 } },
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderQwalk, debouncedM, selectedS, qwalkData, responsive.isMobile]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setQwalkSurfReady(true); });
+  }, [canRenderQwalk, debouncedM, selectedS, qwalkData, responsive.isMobile, qwalkSurfInView]);
 
   useEffect(() => {
-    if (!coverProjectionRef.current) return;
+    if (!coverProjectionRef.current || !coverProjectionInView) return;
 
     const stride = responsive.isMobile ? 10 : 5;
     const xPts = [], yPts = [], zPts = [], sPts = [];
@@ -2660,22 +2808,35 @@ export default function Monograph() {
       },
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
       showlegend: false,
-    }, { displayModeBar: false, responsive: true });
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setCoverProjectionReady(true); });
 
     if (responsive.isMobile) return;
     let theta = 0.72;
-    const timer = setInterval(() => {
-      theta += 0.02;
+    let raf = 0;
+    let last = 0;
+    let visible = true;
+    const el = coverProjectionRef.current;
+    const io = new IntersectionObserver((entries) => {
+      visible = entries[0]?.isIntersecting ?? true;
+    }, { threshold: 0.01 });
+    if (el) io.observe(el);
+    const tick = (t) => {
+      raf = requestAnimationFrame(tick);
+      if (document.hidden || !visible) { last = t; return; }
+      if (t - last < 220) return; // ~4.5fps rotation — plenty for slow orbit, drastically less GPU
+      last = t;
+      theta += 0.045;
       if (coverProjectionRef.current) {
         Plotly.relayout(coverProjectionRef.current, { "scene.camera": orbitCamera(theta, 1.72, 0.92) });
       }
-    }, 140);
-    return () => clearInterval(timer);
-  }, [scatterData, selectedS, computeM, tripShell, responsive.isMobile]);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); io.disconnect(); };
+  }, [scatterData, selectedS, computeM, tripShell, responsive.isMobile, coverProjectionInView]);
 
   useEffect(() => {
     if (!canRenderSynthesis) return;
-    if (!unifyTripRef.current) return;
+    if (!unifyTripRef.current || !unifyTripInView) return;
 
     const xSlice = [], ySlice = [], zSlice = [];
     for (let i = 0; i < scatterData.xs.length; i++) {
@@ -2754,12 +2915,12 @@ export default function Monograph() {
       },
       showlegend: false,
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderSynthesis, tripShell, scatterData, selectedS, computeM, conjTriplet, responsive.isMobile]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setUnifyTripReady(true); });
+  }, [canRenderSynthesis, tripShell, scatterData, selectedS, computeM, conjTriplet, responsive.isMobile, unifyTripInView]);
 
   useEffect(() => {
     if (!canRenderSynthesis) return;
-    if (!unifyConstellationRef.current) return;
+    if (!unifyConstellationRef.current || !unifyConstellationInView) return;
 
     const kernel = regimeConstellation[0];
     const outer = regimeConstellation.slice(1);
@@ -2825,22 +2986,35 @@ export default function Monograph() {
       },
       showlegend: false,
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setUnifyConstellationReady(true); });
 
     if (responsive.isMobile) return;
     let theta = 1.18;
-    const timer = setInterval(() => {
-      theta += 0.015;
+    let raf = 0;
+    let last = 0;
+    let visible = true;
+    const el = unifyConstellationRef.current;
+    const io = new IntersectionObserver((entries) => {
+      visible = entries[0]?.isIntersecting ?? true;
+    }, { threshold: 0.01 });
+    if (el) io.observe(el);
+    const tick = (t) => {
+      raf = requestAnimationFrame(tick);
+      if (document.hidden || !visible) { last = t; return; }
+      if (t - last < 240) return;
+      last = t;
+      theta += 0.04;
       if (unifyConstellationRef.current) {
         Plotly.relayout(unifyConstellationRef.current, { "scene.camera": orbitCamera(theta, 1.62, 0.9) });
       }
-    }, 160);
-    return () => clearInterval(timer);
-  }, [canRenderSynthesis, regimeConstellation, responsive.isMobile]);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); io.disconnect(); };
+  }, [canRenderSynthesis, regimeConstellation, responsive.isMobile, unifyConstellationInView]);
 
   useEffect(() => {
     if (!canRenderSynthesis) return;
-    if (!unifyArchitectureRef.current) return;
+    if (!unifyArchitectureRef.current || !unifyArchitectureInView) return;
 
     const traces = [];
     layerArchitecture.layers.forEach((layer) => {
@@ -2917,8 +3091,8 @@ export default function Monograph() {
       },
       showlegend: false,
       hoverlabel: { bgcolor: C.panel, bordercolor: C.gold, font: { color: C.ink, family: FONT_MONO, size: responsive.isMobile ? 9 : 11 } },
-    }, { displayModeBar: false, responsive: true });
-  }, [canRenderSynthesis, layerArchitecture, responsive.isMobile]);
+    }, { displayModeBar: false, responsive: true }).then((p) => { if (p) setUnifyArchitectureReady(true); });
+  }, [canRenderSynthesis, layerArchitecture, responsive.isMobile, unifyArchitectureInView]);
 
   // Formula table data
   const formulaRows = useMemo(() => {
@@ -3252,6 +3426,53 @@ export default function Monograph() {
             </p>
           </div>
 
+          {/* CTA · jump to standalone Unified Theory compendium */}
+          <div style={{
+            marginTop: responsive.isMobile ? 20 : 26,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: responsive.isMobile ? 10 : 14,
+            alignItems: "center",
+            justifyContent: responsive.isMobile ? "center" : "flex-start",
+            maxWidth: responsive.isMobile ? "100%" : 880,
+          }}>
+            <Link to="/unified" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              padding: responsive.isMobile ? "12px 18px" : "14px 24px",
+              background: `linear-gradient(135deg, ${C.gold} 0%, #d4a64a 100%)`,
+              color: C.bgDeep,
+              fontFamily: FONT_MONO,
+              fontSize: responsive.isMobile ? 11 : 12,
+              letterSpacing: 1.8,
+              textTransform: "uppercase",
+              textDecoration: "none",
+              borderRadius: 3,
+              fontWeight: 600,
+              boxShadow: `0 6px 24px ${C.gold}55, inset 0 1px 0 #ffffff44`,
+              transition: "transform 0.18s ease, box-shadow 0.18s ease",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 10px 32px ${C.gold}88, inset 0 1px 0 #ffffff66`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 6px 24px ${C.gold}55, inset 0 1px 0 #ffffff44`; }}
+            >
+              <span style={{ fontSize: 14 }}>✦</span>
+              Open the Unified Theory compendium
+              <span style={{ fontSize: 16, opacity: 0.7 }}>→</span>
+            </Link>
+            <Link to="/unified" style={{
+              fontFamily: FONT_DISPLAY,
+              fontStyle: "italic",
+              fontSize: responsive.isMobile ? 13 : 14.5,
+              color: C.inkDim,
+              textDecoration: "none",
+              borderBottom: `1px dotted ${C.inkDim}88`,
+              paddingBottom: 1,
+            }}>
+              standalone deep-dive · 13 sections · 5 hero 3D figures
+            </Link>
+          </div>
+
           <div style={{
             display: "grid",
             gridTemplateColumns: responsive.isMobile ? "1fr" : responsive.isTablet ? "1.06fr 0.94fr" : "1.22fr 0.78fr",
@@ -3284,7 +3505,7 @@ export default function Monograph() {
                   <span style={{ color: C.gold }}>M={computeM}</span> · <span style={{ color: C.crimson }}>Σ={selectedS}</span>
                 </div>
               </div>
-              <div ref={coverProjectionRef} style={{ width: "100%", height: responsive.isMobile ? 320 : 430 }} />
+              <ChartHost hostRef={coverProjectionRef} ready={coverProjectionReady} height={responsive.isMobile ? 320 : 430} />
             </div>
 
             <div style={{ display: "grid", gap: 12 }}>
@@ -3410,7 +3631,7 @@ export default function Monograph() {
         </Theorem>
 
         <Figure number="1" caption="The tetrahedral wedge T_M. Each lattice point is colored by its coordinate sum S = x + y + z. Selecting any S below highlights the level set {(x,y,z) ∈ T_M : x+y+z = S}, which forms a polygonal slice through the tetrahedron.">
-          <div ref={scatterRef} style={{ width: "100%", height: 460 }} />
+          <ChartHost hostRef={scatterRef} ready={scatterReady} height={460} />
         </Figure>
 
         {/* ═══════════════ § 2 — SUM DISTRIBUTION ═══════════════ */}
@@ -3442,7 +3663,7 @@ export default function Monograph() {
 
         <Figure number="2" caption="The distribution p₃(S | M). Teal bars give the exact count; the dotted golden curve is the theoretical Gaussian N(μ, σ²) with μ = 3(M+1)/2, σ² = 3(M²−1)/12. Click any bar to select that S; the selection propagates through all figures. When symmetry is engaged (§4), the involution is visualized as a dashed violet overlay.">
           <div style={{ display: "flex", gap: 16 }}>
-            <div ref={barRef} style={{ flex: 1, height: 400 }} />
+            <ChartHost hostRef={barRef} ready={barReady} height={400} />
             <div style={{ width: 180, display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
               <Metric label="mean μ" value={moments.mean.toFixed(2)} tone="gold" mono />
               <Metric label="median" value={peakS} tone="teal" />
@@ -3482,9 +3703,9 @@ export default function Monograph() {
         </Eq>
 
         <Figure number="3" caption="Top: log–log convergence of p₃(S)/S² to its limit 1/12. Points are colored by rank order; the dashed golden line is log(1/12) ≈ −1.079. Bottom: relative error of both formulas across the full range of S. Note the crimson Cayley–Sylvester curve diverges sharply near the upper tail; the reflected formula restores accuracy.">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div ref={convRef} style={{ width: "100%", height: 320 }} />
-            <div ref={errRef} style={{ width: "100%", height: 320 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
+            <ChartHost hostRef={convRef} ready={convReady} height={320} />
+            <ChartHost hostRef={errRef} ready={errReady} height={320} />
           </div>
         </Figure>
 
@@ -3535,7 +3756,7 @@ export default function Monograph() {
           Four moments characterize the departure from normality:
         </Prose>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, margin: "18px 0 24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, margin: "18px 0 24px" }}>
           {[
             { lbl: "mean  μ", val: moments.mean.toFixed(3), theo: theoMean.toFixed(2) },
             { lbl: "std. σ", val: moments.sd.toFixed(3), theo: theoSD.toFixed(2) },
@@ -3551,9 +3772,9 @@ export default function Monograph() {
         </div>
 
         <Figure number="4" caption="Left: empirical CDF F̂(S) (teal, step function) against the Gaussian Φ((S−μ)/σ) with theoretical moments (dotted gold). The two coincide in the bulk and disagree only in the extreme tails. Right: the quantile–quantile plot. Under exact normality, the points lie on y = x (dashed gold). Systematic deviation at the tails reveals heavier-than-normal behavior near the boundaries.">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div ref={cdfRef} style={{ width: "100%", height: 320 }} />
-            <div ref={qqRef} style={{ width: "100%", height: 320 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
+            <ChartHost hostRef={cdfRef} ready={cdfReady} height={320} />
+            <ChartHost hostRef={qqRef} ready={qqReady} height={320} />
           </div>
         </Figure>
 
@@ -3576,7 +3797,7 @@ export default function Monograph() {
         </Prose>
 
         <Figure number="5" caption="Bivariate density n(x, S | M) = #{(y,z) : x≤y≤z≤M, x+y+z=S}. The crimson dashed line marks the currently selected sum S. The diagonal bands visualize how the small-x and small-S regions are disproportionately populated, reflecting the asymmetric wedge geometry.">
-          <div ref={heatRef} style={{ width: "100%", height: 340 }} />
+          <ChartHost hostRef={heatRef} ready={heatReady} height={340} />
         </Figure>
 
         <Theorem kind="Definition" number="6.1" title="Representative Young diagram" tone="gold">
@@ -3664,7 +3885,7 @@ export default function Monograph() {
               <span style={{ fontFamily: FONT_MONO, fontSize: 24, fontWeight: 500, color: C.crimson, minWidth: 54, textAlign: "right", textShadow: `0 0 16px ${C.crimson}77` }}>{selectedS}</span>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 10, marginBottom: 14 }}>
               {[
                 { l: "p₃(S | M)", v: selActual.toLocaleString(), c: C.gold },
                 { l: "⌊S²/12⌉", v: selNaive.toLocaleString(), c: selNaive === selActual ? C.teal : C.inkDim },
@@ -3727,7 +3948,7 @@ export default function Monograph() {
             bijection, and conclude with a conjectural category-theoretic synthesis.
           </Prose>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, margin: "22px 0 14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10, margin: "22px 0 14px" }}>
             {[
               { tag: "§ 8", topic: "Bose–Einstein statistics", tone: "gold" },
               { tag: "§ 9", topic: "Feynman perturbation", tone: "indigo" },
@@ -3805,9 +4026,9 @@ export default function Monograph() {
         </div>
 
         <Figure number="6" caption="The Bose-Einstein imprint. Left: the degeneracy g(S) = p₃(S|M) coincides (up to an index shift) with the integer-partition count of §2; superimposed in gold is the Boltzmann-weighted population π(S) = g(S)·e^(−βS)/Z. The condensation tendency is visible as temperature drops (increase β): probability mass concentrates at low S. Right: the 3D surface log Z(β, M), showing how the partition-function landscape warps across the (temperature, system-size) plane; the crimson diamond locates the current (β, M).">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div ref={besteinRef} style={{ width: "100%", height: 380 }} />
-            <div ref={besteinSurfRef} style={{ width: "100%", height: 380 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
+            <ChartHost hostRef={besteinRef} ready={besteinReady} height={380} />
+            <ChartHost hostRef={besteinSurfRef} ready={besteinSurfReady} height={380} />
           </div>
         </Figure>
 
@@ -3851,9 +4072,9 @@ export default function Monograph() {
         </Theorem>
 
         <Figure number="7" caption="Feynman diagram counting. Left: the topologically-inequivalent vacuum-bubble count at each perturbative order n, rising polynomially and plotted in log scale. The currently-selected half-sum (S/2) is highlighted crimson. Right: a cartoon 3D rendering of the trivalent momentum vertex for the selected triplet (x,y,z), with the dotted closed loop representing the one-loop contraction that makes the diagram a true vacuum bubble.">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div ref={feynmanRef} style={{ width: "100%", height: 340 }} />
-            <div ref={feynmanDiagRef} style={{ width: "100%", height: 340 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
+            <ChartHost hostRef={feynmanRef} ready={feynmanReady} height={340} />
+            <ChartHost hostRef={feynmanDiagRef} ready={feynmanDiagReady} height={340} />
           </div>
         </Figure>
 
@@ -3981,8 +4202,8 @@ export default function Monograph() {
 
         <Figure number="8" caption="Three-wave phase-matching. Left: the cloud of resonant triplets at the selected sum S, plotted in (ω₁,ω₂,ω₃)-space. Marker color encodes the phase mismatch |Δk|; teal points are perfectly phase-matched (highest non-linear conversion efficiency) while crimson points are strongly dephased (negligible conversion). Right: the dispersion relation k(ω) = ω + αω² against which the mismatch is computed, and the histogram of |Δk| values across the full phase-matching slice.">
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 14 }}>
-            <div ref={nloRef} style={{ width: "100%", height: 380 }} />
-            <div ref={nloDispRef} style={{ width: "100%", height: 380 }} />
+            <ChartHost hostRef={nloRef} ready={nloReady} height={380} />
+            <ChartHost hostRef={nloDispRef} ready={nloDispReady} height={380} />
           </div>
         </Figure>
 
@@ -4050,8 +4271,8 @@ export default function Monograph() {
 
         <Figure number="9" caption="The Lorenz strange attractor. Left: 6 000-step RK4 trajectory in (x, y, z)-space, colored by flow time (indigo → teal → gold → crimson). The two wings of the butterfly are visited irregularly; the trajectory is bounded but never periodic, a geometric witness to sensitive dependence on initial conditions. Right: the Poincaré section at z = ρ−1 — each crossing of this plane in the +z direction is recorded as a point in the (x, y) plane. The resulting Cantor-like transverse structure reveals the fractal foliation of the attractor, and its triplet statistics recover the partition-theoretic envelope p₃(S|M).">
           <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 14 }}>
-            <div ref={lorenzRef} style={{ width: "100%", height: 420 }} />
-            <div ref={poincareRef} style={{ width: "100%", height: 420 }} />
+            <ChartHost hostRef={lorenzRef} ready={lorenzReady} height={420} />
+            <ChartHost hostRef={poincareRef} ready={poincareReady} height={420} />
           </div>
         </Figure>
 
@@ -4087,9 +4308,9 @@ export default function Monograph() {
         </Theorem>
 
         <Figure number="10" caption="Kolmogorov inertial-range scaling. Left: the K41 spectrum E(k) ~ k^(−5/3) (gold) against the empirical partition density p₃(S|M)/|T_M| (teal). The two curves obey distinct power laws in their respective domains — the former in wavenumber, the latter in sum — but both originate from the identical triadic combinatorial substrate. Right: the 3D scatter of triadic coupling strengths T(k₁,k₂,k₃) = √(k₁k₂k₃) over the ordered simplex T_M; the dominant triads lie on the body diagonal, where all three modes are balanced — the slow, large-scale modes that carry the bulk of the turbulent energy.">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div ref={kolmogRef} style={{ width: "100%", height: 380 }} />
-            <div ref={triadRef} style={{ width: "100%", height: 380 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 14 }}>
+            <ChartHost hostRef={kolmogRef} ready={kolmogReady} height={380} />
+            <ChartHost hostRef={triadRef} ready={triadReady} height={380} />
           </div>
         </Figure>
 
@@ -4143,7 +4364,7 @@ export default function Monograph() {
         </div>
 
         <Figure number="11" caption="The Gutenberg–Richter exponent at work. The crimson curve is the canonical log-linear decay log N = a − b·m across the magnitude range. Teal markers superimpose the empirical p₃(S|M) count against a rescaled sum axis (m = S/5). Over roughly two decades the two curves are visually parallel — the same b ≈ 1 exponent governs both. This apparent coincidence has been exploited to train triplet-based anomaly classifiers that flag seismic precursors.">
-          <div ref={gutRef} style={{ width: "100%", height: 400 }} />
+          <ChartHost hostRef={gutRef} ready={gutReady} height={400} />
         </Figure>
 
         {/* ═══════════════ § 15 — BIG BANG NUCLEOSYNTHESIS ═══════════════ */}
@@ -4168,7 +4389,7 @@ export default function Monograph() {
         </Theorem>
 
         <Figure number="12" caption="Schematic evolution of the primordial light-element abundances through the BBN freeze-out. The helium mass fraction Y_p (gold, left axis) plateaus near 0.247; deuterium D/H (teal, right axis) and lithium ⁷Li/H (crimson, right axis) follow different quenching trajectories. The observed triplet (Y_p, D/H, ⁷Li/H) is the cosmological Rosetta stone: any triad satisfying all three observational constraints simultaneously locates the baryon density η of the actual universe.">
-          <div ref={bbnRef} style={{ width: "100%", height: 420 }} />
+          <ChartHost hostRef={bbnRef} ready={bbnReady} height={420} />
         </Figure>
 
         {/* ═══════════════ § 16 — LATTICE CRYPTOGRAPHY ═══════════════ */}
@@ -4226,7 +4447,7 @@ export default function Monograph() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, margin: "14px 0" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, margin: "14px 0" }}>
           <Metric label="# SIS solutions" value={sisData.length.toLocaleString()} tone="gold" />
           <Metric label="|T_M| / q" value={(partData.totalCount / sisQ).toFixed(1)} tone="indigo" />
           <Metric label="density" value={(sisData.length / partData.totalCount * 100).toFixed(2) + "%"} tone="teal" />
@@ -4235,8 +4456,8 @@ export default function Monograph() {
 
         <Figure number="13" caption="SIS over the ordered 3-lattice T_M modulo the prime q. Left: the faint indigo background cloud is the full ordered simplex T_M; the bright points are the admissible SIS solutions — triplets (x₁,x₂,x₃) for which A·x ≡ 0 mod q. Marker color encodes squared norm ‖x‖², the hardness metric: smaller is harder to find by brute force, and directly measures cryptographic advantage. Right: the residue-class histogram of A·x mod q over the full lattice — by uniformity, each residue class is populated ≈ |T_M|/q times; the crimson bars mark the admissible classes {0, 1, q−1} used by the extended SIS variant for forgery resistance.">
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 14 }}>
-            <div ref={sisRef} style={{ width: "100%", height: 420 }} />
-            <div ref={sisErrorRef} style={{ width: "100%", height: 420 }} />
+            <ChartHost hostRef={sisRef} ready={sisReady} height={420} />
+            <ChartHost hostRef={sisErrorRef} ready={sisErrorReady} height={420} />
           </div>
         </Figure>
 
@@ -4291,8 +4512,8 @@ export default function Monograph() {
 
         <Figure number="14" caption="The quantum walk on T_M. Left: the probability distribution |ψ(S,t)|² (violet) at the current step t, superimposed on the classical stationary partition density (dotted gold). Quantum interference produces the characteristic oscillatory envelope — peaks and nodes — absent in the classical distribution. Right: the full (S, t, |ψ|²) spacetime surface: peaks propagate outward ballistically at constant speed, forming the light-cone structure that is the dynamical signature of coherent quantum spreading.">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 14 }}>
-            <div ref={qwalkRef} style={{ width: "100%", height: 400 }} />
-            <div ref={qwalkSurfRef} style={{ width: "100%", height: 400 }} />
+            <ChartHost hostRef={qwalkRef} ready={qwalkReady} height={400} />
+            <ChartHost hostRef={qwalkSurfRef} ready={qwalkSurfReady} height={400} />
           </div>
         </Figure>
 
@@ -4306,24 +4527,24 @@ export default function Monograph() {
         <Figure number="15" caption="The synthesis chamber rendered as three coupled spatial objects. Left: the bounded simplex with the active sum-slice Σ = S lit inside the shell and its floor projection faintly recorded. Center: the eleven-regime constellation orbiting a central kernel node, colored by evidence class. Right: the theorem architecture as a stacked four-layer wireframe, with assumptions H1–H8 suspended between floors.">
           <div style={{
             display: "grid",
-            gridTemplateColumns: responsive.isMobile ? "1fr" : responsive.isTablet ? "1fr 1fr" : "1.08fr 1fr 1fr",
+            gridTemplateColumns: responsive.isMobile ? "1fr" : responsive.isTablet ? "minmax(0, 1fr) minmax(0, 1fr)" : "1.08fr 1fr 1fr",
             gap: 14,
           }}>
             {[
               {
                 title: "Kernel chamber",
                 note: "T_M as the fixed solid behind every later transcription.",
-                ref: unifyTripRef,
+                ref: unifyTripRef, ready: unifyTripReady,
               },
               {
                 title: "Regime orbit",
                 note: "Explicit, inferred, and analogical bridges exposed as geometry.",
-                ref: unifyConstellationRef,
+                ref: unifyConstellationRef, ready: unifyConstellationReady,
               },
               {
                 title: "Proof stack",
                 note: "Definitions, safe core, conjectural middle, flagship crown.",
-                ref: unifyArchitectureRef,
+                ref: unifyArchitectureRef, ready: unifyArchitectureReady,
               },
             ].map((panel, idx) => (
               <div key={panel.title} style={{
@@ -4345,14 +4566,14 @@ export default function Monograph() {
                     {panel.note}
                   </div>
                 </div>
-                <div ref={panel.ref} style={{ width: "100%", height: responsive.isMobile ? 290 : responsive.isTablet && idx === 2 ? 340 : 360 }} />
+                <ChartHost hostRef={panel.ref} ready={panel.ready} height={responsive.isMobile ? 290 : responsive.isTablet && idx === 2 ? 340 : 360} />
               </div>
             ))}
           </div>
 
           <div style={{
             display: "grid",
-            gridTemplateColumns: responsive.isMobile ? "1fr 1fr" : "repeat(4, minmax(0, 1fr))",
+            gridTemplateColumns: responsive.isMobile ? "minmax(0, 1fr) minmax(0, 1fr)" : "repeat(4, minmax(0, 1fr))",
             gap: 10,
             marginTop: 12,
           }}>
@@ -5598,7 +5819,7 @@ export default function Monograph() {
           <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.indigo, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
             asymptotic zones
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)", gap: 10 }}>
             {[
               ["left boundary", "small-S lattice effects dominate", "wall regime"],
               ["bulk", "quadratic profile dominant", "parabolic regime"],
@@ -6432,7 +6653,7 @@ export default function Monograph() {
         <div style={{ marginTop: 54, paddingTop: 28, borderTop: `2px solid ${C.gold}` }}>
           <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>APPENDIX · REFERENCES</div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, fontFamily: FONT_MATH, fontSize: 13.5, color: C.inkDim, lineHeight: 1.78 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 28, fontFamily: FONT_MATH, fontSize: 13.5, color: C.inkDim, lineHeight: 1.78 }}>
             <div>
               <div style={{ color: C.gold, fontStyle: "italic", fontSize: 14.5, marginBottom: 8 }}>Combinatorics &amp; number theory</div>
               <div>Cayley, A. (1856). <em>Researches on the partition of numbers.</em> Phil. Trans. R. Soc. 146: 127–140.</div>
