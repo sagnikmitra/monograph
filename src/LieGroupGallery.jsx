@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { useEffect, useRef, useState, useMemo } from "react";
 import Plotly from "plotly.js-dist-min";
-import { C, FONT_MATH, FONT_DISPLAY, FONT_MONO, M, orbitCamera } from "./Monograph";
+import { C, FONT_MATH, FONT_DISPLAY, FONT_MONO, M, orbitCamera } from "./shared-kernel-ui.jsx";
 import { useResponsive } from "./responsive";
 import LazyMount from "./LazyMount";
 

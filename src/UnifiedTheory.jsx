@@ -72,7 +72,7 @@ import {
   orbitCamera,
   cayleySylvester,
   p3Corrected,
-} from "./Monograph";
+} from "./shared-kernel-ui.jsx";
 import { useResponsive, responsiveScale, responsiveSpacing } from "./responsive";
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -135,6 +135,10 @@ function RefLink({ href, children }) {
 // ═══════════════════════════════════════════════════════════════════════════
 export default function UnifiedTheory() {
   const responsive = useResponsive();
+  const lowPowerDevice =
+    typeof navigator !== "undefined" &&
+    ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+      (navigator.deviceMemory && navigator.deviceMemory <= 4));
 
   // ── live state for the kernel chamber + new interactive figures ────────
   const [M_, setM] = useState(40);
@@ -147,7 +151,14 @@ export default function UnifiedTheory() {
   const tripShell = useMemo(() => generateTripShell(M_), [M_]);
   const regimeConstellation = useMemo(() => generateRegimeConstellation(), []);
   const layerArchitecture = useMemo(() => generateLayerArchitecture(), []);
-  const scatterData = useMemo(() => generateScatterSample(M_, responsive.isMobile ? 4500 : 14000), [M_, responsive.isMobile]);
+  const scatterData = useMemo(
+    () =>
+      generateScatterSample(
+        M_,
+        responsive.isMobile ? 2400 : lowPowerDevice ? 6200 : 9000
+      ),
+    [M_, responsive.isMobile, lowPowerDevice]
+  );
 
   // ── refs for ALL hero 3D plots (now five) ──────────────────────────────
   const tripRef = useRef(null);
@@ -162,7 +173,7 @@ export default function UnifiedTheory() {
   // viewport, AND track a `ready` flag so we can overlay a loader on the
   // host <div> until the chart actually paints. ─────────────────────────
   const tripInView = useInView(tripRef);
-  const constInView = useInView(constRef);
+  const constInView = useInView(constRef, { rootMargin: "320px 0px 320px 0px", once: false });
   const archInView = useInView(archRef);
   const couplingInView = useInView(couplingRef);
   const cascadeInView = useInView(cascadeRef);
@@ -270,14 +281,14 @@ export default function UnifiedTheory() {
       showlegend: false,
     }, { displayModeBar: false, responsive: true });
 
-    if (responsive.isMobile) return;
+    if (responsive.isMobile || lowPowerDevice || !constInView) return;
     let theta = 1.18;
     const t = setInterval(() => {
       theta += 0.012;
       if (constRef.current) Plotly.relayout(constRef.current, { "scene.camera": orbitCamera(theta, 1.62, 0.9) });
-    }, 180);
+    }, 120);
     return () => clearInterval(t);
-  }, [regimeConstellation, responsive.isMobile, constInView]);
+  }, [regimeConstellation, responsive.isMobile, lowPowerDevice, constInView]);
 
   // ── proof-stack architecture ───────────────────────────────────────────
   useEffect(() => {
@@ -385,7 +396,7 @@ export default function UnifiedTheory() {
   // 3D embedding (u, v, height) used purely as a visual.
   useEffect(() => {
     if (!cyRef.current || !cyInView) return;
-    const N = responsive.isMobile ? 36 : 56;
+    const N = responsive.isMobile ? 26 : lowPowerDevice ? 34 : 44;
     const range = 1.6;
     const xs = [], ys = [], zs = [];
     for (let i = 0; i <= N; i++) {
@@ -443,7 +454,7 @@ export default function UnifiedTheory() {
       },
       showlegend: false,
     }, { displayModeBar: false, responsive: true }).then(() => setCyReady(true));
-  }, [cyPsi, responsive.isMobile, cyInView]);
+  }, [cyPsi, responsive.isMobile, lowPowerDevice, cyInView]);
 
   // ── Interactive symmetry-breaking cascade (3D) ─────────────────────────
   // Plots the four-stage hierarchy as a vertical stack, with a Higgs-style
@@ -460,7 +471,7 @@ export default function UnifiedTheory() {
       { name: "Electroweak broken (today)",   E: -0.5,  color: "#7aa6c2", group: "SU(3)×U(1)_em",           z: -1.4 },
     ];
     // Higgs Mexican-hat potential, kept clearly below the lowest plate.
-    const N = responsive.isMobile ? 28 : 44;
+    const N = responsive.isMobile ? 20 : lowPowerDevice ? 28 : 34;
     const R = 1.7;
     const HAT_Z = -3.6;
     const breakingActive =
@@ -617,7 +628,7 @@ export default function UnifiedTheory() {
       },
       showlegend: false,
     }, { displayModeBar: false, responsive: true }).then(() => setBreakReady(true));
-  }, [logE, responsive.isMobile, breakInView]);
+  }, [logE, responsive.isMobile, lowPowerDevice, breakInView]);
 
   useEffect(() => {
     if (!cascadeRef.current || !cascadeInView) return;

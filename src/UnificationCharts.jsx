@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import Plotly from "plotly.js-dist-min";
 import {
   C, FONT_MATH, FONT_DISPLAY, FONT_MONO, M, Eq, orbitCamera,
-} from "./Monograph";
+} from "./shared-kernel-ui.jsx";
 import { useResponsive } from "./responsive";
 import LazyMount from "./LazyMount";
 

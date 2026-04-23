@@ -5,7 +5,10 @@
 // rectangles with a broken-image icon (Plotly's placeholder logo).
 import { useEffect, useState } from "react";
 
-export default function useInView(ref, { rootMargin = "1200px 0px 1200px 0px" } = {}) {
+export default function useInView(
+  ref,
+  { rootMargin = "1200px 0px 1200px 0px", once = true } = {}
+) {
   const [inView, setInView] = useState(false);
   useEffect(() => {
     if (!ref.current) return;
@@ -18,6 +21,12 @@ export default function useInView(ref, { rootMargin = "1200px 0px 1200px 0px" } 
         for (const e of entries) {
           if (e.isIntersecting) {
             setInView(true);
+            if (once) return;
+          } else if (!once) {
+            setInView(false);
+            return;
+          }
+          if (once && e.isIntersecting) {
             return;
           }
         }
@@ -26,6 +35,6 @@ export default function useInView(ref, { rootMargin = "1200px 0px 1200px 0px" } 
     );
     obs.observe(ref.current);
     return () => obs.disconnect();
-  }, [ref, rootMargin]);
+  }, [ref, rootMargin, once]);
   return inView;
 }

@@ -13,8 +13,8 @@ import { SectionLoader } from "./Loader";
 export default function LazyMount({
   children,
   minHeight = 540,
-  rootMargin = "1200px 0px 1200px 0px",
-  unmountMargin = "2400px 0px 2400px 0px",
+  rootMargin = "450px 0px 450px 0px",
+  unmountMargin = "1200px 0px 1200px 0px",
   loaderLabel = "Rendering figures",
   showLoader = true,
 }) {
